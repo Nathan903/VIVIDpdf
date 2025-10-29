@@ -1,0 +1,558 @@
+{
+  "file": "sample.pdf",
+  "pages": [
+    {
+      "page_num": 1,
+      "images": [
+        {
+          "index": 0,
+          "name": "Im0",
+          "bbox": {
+            "x0": 323.55848000000003,
+            "y0": 515.4148399999999,
+            "x1": 376.91400000000004,
+            "y1": 568.77036
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img0_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 1,
+          "name": "Im1",
+          "bbox": {
+            "x0": 379.83187999999996,
+            "y0": 515.4148399999999,
+            "x1": 433.18739999999997,
+            "y1": 568.77036
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img1_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 2,
+          "name": "Im2",
+          "bbox": {
+            "x0": 436.10528,
+            "y0": 515.4148399999999,
+            "x1": 489.4608,
+            "y1": 568.77036
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img2_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 3,
+          "name": "Im3",
+          "bbox": {
+            "x0": 323.55848000000003,
+            "y0": 573.77244,
+            "x1": 376.91400000000004,
+            "y1": 627.12796
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img3_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 4,
+          "name": "Im4",
+          "bbox": {
+            "x0": 379.83187999999996,
+            "y0": 573.77244,
+            "x1": 433.18739999999997,
+            "y1": 627.12796
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img4_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 5,
+          "name": "Im5",
+          "bbox": {
+            "x0": 436.10528,
+            "y0": 573.77244,
+            "x1": 489.4608,
+            "y1": 627.12796
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img5_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 6,
+          "name": "Im6",
+          "bbox": {
+            "x0": 122.22476,
+            "y0": 515.4148399999999,
+            "x1": 175.58028000000002,
+            "y1": 568.77036
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img6_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 7,
+          "name": "Im7",
+          "bbox": {
+            "x0": 178.49815999999998,
+            "y0": 515.4148399999999,
+            "x1": 231.85368,
+            "y1": 568.77036
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img7_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 8,
+          "name": "Im8",
+          "bbox": {
+            "x0": 234.77156,
+            "y0": 515.4148399999999,
+            "x1": 288.12708,
+            "y1": 568.77036
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img8_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 9,
+          "name": "Im9",
+          "bbox": {
+            "x0": 122.22476,
+            "y0": 573.77244,
+            "x1": 175.58028000000002,
+            "y1": 627.12796
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img9_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 10,
+          "name": "Im10",
+          "bbox": {
+            "x0": 178.49815999999998,
+            "y0": 573.77244,
+            "x1": 231.85368,
+            "y1": 627.12796
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img10_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 11,
+          "name": "Im11",
+          "bbox": {
+            "x0": 234.77156,
+            "y0": 573.77244,
+            "x1": 288.12708,
+            "y1": 627.12796
+          },
+          "reported_width": 53,
+          "reported_height": 53,
+          "preview_path": "out_images\\images\\p1_img11_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        }
+      ]
+    },
+    {
+      "page_num": 2,
+      "images": []
+    },
+    {
+      "page_num": 3,
+      "images": []
+    },
+    {
+      "page_num": 4,
+      "images": [
+        {
+          "index": 0,
+          "name": "Im2",
+          "bbox": {
+            "x0": 117.901,
+            "y0": 71.99928160000002,
+            "x1": 494.115016,
+            "y1": 296.059
+          },
+          "reported_width": 376,
+          "reported_height": 224,
+          "preview_path": "out_images\\images\\p4_img0_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        }
+      ]
+    },
+    {
+      "page_num": 5,
+      "images": []
+    },
+    {
+      "page_num": 6,
+      "images": []
+    },
+    {
+      "page_num": 7,
+      "images": []
+    },
+    {
+      "page_num": 8,
+      "images": []
+    },
+    {
+      "page_num": 9,
+      "images": []
+    },
+    {
+      "page_num": 10,
+      "images": [
+        {
+          "index": 0,
+          "name": "Im6",
+          "bbox": {
+            "x0": 187.199,
+            "y0": 193.02703999999994,
+            "x1": 424.79411000000005,
+            "y1": 324.147
+          },
+          "reported_width": 237,
+          "reported_height": 131,
+          "preview_path": "out_images\\images\\p10_img0_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 1,
+          "name": "Im7",
+          "bbox": {
+            "x0": 197.099,
+            "y0": 356.47545,
+            "x1": 414.8968625,
+            "y1": 393.522
+          },
+          "reported_width": 217,
+          "reported_height": 37,
+          "preview_path": "out_images\\images\\p10_img1_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 2,
+          "name": "Im8",
+          "bbox": {
+            "x0": 189.181,
+            "y0": 410.459095,
+            "x1": 422.818855,
+            "y1": 445.402
+          },
+          "reported_width": 233,
+          "reported_height": 34,
+          "preview_path": "out_images\\images\\p10_img2_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        }
+      ]
+    },
+    {
+      "page_num": 11,
+      "images": []
+    },
+    {
+      "page_num": 12,
+      "images": []
+    },
+    {
+      "page_num": 13,
+      "images": []
+    },
+    {
+      "page_num": 14,
+      "images": []
+    },
+    {
+      "page_num": 15,
+      "images": []
+    },
+    {
+      "page_num": 16,
+      "images": []
+    },
+    {
+      "page_num": 17,
+      "images": []
+    },
+    {
+      "page_num": 18,
+      "images": []
+    },
+    {
+      "page_num": 19,
+      "images": []
+    },
+    {
+      "page_num": 20,
+      "images": [
+        {
+          "index": 0,
+          "name": "Im9",
+          "bbox": {
+            "x0": 108.0,
+            "y0": 242.52480000000003,
+            "x1": 286.2395664,
+            "y1": 350.418
+          },
+          "reported_width": 178,
+          "reported_height": 107,
+          "preview_path": "out_images\\images\\p20_img0_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 1,
+          "name": "Im10",
+          "bbox": {
+            "x0": 325.801,
+            "y0": 242.52480000000003,
+            "x1": 504.0405664,
+            "y1": 350.418
+          },
+          "reported_width": 178,
+          "reported_height": 107,
+          "preview_path": "out_images\\images\\p20_img1_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        }
+      ]
+    },
+    {
+      "page_num": 21,
+      "images": [
+        {
+          "index": 0,
+          "name": "Im11",
+          "bbox": {
+            "x0": 112.722,
+            "y0": 259.22132,
+            "x1": 302.79336,
+            "y1": 354.257
+          },
+          "reported_width": 190,
+          "reported_height": 95,
+          "preview_path": "out_images\\images\\p21_img0_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 1,
+          "name": "Im12",
+          "bbox": {
+            "x0": 309.199,
+            "y0": 259.22132,
+            "x1": 499.27036,
+            "y1": 354.257
+          },
+          "reported_width": 190,
+          "reported_height": 95,
+          "preview_path": "out_images\\images\\p21_img1_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 2,
+          "name": "Im13",
+          "bbox": {
+            "x0": 112.722,
+            "y0": 371.19131999999996,
+            "x1": 302.79336,
+            "y1": 466.227
+          },
+          "reported_width": 190,
+          "reported_height": 95,
+          "preview_path": "out_images\\images\\p21_img2_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 3,
+          "name": "Im14",
+          "bbox": {
+            "x0": 309.199,
+            "y0": 371.19131999999996,
+            "x1": 499.27036,
+            "y1": 466.227
+          },
+          "reported_width": 190,
+          "reported_height": 95,
+          "preview_path": "out_images\\images\\p21_img3_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        }
+      ]
+    },
+    {
+      "page_num": 22,
+      "images": [
+        {
+          "index": 0,
+          "name": "Im0",
+          "bbox": {
+            "x0": 305.999,
+            "y0": 72.14516156060006,
+            "x1": 464.3990016038,
+            "y1": 170.85285487340002
+          },
+          "reported_width": 158,
+          "reported_height": 98,
+          "preview_path": "out_images\\images\\p22_img0_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 1,
+          "name": "Im1",
+          "bbox": {
+            "x0": 147.5990241758,
+            "y0": 72.14516156060006,
+            "x1": 305.9990257796,
+            "y1": 170.85285487340002
+          },
+          "reported_width": 158,
+          "reported_height": 98,
+          "preview_path": "out_images\\images\\p22_img1_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        }
+      ]
+    },
+    {
+      "page_num": 23,
+      "images": []
+    },
+    {
+      "page_num": 24,
+      "images": [
+        {
+          "index": 0,
+          "name": "I1",
+          "bbox": {
+            "x0": 276.0049248,
+            "y0": 266.11760958750006,
+            "x1": 285.83596320000004,
+            "y1": 463.1956351875
+          },
+          "reported_width": 9,
+          "reported_height": 197,
+          "preview_path": "out_images\\images\\p24_img0_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        },
+        {
+          "index": 1,
+          "name": "I1",
+          "bbox": {
+            "x0": 461.738144,
+            "y0": 265.88485683499994,
+            "x1": 471.7580384,
+            "y1": 463.02045363499997
+          },
+          "reported_width": 10,
+          "reported_height": 197,
+          "preview_path": "out_images\\images\\p24_img1_preview.png",
+          "raw_path": null,
+          "filters": null,
+          "colorspace": null,
+          "bits_per_component": null
+        }
+      ]
+    },
+    {
+      "page_num": 25,
+      "images": []
+    },
+    {
+      "page_num": 26,
+      "images": []
+    }
+  ]
+}
