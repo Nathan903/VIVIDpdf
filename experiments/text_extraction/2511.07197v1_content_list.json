@@ -1,0 +1,1026 @@
+[
+    {
+        "type": "text",
+        "text": "Simulation-based Methods for Optimal Sampling Design in Systems Biology ",
+        "text_level": 1,
+        "bbox": [
+            104,
+            64,
+            895,
+            132
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Tuan Minh Ha Department of Basic Sciences Saigon Technology University Ho Chi Minh City, Vietnam tuan.haminh@stu.edu.vn ",
+        "bbox": [
+            107,
+            151,
+            312,
+            229
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Binh Thanh Nguyen Department of Computer Science University of Science, VNU Ho Chi Minh City, Vietnam ngtbinh@hcmus.edu.vn ",
+        "bbox": [
+            343,
+            151,
+            568,
+            229
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Lam Si Tung Ho Department of Mathematics and Statistics Dalhousie University Halifax, Nova Scotia, Canada lam.ho@dal.ca ",
+        "bbox": [
+            599,
+            151,
+            883,
+            229
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Abstract—In many research areas of systems biology including virology, pharmacokinetics, and population biology, researchers often use the dynamical systems to describe dynamics of biological systems. We can learn about these biological systems by estimating the parameters of the dynamical systems from sampling data. Therefore, an important question arises: how can one select the optimal sampling points for accurately estimating the parameters? Classical methods often rely on Fisher information matrix-based criteria such as A-, D-, and E-optimality. However, these methods require an initial estimate of the parameters and often lead to a suboptimal result when the initial estimate is inaccurate. In this paper, we develop two simulation-based methods for optimal sampling design that do not require an initial estimate of the parameters. The first method, E-optimal-ranking (EOR), employs the E-optimal criterion while the second method utilizes the Long short-term memory (LSTM) neural network. We demonstrate the performance of our proposed methods using simulation studies based on two popular models in system biology (Lotka–Volterra and Three-compartment models). The results show that our methods outperform the naive random selection method and the classical E-optimal design. ",
+        "bbox": [
+            78,
+            275,
+            490,
+            537
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Index Terms—optimal sampling design, systems biology, E-optimal design, Lotka-Volterra model, Three-compartment model, LSTM. ",
+        "bbox": [
+            76,
+            540,
+            488,
+            578
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "I. INTRODUCTION ",
+        "text_level": 1,
+        "bbox": [
+            220,
+            597,
+            348,
+            609
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Dynamic system modeling is an essential tool for studying the dynamics of biological systems including the changes in the population of species (e.g. Lotka-Volterra models [1]–[3]), the transformation and metabolism of substances within the body (e.g. pharmacokinetic models [4], [5]), and the fluctuation of virus levels within a living organism (e.g. HIV models [6]–[8]). We often represent these dynamic models using systems of differential equations and learn the dynamics of biological systems by estimating the parameters from sampling data. Therefore, designing an optimal sampling scheme is one of the most important tasks in systems biology. ",
+        "bbox": [
+            78,
+            621,
+            490,
+            785
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Conducting experiments and sampling to estimate the parameters of a dynamic system is often time-consuming, laborintensive, and costly. Therefore, Optimal Experiment Design (OED) is a crucial step in identifying a dynamic model. Classical criteria for optimal experimental designs are derived by optimizing the information matrix. These criteria include minimizing the trace of the inverse of the information matrix (A-optimal), maximizing the determinant of the information matrix (D-optimal), and maximizing the smallest eigenvalue of the information matrix (E-optimal). Several OED methods using these classical criteria have been proposed over the past decades [9]–[13]. Most of the works have a common drawback in that they require an initial estimate of the parameters and tend to obtain suboptimal results due to the inaccuracy of the initial estimate [14]. Hence, it is essential to develop an effective experimental design method that does not require an initial estimate of the parameters. ",
+        "bbox": [
+            78,
+            787,
+            490,
+            906
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            508,
+            273,
+            919,
+            409
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "To overcome this limitation of the classical optimal design criteria, we develop two simulation-based approaches for OED. The first method adapts E-optimal criterion to avoid the need for an initial estimate of the parameters. The key idea is similar to Bayesian inference where we assume that the initial estimate follows a uniform distribution in the parameter space. Specifically, we simulate a vector of parameters uniformly from the parameter space and use E-optimal criterion to rank the sampling times according to the sampled parameters. We repeat this process several times and use the average ranking to pick the optimal sampling points. The second approach involves using a combination of simulated data and the Attention-based Long Short-Term Memory (At-LSTM) neural network to identify the sampling times that influence the estimation of parameters the most. We illustrate our methods using two well-known dynamic models (the Lotka–Volterra and the three-compartment models). The results show that the proposed methods outperform the classical E-optimal criterion in selecting optimal sampling times for estimating the parameters of the dynamic models. ",
+        "bbox": [
+            508,
+            410,
+            919,
+            710
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "II. DYNAMIC SYSTEM MODELING ",
+        "text_level": 1,
+        "bbox": [
+            596,
+            723,
+            830,
+            736
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "A. Dynamic system models ",
+        "text_level": 1,
+        "bbox": [
+            508,
+            743,
+            691,
+            757
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Dynamical system is a popular modeling tool in Systems Biology. It has been used extensively to describe changes in the population size of organisms [1], [2], the concentration of a substance [4], [5], cell signaling [15], synthetic biology [16], and infectious disease epidemics [17], [18]. A general dynamic system model takes the form of a system of differential equations, which is typically structured as follows: ",
+        "bbox": [
+            508,
+            762,
+            919,
+            867
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "equation",
+        "img_path": "images/2f12cee93a3bc1ee331cb6f9b6bd3be9bc154b2f33fb14d23d87081c4b054635.jpg",
+        "text": "$$\n\\begin{array} { c } { { \\dot { X } ( t ) = f ( X ( t ) , \\theta ) } } \\\\ { { { \\cal X } ( t _ { 0 } ) = X _ { 0 } , } } \\end{array}\n$$",
+        "text_format": "latex",
+        "bbox": [
+            643,
+            872,
+            782,
+            914
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "discarded",
+        "text": "",
+        "bbox": [
+            24,
+            265,
+            60,
+            733
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "where $f ( \\cdot , \\theta )$ is the functions of states transition which refer to the reaction mechanisms, $\\theta \\in \\mathbb { R } ^ { m }$ is a parameter of the dynamic system, $X ( t ) \\in \\mathbb { R } ^ { n }$ is the state of the system at time $t$ , and $X _ { 0 }$ is the state of the system at time $t _ { 0 }$ where we start observing the system. ",
+        "bbox": [
+            78,
+            61,
+            490,
+            137
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "In practice, we may not be able to observe $X ( t )$ directly due to measurement errors. Let $\\boldsymbol { y } \\in \\mathbb { R } ^ { q }$ be the measurement output vector, representing observation data. We have ",
+        "bbox": [
+            78,
+            138,
+            490,
+            183
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "equation",
+        "img_path": "images/9ef8dc082f4a5bf4bc4102a7942862364fd47b3ad8eb62c58875956f9107ca63.jpg",
+        "text": "$$\ny ( t ) = g ( X ( t ) ) + w .\n$$",
+        "text_format": "latex",
+        "bbox": [
+            210,
+            191,
+            356,
+            209
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Here, $g ( \\cdot )$ is the measurement function used to select measurement variables. For instance, if all states of the system are measured, $g ( \\cdot )$ is an identity function. If we only observe the $i$ -th state, then the function $g ( \\cdot )$ will be a projection function from the space $\\mathbb { R } ^ { n }$ onto $\\mathbb { R }$ , keeping only the $i$ -th component. The noise $w$ is a Gaussian random variable with zero mean. ",
+        "bbox": [
+            78,
+            218,
+            490,
+            308
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "In many studies, the main task is to estimate the unknown parameter $\\theta$ of the system using the observations. The leastsquare method is a commonly used method for this task. This estimator is expressed as: ",
+        "bbox": [
+            76,
+            309,
+            490,
+            368
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "equation",
+        "img_path": "images/938ab3bd831f2be52f9100f49d25429c8745d14114b6827fa00d806c69f270fd.jpg",
+        "text": "$$\n\\hat { \\theta } = \\arg \\operatorname* { m i n } _ { \\theta \\in \\Theta } \\sum _ { i = 1 } ^ { N } \\| y ( t _ { i } ) - g ( X _ { \\theta } ( t _ { i } ) ) \\| ^ { 2 }\n$$",
+        "text_format": "latex",
+        "bbox": [
+            155,
+            378,
+            413,
+            422
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "where $\\| \\cdot \\|$ is the Euclidean norm, $\\Theta$ is a space of parameters, $X _ { \\theta }$ is the solution of the system of differential equations (1) with respect to $\\theta , N$ is the total number of observations, and $( t _ { i } ) _ { i = 1 } ^ { N }$ are sampling times. Throughout this paper, we assume that $\\Theta$ is bounded. ",
+        "bbox": [
+            78,
+            429,
+            490,
+            503
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "B. Classical Optimal Sampling Design ",
+        "text_level": 1,
+        "bbox": [
+            80,
+            516,
+            339,
+            530
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "The goal of classical optimal sampling design is to choose sampling points $t _ { i }$ $( i = 1 , 2 , 3 , \\dots , N )$ that maximize the information about the unknown parameter $\\theta$ . The Fisher information matrix (FIM) is used to measure the amount of data information contained in the experimental data. It can be built based on the parametric sensitivity matrix and the measurement error covariance matrix as follows ",
+        "bbox": [
+            78,
+            536,
+            490,
+            641
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "equation",
+        "img_path": "images/113c31a66ef34ad195b1851049480c572c564c42ad89f85974170c5db652b8f3.jpg",
+        "text": "$$\n\\mathrm { F I M } = S ^ { T } S ,\n$$",
+        "text_format": "latex",
+        "bbox": [
+            236,
+            648,
+            328,
+            667
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "where, $S = \\partial X / \\partial \\theta$ represents the local parametric sensitivity matrix, which indicates how parameters locally influence model outputs [19]. $S$ can be solved using (1) and the following system of equations: ",
+        "bbox": [
+            78,
+            676,
+            490,
+            736
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "equation",
+        "img_path": "images/8d41aec7ab4c8146b6a2e9c58c29c9ab965be8463f9ed8d2657aa5662dfcd095.jpg",
+        "text": "$$\n\\dot { S } = J S + P ,\n$$",
+        "text_format": "latex",
+        "bbox": [
+            236,
+            742,
+            330,
+            762
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "where $J = \\partial f / \\partial X$ , and $P = \\partial f / \\partial \\theta$ . ",
+        "bbox": [
+            78,
+            771,
+            331,
+            786
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "The Cramer-Rao bound states that the inverse of the FIM provides a lower bound of parameter estimation variancecovariance matrix, which is the fundamental support for FIMbased OED. The target of OED is to optimize a scalar measure of FIM using different criteria. The objective function of OED can be expressed as ",
+        "bbox": [
+            78,
+            787,
+            490,
+            877
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "equation",
+        "img_path": "images/b3faa381443005c6cd728ca65c0d89fdba374ea9245065816e3557439f2aecee.jpg",
+        "text": "$$\n\\lambda ^ { * } = \\arg \\operatorname* { m i n } _ { \\lambda \\in \\Omega } \\Phi \\left( \\left( \\operatorname { F I M } ( \\theta , \\lambda ) \\right) ^ { - 1 } \\right)\n$$",
+        "text_format": "latex",
+        "bbox": [
+            169,
+            883,
+            398,
+            911
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "where $\\lambda$ is a vector representing design factors and $\\Omega$ is the possible space for $\\lambda$ . FIM is characterized by both the model parameters $\\theta$ and the design factors $\\lambda . \\Phi ( \\cdot )$ denotes the design criteria such as A-, D- and $\\mathrm { E } \\mathrm { - }$ optimal design that will get scalar features from FIM [20]. In this paper, we will focus on the E-optimal method. ",
+        "bbox": [
+            508,
+            63,
+            919,
+            151
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "According to Martin Brown [19], E-optimal design can be cast as a Semi-Definite Programme ",
+        "bbox": [
+            506,
+            154,
+            919,
+            183
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "equation",
+        "img_path": "images/515b81a464e742e3d76161f91f642a54ec5602b8f1069e29f2305a8929d6f6f8.jpg",
+        "text": "$$\n\\begin{array} { r l } { \\operatorname* { m i n } } & { - t } \\\\ { \\mathrm { s . t . ~ } } & { \\sum _ { i = 1 } ^ { N } \\lambda _ { i } S _ { i } ^ { T } S _ { i } \\succeq t \\mathbf { I } } \\\\ & { \\lambda _ { i } \\succeq 0 , \\forall i } \\\\ & { \\mathbf { 1 } ^ { T } \\lambda = 1 , } \\end{array}\n$$",
+        "text_format": "latex",
+        "bbox": [
+            622,
+            193,
+            802,
+            258
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "where $S _ { i } ~ = ~ \\partial X / \\partial \\theta _ { i }$ is an $i \\cdot$ -th column vector of $S$ , I is an identity matrix. Transforming an E-optimal problem into a convex optimization problem offers several significant advantages, primarily due to the inherent properties of convex optimization problems and the corresponding solution techniques. Convex optimization problems exhibit global convergence properties, ensuring that solution methods typically converge to a global optimum rather than getting trapped in local optima, as can occur in non-convex problems. Additionally, numerous powerful optimization tools and software, such as CVXPY, MOSEK, Gurobi, and optimization libraries in Python like scipy.optimize, are specifically designed for convex problems, facilitating easier and more convenient implementation and resolution. In this work, we use the CVXPY library [21] to solve the Semi-Definite Programme (7). ",
+        "bbox": [
+            508,
+            267,
+            919,
+            510
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "III. SIMULATION-BASED METHODS FOR OPTIMAL SAMPLING DESIGN ",
+        "text_level": 1,
+        "bbox": [
+            537,
+            526,
+            888,
+            555
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "In this paper, we propose two simulation-based methods to find optimal sampling times. Both methods do not require an initial estimate of the parameters. The first method, called Eoptimal-ranking (EOR), combines simulated parameters and E-optimal criterion. The second method combines simulated data and At-LSTM. ",
+        "bbox": [
+            508,
+            566,
+            919,
+            655
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "A. E-optimal-ranking (EOR) ",
+        "text_level": 1,
+        "bbox": [
+            508,
+            674,
+            700,
+            688
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "We propose a new simulation-based method for optimal sampling design that employs E-optimal criterion, called Eoptimal-ranking. We uniformly select parameters within the parameter space $\\Theta$ to solve the optimization Problem (7). Its solution, $\\lambda _ { i }$ , is collected as the basis for ranking the time points $t _ { i }$ . The ranking is from 1 to $N$ where 1 is the highest rank and $N$ is the lowest rank. If $\\lambda _ { i } > \\lambda _ { j }$ , then $t _ { i }$ ranks higher than $t _ { j }$ . We repeat the above process with a sufficiently large number of times. Then, the average rank of each time point is computed. We choose $n$ optimal sampling times by taking the $n$ highest ranked time points. The method is described in Algorithm 1. This method is more flexible than the classical Eoptimal criterion because it does not require an initial estimate of the parameters. ",
+        "bbox": [
+            508,
+            696,
+            919,
+            906
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Algorithm 1 EOR ",
+        "text_level": 1,
+        "bbox": [
+            78,
+            59,
+            205,
+            74
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Require: System of ODEs (1), (5); parameters space $\\Theta$ ; set of time points $( t _ { i } ) _ { i = 1 } ^ { N } \\subset [ 0 , T ] ; k$ $K$ is a number of times for solving Problem (7). ",
+        "bbox": [
+            78,
+            77,
+            490,
+            121
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Ensure: Set of $n$ optimal time points is a subset of $( t _ { i } ) _ { i = 1 } ^ { N }$ ",
+        "bbox": [
+            76,
+            122,
+            485,
+            136
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": ".   \n1: for $j = 1$ to $K$ do   \n2: Sample uniformly $\\theta \\in \\Theta$ .   \n3: Solve system (1), (5).   \n4: Constructing FIM.   \n5: Solve convex optimization Problem (7).   \n6: Collect $\\lambda _ { i }$ and rank $( t _ { i } ) _ { i = 1 } ^ { N }$ based on $\\lambda _ { i }$ , $i = 1 , \\ldots , N$ .   \n7: end for   \n8: Calculate the average ranking of $( t _ { i } ) _ { i = 1 } ^ { N }$ .   \n9: Determine the optimal time points with the highest aver  \nage ranking. ",
+        "bbox": [
+            84,
+            127,
+            490,
+            287
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "10: return Set of $n$ optimal time points ",
+        "bbox": [
+            83,
+            287,
+            354,
+            303
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "B. Attention-based Long short-term memory (At-LSTM) ",
+        "text_level": 1,
+        "bbox": [
+            76,
+            332,
+            454,
+            347
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Wang et al. [22] proposed a unique idea of incorporating the attention mechanism into Long Short-Term Memory (LSTM) models to enhance prediction accuracy. This attention mechanism in LSTM helps us identify important features by assigning attention weights to the data features. In particular, we first uniformly select parameters from the parameter space $\\Theta$ . For each set of simulated parameters, we simulate data at the possible observational times according to Equation (1). Then, we build an At-LSTM model to map each data to the corresponding parameters. Attention weights are then extracted at each time point. Finally, the time points with the highest attention weights are selected as the optimal sampling times (see Algorithm 2 for details). ",
+        "bbox": [
+            78,
+            352,
+            490,
+            546
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Algorithm 2 At-LSTM Model for Optimal Sampling Time ",
+        "text_level": 1,
+        "bbox": [
+            76,
+            559,
+            483,
+            574
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Require: System of ODEs (1); the space $\\Theta$ contain $\\theta$ ; set of time points $( t _ { i } ) _ { i = 1 } ^ { N } \\subset [ 0 , T ] ; K$ is a number of observations of dataset. ",
+        "bbox": [
+            80,
+            577,
+            490,
+            621
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Ensure: Set of $n$ optimal time points   \n1: for $j = 1$ to $K$ do   \n2: Sample uniformly $\\theta \\in \\Theta$ .   \n3: Simulate data at $( t _ { i } ) _ { i = 1 } ^ { N }$ according to $\\theta$ .   \n4: end for   \n5: Train an At-LSTM model to map data to the corresponding $\\theta$ .   \n6: Extract attention weights.   \n7: return Set of $n$ optimal time points is the set that has the highest weights. ",
+        "bbox": [
+            78,
+            622,
+            490,
+            773
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "IV. CASE STUDY ",
+        "text_level": 1,
+        "bbox": [
+            223,
+            797,
+            344,
+            813
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "In this section, we use simulations to compare the performance of our proposed methods with the E-optimal criterion and a naive method where sampling points are chosen randomly. Specifically, we simulate data from two popular models and apply several methods to identify the optimal sampling points. The set of time points that results in the lowest estimated error of the parameter will be considered the best. This process is illustrated in Figure 1. ",
+        "bbox": [
+            78,
+            818,
+            490,
+            906
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            506,
+            63,
+            919,
+            92
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "image",
+        "img_path": "images/58ff693edafd836da86fd6190a626149fcc8d2577dd8549db6ffa9e422282590.jpg",
+        "image_caption": [
+            "Fig. 1. The comparison procedure between several optimal sampling schemes. "
+        ],
+        "image_footnote": [],
+        "bbox": [
+            514,
+            107,
+            916,
+            594
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "A. Lotka - Volterra model ",
+        "text_level": 1,
+        "bbox": [
+            508,
+            635,
+            686,
+            648
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "The Lotka–Volterra dynamic model, known as the preypredator model, describes the interaction between two competing species. The model was independently developed by the American biophysicist Alfred J. Lotka in 1925 [2] and the Italian mathematician Vito Volterra in 1927 [1]. This is an important tool for studying biological populations in a natural environment. The Lotka-Volterra Model has many applications in various fields including chemistry [23], ecology [24], biology [25], business [26], and epidemiology [27]. ",
+        "bbox": [
+            508,
+            654,
+            919,
+            789
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "To generate simulated data, we solve the following ODE system ",
+        "bbox": [
+            506,
+            790,
+            919,
+            816
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "equation",
+        "img_path": "images/86e2cf6343350fed013c0b96f9478fc523981283011278e8d604a2ae156a265d.jpg",
+        "text": "$$\n\\left\\{ \\begin{array} { l l } { \\displaystyle \\frac { d r } { d t } = \\alpha r - \\beta r w , } \\\\ { \\displaystyle \\frac { d w } { d t } = - \\gamma w + \\delta r w . } \\end{array} \\right.\n$$",
+        "text_format": "latex",
+        "bbox": [
+            637,
+            814,
+            789,
+            876
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "We follow the the paper [28] and use the parameter space $( \\alpha , \\beta , \\gamma , \\delta ) ~ \\in ~ \\Theta ~ = ~ [ 0 . 5 , 1 . 5 ] \\times [ 0 . 0 1 , 0 . 1 ] \\times [ 0 . 5 , 1 . 5 ] \\times$ [0.01, 0.1] and 50 as the initial value of both predator and prey populations. Possible observation time points are 101 points that are placed equally in the time interval [0, 10]. For the comparison, we simulate 1000 observations by first simulating $1 , 0 0 0$ values of $( \\alpha , \\beta , \\gamma , \\delta )$ uniformly in $\\Theta$ , and then for each simulated parameter set, we simulate the observations of $w$ at the possible time points. For each observation, we apply the four optimal design sampling methods for selecting 5 best sampling time points to estimate the coefficients of the system of Equations (8) as follows: ",
+        "bbox": [
+            506,
+            877,
+            919,
+            909
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            78,
+            61,
+            490,
+            212
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "1) Random: We randomly select 5 time points from the total of 101 time points. This method provides different time points for different datasets. ",
+        "bbox": [
+            76,
+            213,
+            488,
+            257
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "2) $E$ -optimal: For each simulated dataset, we use the true parameters of that dataset as the initial estimate and solve problem (7). Then, the top 5 time points with the highest values $\\lambda _ { i }$ are selected as the optimal sampling times. Again, this method gives different sets of optimal times for different datasets. ",
+        "bbox": [
+            78,
+            258,
+            490,
+            348
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "3) EOR: We perform Algorithm 1 with $N = 1 0 1 , n =$ $5 , T = 1 0 , K = 1 , 0 0 0$ . Note that this algorithm provides one set of best sampling times for all datasets. The set of optimal time points is $\\{ 2 . 1 , 2 . 2 , 2 . 3 , 2 . 4 , 2 . 5 \\}$ . ",
+        "bbox": [
+            76,
+            349,
+            490,
+            410
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "4) At-LSTM: We use Algorithm 2 with $N = 1 0 1 , n =$ $5 , T = 1 0 , K = 1 0 0 , 0 0 0$ . As a result, the only set of optimal time points for all simulated datasets is $\\{ 1 . 0 , 1 . 1 , 1 . 2 , 1 . 3 , 1 . 4 \\} $ . ",
+        "bbox": [
+            76,
+            411,
+            490,
+            455
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "To determine which sampling method is best for estimating the parameters of the dynamic system, we use the average error of the least squares estimate (3) with respect to observations at the optimal time points selected by each method. The results of this process are presented in Table I and Figure 2. We can see that our proposed methods (EOR and AtLSTM) perform significantly better than random selection and E-optimal criterion. ",
+        "bbox": [
+            78,
+            455,
+            490,
+            575
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "We perform Tukey’s HSD test to confirm the statistically significant differences between the performance of these sampling methods. To test the differences between statistics, researchers use the family-wise error rate (FWER) as the probability of making a Type I error among a specified group of tests. The results of Tukey’s HSD test with $\\mathrm { F W E R } = 0 . 0 5$ are presented in Table II. They conclude that EOR and AtLSTM are significantly better than Random selection and Eoptimal methods. On the other hand, the performance of EOR and At-LSTM is similar. ",
+        "bbox": [
+            78,
+            577,
+            490,
+            727
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "B. Three-compartment pharmacokinetic model ",
+        "text_level": 1,
+        "bbox": [
+            76,
+            737,
+            393,
+            751
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "The three-compartment pharmacokinetic model is a system of first-order linear differential equations widely used to describe the absorption, metabolism, and clearance of drugs in the human body. It divides the body into three compartments: the central compartment, which typically symbolizes blood and well-perfused organs; and two peripheral compartments, representing place tissues. The drug may be stored or metabolized more slowly. The three-compartment model is widely applied in clinical pharmacology and drug development for predicting drug behavior [29], optimizing medication regimens [30], and ensuring safe and effective treatment [31]. It also helps to understand how dangerous compounds are distributed in the body. From there, the treatment strategy may be tailored to each individual. ",
+        "bbox": [
+            78,
+            757,
+            490,
+            907
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "image",
+        "img_path": "images/04078d9bf9e41801627d05254cca33e2c8ef2dd2a5e88aaed2a8bec8420cda8e.jpg",
+        "image_caption": [
+            "Fig. 2. Violine plots of the average error of four optimal sampling design methods under the Lotka-Volterra model. "
+        ],
+        "image_footnote": [],
+        "bbox": [
+            547,
+            106,
+            911,
+            270
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            506,
+            349,
+            919,
+            409
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "We simulate data according to the following threecompartment pharmacokinetic model: ",
+        "bbox": [
+            508,
+            410,
+            918,
+            439
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "equation",
+        "img_path": "images/6a54bb5e979bdcd8590242ab78635073a10d11880d1cec00b0d50cb6eb3d06e9.jpg",
+        "text": "$$\n\\left\\{ \\begin{array} { l l } { \\displaystyle \\frac { d x _ { 1 } ( t ) } { d t } = - ( k _ { 1 0 } + k _ { 1 2 } + k _ { 1 3 } ) x _ { 1 } ( t ) + k _ { 2 1 } x _ { 2 1 } ( t ) + k _ { 3 1 } x _ { 3 } ( t ) , } \\\\ { \\displaystyle \\frac { d x _ { 2 } ( t ) } { d t } = k _ { 1 2 } x _ { 1 } ( t ) - k _ { 2 1 } x _ { 2 } ( t ) , } \\\\ { \\displaystyle \\frac { d x _ { 3 } ( t ) } { d t } = k _ { 1 3 } x _ { 1 } ( t ) - k _ { 3 1 } x _ { 3 } ( t ) , } \\end{array} \\right.\n$$",
+        "text_format": "latex",
+        "bbox": [
+            506,
+            443,
+            926,
+            536
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "We follow the paper [32] and use the parameter space $( k _ { 1 0 } , k _ { 1 2 } , k _ { 1 3 } , k _ { 2 1 } , k _ { 3 1 } ) ~ \\in ~ \\Theta ~ = ~ [ 0 . 0 9 , 2 . 4 0 ] ~ \\times ~ [ 0 . 5 , 1 . 0 ] ~ \\times$ $[ 0 . 5 , 2 . 0 ] \\times [ 0 . 2 , 0 . 6 ] \\times [ 0 . 5 , 0 . 7 ]$ . The initial values of the drug amounts in compartments $C _ { 1 } , \\ C _ { 2 }$ , and $C _ { 3 }$ are 100, 0, and 0, respectively. We consider 101 possible observation time points that are divided equally in the time interval [0, 25]. We simulate 1000 datasets by first simulating 1000 values of $( k _ { 1 0 } , k _ { 1 2 } , k _ { 1 3 } , k _ { 2 1 } , k _ { 3 1 } )$ uniformly in $\\Theta$ , and then simulate the observations of $C _ { 1 }$ (that is $x _ { 1 } \\mathrm { { . } }$ ) at the possible observation time points for each set of simulated parameters. We apply four optimal design sampling methods for selecting 5 best sampling time points as follows: ",
+        "bbox": [
+            508,
+            546,
+            919,
+            727
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "1) Random: We randomly select 5 time points out of a total of 101 time points. ",
+        "bbox": [
+            506,
+            728,
+            919,
+            756
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "2) $E$ -optimal: For each parameter $\\theta$ , we solve Problem (7) in the case of the three-compartment model, System (9). Then, the top 5 time points with the highest values $\\lambda _ { i }$ are selected to estimate the coefficients of the system of equations. ",
+        "bbox": [
+            504,
+            757,
+            919,
+            816
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "3) EOR: We perform Algorithm 1 with $N = 1 0 1 , n =$ $5 , T = 2 5 , K = 1 , 0 0 0$ . As a result, we obtain $\\{ 0 . 2 5 , \\ 0 . 5 $ , $3 . 7 5 , 4 . 0 , 4 . 2 5 \\}$ as the optimal sampling times for all datasets. 4) At-LSTM: We use Algorithm 2 with $N = 1 0 1 , n =$ $5 , T = 2 5 , K = 1 0 0 , 0 0 0$ . The set of optimal sampling times for all datasets is $\\left\\{ 1 . 0 , 1 . 2 5 , 3 . 5 , 3 . 7 5 , 3 . 2 5 \\right\\}$ . ",
+        "bbox": [
+            506,
+            818,
+            919,
+            907
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "table",
+        "img_path": "images/2b51f83033bd51c46c5a893b229df995f578f93b8454349ec3114531bc149e93.jpg",
+        "table_caption": [
+            "TABLE I SUMMARY OF THE AVERAGE ERROR OF FOUR OPTIMAL SAMPLING DESIGN METHODS UNDER THE LOTKA-VOLTERRA AND THREE-COMPARTMENT PHARMACOKINETIC MODELS. "
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"6\">Lotka-Volterra Model</td><td colspan=\"3\">Three-Compartment Pharmacokinetic Model</td></tr><tr><td></td><td>At-LSTM</td><td>EOR</td><td>E-optimal</td><td>Random</td><td>At-LSTM</td><td>EOR</td><td>E-optimal</td><td>Random</td></tr><tr><td>Mean</td><td>1.27</td><td>1.22</td><td>1.76</td><td>1.63</td><td>0.77</td><td>0.55</td><td>0.55</td><td>1.08</td></tr><tr><td>Std</td><td>0.39</td><td>0.44</td><td>0.61</td><td>0.61</td><td>0.50</td><td>0.26</td><td>0.27</td><td>0.61</td></tr><tr><td>Min</td><td>0.67</td><td>0.63</td><td>0.34</td><td>0.27</td><td>0.06</td><td>0.05</td><td>0.03</td><td>0.02</td></tr><tr><td>25%</td><td>0.99</td><td>0.93</td><td>1.28</td><td>1.12</td><td>0.45</td><td>0.36</td><td>0.34</td><td>0.57</td></tr><tr><td>50%</td><td>1.20</td><td>1.09</td><td>1.68</td><td>1.55</td><td>0.67</td><td>0.55</td><td>0.53</td><td>1.03</td></tr><tr><td>75%</td><td>1.43</td><td>1.36</td><td>2.17</td><td>2.09</td><td>0.95</td><td>0.73</td><td>0.71</td><td>1.50</td></tr><tr><td>Max</td><td>2.69</td><td>2.66</td><td>3.78</td><td>4.07</td><td>3.83</td><td>1.99</td><td>2.27</td><td>3.31</td></tr></table>",
+        "bbox": [
+            218,
+            107,
+            779,
+            214
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "table",
+        "img_path": "images/394f4ec55b6d630a701d2554af3a0c34a3a4e1f1814fb76cb92a39d58752a581.jpg",
+        "table_caption": [
+            "TABLE II COMPARING THE PERFORMANCE OF FOUR OPTIMAL SAMPLING DESIGN METHODS UNDER THE LOTKA-VOLTERRA AND THREE-COMPARTMENT PHARMACOKINETIC MODELS USING TUKEY’S HSD TEST WITH $\\mathrm { F W E R } { = } 0 . 0 5$ . "
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"7\">Lotka-Volterra Model</td><td colspan=\"5\">Three-Compartment Pharmacokinetic Model</td></tr><tr><td>Group 1</td><td>Group 2</td><td>Meandiff</td><td>p-adj</td><td>Lower</td><td>Upper</td><td>Reject</td><td>Meandiff</td><td>p-adj</td><td>Lower</td><td>Upper</td><td>Reject</td></tr><tr><td>E-optimal</td><td>EOR</td><td>-0.53</td><td>0.0</td><td>-0.60</td><td>-0.47</td><td>True</td><td>0.01</td><td>0.99</td><td>-0.04</td><td>0.06</td><td>False</td></tr><tr><td>E-optimal</td><td>At-LSTM</td><td>-0.49</td><td>0.0</td><td>-0.55</td><td>-0.43</td><td>True</td><td>0.23</td><td>0.0</td><td>0.18</td><td>0.28</td><td>True</td></tr><tr><td>E-optimal</td><td>Random</td><td>-0.12</td><td>0.0</td><td>-0.19</td><td>-0.06</td><td>True</td><td>0.53</td><td>0.0</td><td>0.48</td><td>0.58</td><td>True</td></tr><tr><td>EOR</td><td>At-LSTM</td><td>0.05</td><td>0.26</td><td>-0.02</td><td>0.11</td><td>False</td><td>0.22</td><td>0.0</td><td>0.17</td><td>0.27</td><td>True</td></tr><tr><td>EOR</td><td>Random</td><td>0.41</td><td>0.0</td><td>0.35</td><td>0.47</td><td>True</td><td>0.53</td><td>0.0</td><td>0.48</td><td>0.57</td><td>True</td></tr><tr><td>At-LSTM</td><td>Random</td><td>0.36</td><td>0.0</td><td>0.30</td><td>0.43</td><td>True</td><td>0.30</td><td>0.0</td><td>0.25</td><td>0.35</td><td>True</td></tr></table>",
+        "bbox": [
+            151,
+            275,
+            843,
+            371
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Similar to the previous case study, we compare the average errors of all methods. The results of the average errors are presented in Table I and Figure 3. In this case, we see that the performance of the EOR and E-optimal are similar and better than random selection and At-LSTM. Tukey’s HSD test with FWER $= 0 . 0 5$ confirms this conclusion (see Table II). ",
+        "bbox": [
+            78,
+            397,
+            490,
+            487
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "image",
+        "img_path": "images/93659bfdddac663fe1fd4f20ef582e14ce73dd54669fac4a0447787b3a9234f1.jpg",
+        "image_caption": [
+            "Fig. 3. Violine plots of the average error of four optimal sampling design methods under the three-compartment model. "
+        ],
+        "image_footnote": [],
+        "bbox": [
+            117,
+            547,
+            482,
+            710
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "V. DISCUSSION AND CONCLUTION ",
+        "text_level": 1,
+        "bbox": [
+            163,
+            795,
+            405,
+            809
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Choosing optimal sampling points for estimating parameters of dynamical systems is a critical step in studying biological systems. In this paper, we present two new simulation-based strategies for selecting optimal sampling times (EOR and At-LSTM). Unlike classical optimal sampling methods, our approaches avoid the need for an initial estimate of the parameters. We demonstrate that our proposed methods are better than the classical E-optimal criterion. However, we note that the performance of At-LSTM depends heavily on the performance of the LSTM neural network, which is affected by tuning. Moreover, if we replace LSTM with other machine learning models in Algorithm 2, we will obtain new methods. One future direction is to study the impact of using different machine learning models in Algorithm 2. Another direction is to explore the possibility of combining several optimal sampling schemes using ensemble methods. ",
+        "bbox": [
+            78,
+            816,
+            490,
+            906
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            508,
+            397,
+            919,
+            547
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "ACKNOWLEDGMENT ",
+        "text_level": 1,
+        "bbox": [
+            642,
+            556,
+            785,
+            569
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "LSTH was supported by the Canada Research Chairs program, the NSERC Discovery Grant RGPIN-2018-05447, and the NSERC Discovery Launch Supplement DGECR-2018- 00181. We would like to extend our sincere gratitude to the Scientific Research Fund of Saigon Technology University for their generous support and funding. ",
+        "bbox": [
+            508,
+            573,
+            919,
+            664
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "REFERENCES ",
+        "text_level": 1,
+        "bbox": [
+            666,
+            671,
+            759,
+            684
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "[1] V. Volterra, Variazioni e fluttuazioni del numero d’individui in specie animali conviventi. Societa anonima tipografica “Leonardo da Vinci”, ´ 1927, vol. 2.   \n[2] A. J. Lotka, Elements of physical biology. Williams & Wilkins, 1925.   \n[3] M. Kot, Elements of mathematical ecology. Cambridge University Press, 2001.   \n[4] F. Khorasheh, A. M. Ahmadi, A. Gerayeli, and S. Sattari, “Application of direct search optimization for pharmacokinetic parameter estimation,” J Pharm Pharmacol Sci, vol. 2, pp. 92–98, 1999.   \n[5] V. H. Tam, S. L. Preston, and G. Drusano, “Optimal sampling schedule design for populations of patients,” Antimicrobial Agents and Chemotherapy, vol. 47, no. 9, pp. 2888–2891, 2003.   \n[6] M. A. Stafford, L. Corey, Y. Cao, E. S. Daar, D. D. Ho, and A. S. Perelson, “Modeling plasma virus concentration during primary HIV infection,” Journal of Theoretical Biology, vol. 203, no. 3, pp. 285–301, 2000.   \n[7] N. H. Jo, “Robust drug treatment for HIV-1 infection model with completely unknown parameters,” International Journal of Control, Automation and Systems, vol. 17, no. 12, pp. 3113–3121, 2019. [8] B. M. Adams, H. T. Banks, M. Davidian, H.-D. Kwon, H. T. Tran, S. N. Wynne, and E. S. Rosenberg, “HIV dynamics: modeling, data analysis, and optimal treatment protocols,” Journal of Computational and Applied Mathematics, vol. 184, no. 1, pp. 10–49, 2005. [9] D. Z. D’Argenio, “Optimal sampling times for pharmacokinetic experiments,” Journal of Pharmacokinetics and Biopharmaceutics, vol. 9, pp. 739–756, 1981.   \n[10] M. M. Gil, F. A. Miller, C. L. Silva, and T. R. Brandao, “Application of ˜ optimal experimental design concept to improve the estimation of model parameters in microbial thermal inactivation kinetics,” Journal of Food Engineering, vol. 134, pp. 59–66, 2014.   \n[11] D. R. Hagen, J. K. White, and B. Tidor, “Convergence in parameters and predictions using computational experimental design,” Interface Focus, vol. 3, no. 4, p. 20130008, 2013.   \n[12] H. Yu, H. Yue, and P. Halling, “Optimal experimental design for an enzymatic biodiesel production system,” IFAC-PapersOnLine, vol. 48, no. 8, pp. 1258–1263, 2015.   \n[13] O. Paquet-Durand, V. Zettel, and B. Hitzmann, “Optimal experimental design for parameter estimation of the peleg model,” Chemometrics and Intelligent Laboratory Systems, vol. 140, pp. 36–42, 2015.   \n[14] H. Yu, H. Yue, and P. Halling, “Robust sampling time design for biochemical systems,” IFAC-PapersOnLine, vol. 51, no. 18, pp. 215– 220, 2018.   \n[15] D. Faller, U. Klingmuller, and J. Timmer, “Simulation methods for ¨ optimal experimental design in systems biology,” Simulation, vol. 79, no. 12, pp. 717–725, 2003.   \n[16] J. Liepe, S. Filippi, M. Komorowski, and M. P. Stumpf, “Maximizing the information content of experiments in systems biology,” PLoS Computational Biology, vol. 9, no. 1, p. e1002888, 2013.   \n[17] L. S. T. Ho, J. Xu, F. W. Crawford, V. N. Minin, and M. A. Suchard, “Birth/birth-death processes and their computable transition probabilities with biological applications,” Journal of Mathematical Biology, vol. 76, pp. 911–944, 2018.   \n[18] E. Saha, L. S. T. Ho, and G. Tran, “SPADE4: Sparsity and delay embedding based forecasting of epidemics,” Bulletin of Mathematical Biology, vol. 85, no. 8, p. 71, 2023.   \n[19] M. Brown, F. He, and L. F. Yeung, “Robust measurement selection for biochemical pathway experimental design,” International Journal of Bioinformatics Research and Applications, vol. 4, no. 4, pp. 400–416, 2008.   \n[20] L. Hosten, “A sequential experimental design procedure for precise parameter estimation based upon the shape of the joint confidence region,” Chemical Engineering Science, vol. 29, no. 11, pp. 2247–2252, 1974.   \n[21] A. Agrawal, S. Diamond, and S. Boyd, “Disciplined geometric programming,” Optimization Letters, vol. 13, no. 5, pp. 961–976, 2019.   \n[22] Y. Wang, M. Huang, X. Zhu, and L. Zhao, “Attention-based lstm for aspect-level sentiment classification,” in Proceedings of the 2016 conference on empirical methods in natural language processing, 2016, pp. 606–615.   \n[23] P. Erdi and J. T ´ oth, ´ Mathematical models of chemical reactions: theory and applications of deterministic and stochastic models. Manchester University Press, 1989.   \n[24] E. C. Pielou, Population and community ecology: principles and methods. CRC Press, 1974.   \n[25] B. Hernandez-Bermejo and V. Fair ´ en, “Lotka-volterra representation of ´ general nonlinear systems,” Mathematical Biosciences, vol. 140, no. 1, pp. 1–32, 1997.   \n[26] S.-Y. Wang, W.-M. Chen, and X.-L. Wu, “Competition analysis on industry populations based on a three-dimensional lotka–volterra model,” Discrete Dynamics in Nature and Society, vol. 2021, no. 1, p. 9935127, 2021.   \n[27] W. W. Mohammed, E. Aly, A. Matouk, S. Albosaily, and E. Elabbasy, “An analytical study of the dynamic behavior of lotka-volterra based models of covid-19,” Results in Physics, vol. 26, p. 104432, 2021.   \n[28] B. T. Nguyen, D. M. Nguyen, L. S. T. Ho, and V. Dinh, “An active learning framework for set inversion,” Knowledge-Based Systems, vol. 185, p. 104917, 2019.   \n[29] H. Derendorf, L. J. Lesko, P. Chaikin, W. A. Colburn, P. Lee, R. Miller, R. Powell, G. Rhodes, D. Stanski, and J. Venitz, “Pharmacokinetic/pharmacodynamic modeling in drug research and development,” The Journal of Clinical Pharmacology, vol. 40, no. 12, pp. 1399–1418, 2000.   \n[30] L. E. Gerlowski and R. K. Jain, “Physiologically based pharmacokinetic modeling: principles and applications,” Journal of Pharmaceutical Sciences, vol. 72, no. 10, pp. 1103–1127, 1983.   \n[31] K. L. Garrett, J. Chen, B. M. Maas, M. L. Cottrell, H. A. Prince, C. Sykes, A. P. Schauer, N. White, and J. B. Dumond, “A pharmacokinetic/pharmacodynamic model to predict effective HIV prophylaxis dosing strategies for people who inject drugs,” Journal of Pharmacology and Experimental Therapeutics, vol. 367, no. 2, pp. 245–251, 2018.   \n[32] A. Kartono, D. Anggraini, S. Wahyudi, A. Setiawan et al., “Study of parameters estimation of the three-compartment pharmacokinetic model using particle swarm optimization algorithm,” in Journal of Physics: Conference Series, vol. 1805, no. 1. IOP Publishing, 2021, p. 012032. ",
+        "bbox": [
+            513,
+            690,
+            921,
+            906
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            76,
+            54,
+            491,
+            901
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            508,
+            64,
+            921,
+            200
+        ],
+        "page_idx": 5
+    }
+]

@@ -1,0 +1,2933 @@
+{
+  "items": [
+    {
+      "str": "1 .",
+      "dir": "ltr",
+      "width": 6.486299999999994,
+      "height": 9.15,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        63.94,
+        636.74
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.983700000000013,
+      "height": 0,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        70.42629999999998,
+        636.74
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "THE LEARNING PROBLEM",
+      "dir": "ltr",
+      "width": 104.9061,
+      "height": 9.15,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        76.41,
+        636.74
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 127.61389999999997,
+      "height": 0,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        181.31609999999998,
+        636.74
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "1 . 1 .",
+      "dir": "ltr",
+      "width": 14.232600000000007,
+      "height": 9.15,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        308.92999999999995,
+        636.74
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.747400000000027,
+      "height": 0,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        323.16259999999994,
+        636.74
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "PROBLEM SETUP",
+      "dir": "ltr",
+      "width": 68.96659999999987,
+      "height": 9.15,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        328.90999999999997,
+        636.74
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.8599999999999,
+        605.0600000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "vious ratings. It starts with random factors, then tunes these factors to make",
+      "dir": "ltr",
+      "width": 334.83340000000015,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.8599999999999,
+        605.0600000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "them more and more aligned with how viewers have rated movies before, until",
+      "dir": "ltr",
+      "width": 334.4768000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        63.40999999999991,
+        593.11
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "they are ultimately able to",
+      "dir": "ltr",
+      "width": 118.1092,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.67999999999995,
+        581.11
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.220799999999969,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        180.7892,
+        581.11
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "predict",
+      "dir": "ltr",
+      "width": 28.986000000000075,
+      "height": 10.8,
+      "transform": [
+        10.8,
+        0,
+        0,
+        10.8,
+        185.00999999999996,
+        581.11
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.593999999999909,
+      "height": 0,
+      "transform": [
+        10.8,
+        0,
+        0,
+        10.8,
+        213.99600000000007,
+        581.11
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "how viewers rate movies in general.",
+      "dir": "ltr",
+      "width": 154.68839980000004,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        218.58999999999997,
+        581.11
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 7.321600199999807,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        373.2783998000001,
+        581.11
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "The",
+      "dir": "ltr",
+      "width": 16.92259999999998,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        380.5999999999999,
+        581.11
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "factors we end up with may not be",
+      "dir": "ltr",
+      "width": 155.92000000000002,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.8599999999999,
+        569.19
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.3300000000000125,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        218.7799999999999,
+        569.19
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "as",
+      "dir": "ltr",
+      "width": 8.3711,
+      "height": 4.85,
+      "transform": [
+        4.85,
+        0,
+        0,
+        4.85,
+        223.1099999999999,
+        569.19
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.4088999999999885,
+      "height": 0,
+      "transform": [
+        4.85,
+        0,
+        0,
+        4.85,
+        231.4810999999999,
+        569.19
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": "intuitive as 'comedy content', and in",
+      "dir": "ltr",
+      "width": 162.02769999999973,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        235.8899999999999,
+        569.19
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "fact can be quite subtle or even incomprehensible. After all, the algorithm is",
+      "dir": "ltr",
+      "width": 334.67639999999994,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.85999999999984,
+        557.3000000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "only trying to find the best way to predict how a viewer would rate a movie,",
+      "dir": "ltr",
+      "width": 334.5164,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.59999999999985,
+        545.2700000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "not necessarily explain to us how it is done.",
+      "dir": "ltr",
+      "width": 191.99160120000002,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.689999999999884,
+        533.2900000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 7.118398800000023,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        254.68160119999988,
+        533.2900000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "This algorithm was part of the",
+      "dir": "ltr",
+      "width": 135.5641961999999,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        261.7999999999999,
+        533.2900000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "winning solution in the million-dollar competition.",
+      "dir": "ltr",
+      "width": 218.32319999999993,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.49999999999983,
+        521.2600000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.05,
+        0,
+        0,
+        10.05,
+        63.22999999999982,
+        491.2200000000001
+      ],
+      "fontName": "g_d0_f5",
+      "hasEOL": true
+    },
+    {
+      "str": "1. 1. 1",
+      "dir": "ltr",
+      "width": 26.74004999999999,
+      "height": 10.05,
+      "transform": [
+        10.05,
+        0,
+        0,
+        10.05,
+        63.22999999999982,
+        491.2200000000001
+      ],
+      "fontName": "g_d0_f5",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 13.949950000000001,
+      "height": 0,
+      "transform": [
+        10.05,
+        0,
+        0,
+        10.05,
+        89.97004999999982,
+        491.2200000000001
+      ],
+      "fontName": "g_d0_f5",
+      "hasEOL": false
+    },
+    {
+      "str": "Components of Learning",
+      "dir": "ltr",
+      "width": 143.29939999999996,
+      "height": 10.05,
+      "transform": [
+        10.05,
+        0,
+        0,
+        10.05,
+        103.91999999999982,
+        491.2200000000001
+      ],
+      "fontName": "g_d0_f5",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.49999999999983,
+        472.0800000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "The movie rating application captures the essence of learning from data, and",
+      "dir": "ltr",
+      "width": 334.6673999999999,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.49999999999983,
+        472.0800000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "so do many other applications from vastly different fields. In order to abstract",
+      "dir": "ltr",
+      "width": 334.5109999999998,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.31999999999982,
+        460.11000000000007
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "the common core of the learning problem, we will pick one application and",
+      "dir": "ltr",
+      "width": 334.8574000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.319999999999766,
+        448.13000000000005
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "use it as a metaphor for the different components of the problem. Let us take",
+      "dir": "ltr",
+      "width": 334.69879999999995,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.139999999999816,
+        436.1700000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "credit approval as our metaphor.",
+      "dir": "ltr",
+      "width": 141.0238,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.619999999999834,
+        424.12000000000006
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Suppose that a bank receives thousands of credit card applications every",
+      "dir": "ltr",
+      "width": 319.5483999999999,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        77.43999999999986,
+        411.74000000000007
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "day, and it wants to automate the process of evaluating them.",
+      "dir": "ltr",
+      "width": 269.2590000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.85999999999984,
+        399.8500000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 6.560994200000039,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        331.1189999999999,
+        399.8500000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "Just as in the",
+      "dir": "ltr",
+      "width": 58.98420579999982,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        337.67999419999995,
+        399.8500000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "case of movie ratings, the bank knows of no magical formula that can pinpoint",
+      "dir": "ltr",
+      "width": 334.1582,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.13999999999987,
+        387.88000000000005
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "when credit should be approved, but it has a lot of data. This calls for learning",
+      "dir": "ltr",
+      "width": 334.2167,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.419999999999845,
+        375.9200000000001
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "from data, so the bank uses historical records of previous customers to figure",
+      "dir": "ltr",
+      "width": 334.48999999999984,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.959999999999866,
+        364.01000000000005
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "out a good formula for credit approval.",
+      "dir": "ltr",
+      "width": 168.82499979999994,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.7799999999998,
+        351.96000000000004
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Each customer record has personal information related to credit , such",
+      "dir": "ltr",
+      "width": 307.315,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        76.5499999999998,
+        339.51000000000005
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.9650000000000887,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        383.8649999999997,
+        339.51000000000005
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "as",
+      "dir": "ltr",
+      "width": 8.3711,
+      "height": 4.85,
+      "transform": [
+        4.85,
+        0,
+        0,
+        4.85,
+        387.8299999999998,
+        339.51000000000005
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.95999999999981,
+        327.59000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "annual salary, years in residence, outstanding loans, etc. The record also keeps",
+      "dir": "ltr",
+      "width": 334.1434000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.95999999999981,
+        327.59000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "track of whether approving credit for that customer was a good idea, i.e . , did",
+      "dir": "ltr",
+      "width": 334.18880000000007,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        62.049999999999784,
+        315.64000000000004
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "the bank make money on that customer. This data guides the construction of",
+      "dir": "ltr",
+      "width": 335.07399999999996,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.59999999999974,
+        303.62000000000006
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "a successful formula for credit approval that can be used on future applicants.",
+      "dir": "ltr",
+      "width": 333.61899999999986,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.779999999999745,
+        291.71000000000004
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Let us give names and symbols to the main components of this learning",
+      "dir": "ltr",
+      "width": 320.22729999999984,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        76.04999999999973,
+        279.21000000000004
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "problem.",
+      "dir": "ltr",
+      "width": 37.43689999999996,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.599999999999795,
+        267.34000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 7.933100000000067,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        99.03689999999973,
+        267.34000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "There is the input",
+      "dir": "ltr",
+      "width": 80.83959999999992,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        106.9699999999998,
+        267.34000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.320400000000063,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        187.80959999999976,
+        267.34000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "x",
+      "dir": "ltr",
+      "width": 6.115200000000001,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        192.12999999999982,
+        267.34000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.214800000000025,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        198.2451999999998,
+        267.34000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "(customer information that is used to make",
+      "dir": "ltr",
+      "width": 192.8774999999999,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        203.45999999999984,
+        267.34000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "a credit decision) , the unknown target function",
+      "dir": "ltr",
+      "width": 205.96299999999994,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.599999999999795,
+        255.35000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.7770000000000437,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        267.5629999999998,
+        255.35000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "f:",
+      "dir": "ltr",
+      "width": 8.645699999999994,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        271.33999999999986,
+        255.35000000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.494299999999953,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        279.9856999999999,
+        255.35000000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "X --",
+      "dir": "ltr",
+      "width": 20.804999999999993,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        284.47999999999985,
+        255.35000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.6850000000000023,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        305.2849999999998,
+        255.03500000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "Y",
+      "dir": "ltr",
+      "width": 7.20105,
+      "height": 9.15,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        308.9699999999998,
+        255.35000000000002
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.3189499999999725,
+      "height": 0,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        316.1710499999998,
+        255.35000000000002
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "(ideal formula for",
+      "dir": "ltr",
+      "width": 75.42680000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        320.4899999999998,
+        255.35000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "credit approval) , where X is the input space",
+      "dir": "ltr",
+      "width": 184.9836000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.41999999999979,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.976399999999927,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        246.40359999999984,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "(",
+      "dir": "ltr",
+      "width": 2.70465,
+      "height": 10.95,
+      "transform": [
+        10.95,
+        0,
+        0,
+        10.95,
+        249.37999999999977,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f8",
+      "hasEOL": false
+    },
+    {
+      "str": "set of all possible inputs",
+      "dir": "ltr",
+      "width": 100.5419999999998,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        252.43999999999977,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.078000000000088,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        352.9819999999997,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "x) ,",
+      "dir": "ltr",
+      "width": 12.242399999999982,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        355.0599999999998,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.927599999999984,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        367.3023999999998,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "and",
+      "dir": "ltr",
+      "width": 16.280999999999963,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        370.2299999999998,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.0389999999999873,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        386.5109999999998,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "Y",
+      "dir": "ltr",
+      "width": 7.20105,
+      "height": 9.15,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        388.5499999999998,
+        243.37000000000003
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.41999999999979,
+        231.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "is the output space (set of all possible outputs, in this case just a yes/no deci",
+      "dir": "ltr",
+      "width": 330.85219859999995,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.41999999999979,
+        231.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "sion) . There is a data set",
+      "dir": "ltr",
+      "width": 110.19219999999997,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.41999999999976,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.597799999999978,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        171.61219999999975,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "D",
+      "dir": "ltr",
+      "width": 7.740600000000001,
+      "height": 13.3,
+      "transform": [
+        13.3,
+        0,
+        0,
+        13.3,
+        175.20999999999972,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.7894000000000005,
+      "height": 0,
+      "transform": [
+        13.3,
+        0,
+        0,
+        13.3,
+        182.95059999999972,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "of input-output examples",
+      "dir": "ltr",
+      "width": 109.43999999999994,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        186.73999999999972,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.339999999999975,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        296.1799999999997,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "(x1 , Y1 ) ,",
+      "dir": "ltr",
+      "width": 33.1564,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        300.5199999999997,
+        219.13760000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.8835999999999444,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        333.6763999999997,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "·",
+      "dir": "ltr",
+      "width": 1.2597,
+      "height": 2.85,
+      "transform": [
+        2.85,
+        0,
+        0,
+        2.85,
+        336.55999999999966,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.060295800000006,
+      "height": 0,
+      "transform": [
+        2.85,
+        0,
+        0,
+        2.85,
+        337.81969999999967,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": "·",
+      "dir": "ltr",
+      "width": 1.2597,
+      "height": 2.85,
+      "transform": [
+        2.85,
+        0,
+        0,
+        2.85,
+        340.8799957999997,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.250293899999974,
+      "height": 0,
+      "transform": [
+        2.85,
+        0,
+        0,
+        2.85,
+        342.1396957999997,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": "·",
+      "dir": "ltr",
+      "width": 1.2597,
+      "height": 2.85,
+      "transform": [
+        2.85,
+        0,
+        0,
+        2.85,
+        345.38998969999966,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.510310300000015,
+      "height": 0,
+      "transform": [
+        2.85,
+        0,
+        0,
+        2.85,
+        346.64968969999967,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": ",",
+      "dir": "ltr",
+      "width": 1.6206,
+      "height": 10.95,
+      "transform": [
+        10.95,
+        0,
+        0,
+        10.95,
+        351.1599999999997,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f8",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.0593999999999824,
+      "height": 0,
+      "transform": [
+        10.95,
+        0,
+        0,
+        10.95,
+        352.7805999999997,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f8",
+      "hasEOL": false
+    },
+    {
+      "str": "(xN , YN) ,",
+      "dir": "ltr",
+      "width": 39.62639999999997,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        355.8399999999997,
+        219.44000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.05999999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "where",
+      "dir": "ltr",
+      "width": 25.381199999999986,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.05999999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.69880000000002,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        86.4411999999997,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "Yn",
+      "dir": "ltr",
+      "width": 9.724,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        89.13999999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.5960000000000036,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        98.86399999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "=",
+      "dir": "ltr",
+      "width": 7.0176,
+      "height": 6.8,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        102.45999999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.612399999999994,
+      "height": 0,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        109.47759999999973,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "f",
+      "dir": "ltr",
+      "width": 5.969600000000001,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        113.08999999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 0.5104000000000042,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        119.05959999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "(xn )",
+      "dir": "ltr",
+      "width": 17.47400000000001,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        119.56999999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.0660000000000025,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        137.04399999999973,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "for",
+      "dir": "ltr",
+      "width": 11.69680000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        140.10999999999973,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.5331999999999937,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        151.80679999999973,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "n =",
+      "dir": "ltr",
+      "width": 15.847501999999997,
+      "height": 6.8,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        154.33999999999972,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.7924980000000232,
+      "height": 0,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        170.1875019999997,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "1,",
+      "dir": "ltr",
+      "width": 6.660799999999994,
+      "height": 14.2,
+      "transform": [
+        14.2,
+        0,
+        0,
+        14.2,
+        173.97999999999973,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f12",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.70920000000001,
+      "height": 0,
+      "transform": [
+        14.2,
+        0,
+        0,
+        14.2,
+        180.64079999999973,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f12",
+      "hasEOL": false
+    },
+    {
+      "str": ". . .",
+      "dir": "ltr",
+      "width": 7.008600000000028,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        183.34999999999974,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 1.271399999999943,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        190.3585999999998,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": ", N",
+      "dir": "ltr",
+      "width": 12.77495425,
+      "height": 10.25,
+      "transform": [
+        10.25,
+        0,
+        0,
+        10.25,
+        191.62999999999974,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f13",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.2450457500000027,
+      "height": 0,
+      "transform": [
+        10.25,
+        0,
+        0,
+        10.25,
+        204.40495424999975,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f13",
+      "hasEOL": false
+    },
+    {
+      "str": "(inputs corresponding to previous customers",
+      "dir": "ltr",
+      "width": 187.96939999999995,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        207.64999999999975,
+        207.44000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "and the correct credit decision for them in hindsight). The examples are often",
+      "dir": "ltr",
+      "width": 334.5276000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.41999999999973,
+        195.54000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "referred to as data points. Finally, there is the learning algorithm that uses the",
+      "dir": "ltr",
+      "width": 334.36419999999976,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.05999999999972,
+        183.48000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "data set",
+      "dir": "ltr",
+      "width": 34.4722,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.5199999999997,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.7878000000000043,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        95.99219999999968,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "D",
+      "dir": "ltr",
+      "width": 7.740600000000001,
+      "height": 13.3,
+      "transform": [
+        13.3,
+        0,
+        0,
+        13.3,
+        99.77999999999969,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.0394000000000005,
+      "height": 0,
+      "transform": [
+        13.3,
+        0,
+        0,
+        13.3,
+        107.52059999999969,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "to pick a formula",
+      "dir": "ltr",
+      "width": 74.45419999999999,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        111.55999999999969,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.2557999999999936,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        186.01419999999968,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "g:",
+      "dir": "ltr",
+      "width": 8.286099999999998,
+      "height": 6.8,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        189.26999999999967,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.323900000000009,
+      "height": 0,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        197.55609999999965,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "X --",
+      "dir": "ltr",
+      "width": 20.88960020000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        201.87999999999965,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.4203997999999842,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        222.76960019999967,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "Y",
+      "dir": "ltr",
+      "width": 7.20105,
+      "height": 9.15,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        226.18999999999966,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.7789499999999805,
+      "height": 0,
+      "transform": [
+        9.15,
+        0,
+        0,
+        9.15,
+        233.39104999999967,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "that approximates",
+      "dir": "ltr",
+      "width": 79.0298999999998,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        237.16999999999965,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.970100000000116,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        316.1998999999995,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "f.",
+      "dir": "ltr",
+      "width": 7.381000000000021,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        320.1699999999996,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.758999999999958,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        327.55099999999965,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "The algorithm",
+      "dir": "ltr",
+      "width": 62.47320000000012,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        333.3099999999996,
+        171.63000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "chooses",
+      "dir": "ltr",
+      "width": 31.287799999999983,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.35999999999956,
+        159.58
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.5222000000000406,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        92.64779999999952,
+        159.58
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "g",
+      "dir": "ltr",
+      "width": 5.8344,
+      "height": 6.8,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        96.16999999999956,
+        159.58
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.6355999999999966,
+      "height": 0,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        102.00439999999956,
+        159.58
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "from a set of candidate formulas under consideration, which we call",
+      "dir": "ltr",
+      "width": 290.9403999999997,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        104.63999999999956,
+        159.58
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "the hypothesis set",
+      "dir": "ltr",
+      "width": 78.68220000000002,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        60.87999999999954,
+        147.72000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.9677999999999827,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        139.56219999999956,
+        147.72000000000003
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "1-l.",
+      "dir": "ltr",
+      "width": 10.3666,
+      "height": 13.3,
+      "transform": [
+        13.3,
+        0,
+        0,
+        13.3,
+        143.52999999999955,
+        147.72000000000003
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.733400000000017,
+      "height": 0,
+      "transform": [
+        13.3,
+        0,
+        0,
+        13.3,
+        153.89659999999952,
+        147.18000000000004
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "For instance,",
+      "dir": "ltr",
+      "width": 55.743800000000114,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        159.62999999999954,
+        147.58500000000004
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.336199999999934,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        215.37379999999962,
+        147.58500000000004
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "1-l",
+      "dir": "ltr",
+      "width": 8.0066,
+      "height": 13.3,
+      "transform": [
+        13.3,
+        0,
+        0,
+        13.3,
+        219.70999999999955,
+        147.58500000000004
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.233400000000017,
+      "height": 0,
+      "transform": [
+        13.3,
+        0,
+        0,
+        13.3,
+        227.71659999999954,
+        147.58500000000004
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "could be the set of all linear formulas",
+      "dir": "ltr",
+      "width": 163.46300000000002,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        231.94999999999956,
+        147.58500000000004
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "from which the algorithm would choose the best linear fit to the data, as we",
+      "dir": "ltr",
+      "width": 334.3221974,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.05999999999955,
+        135.73000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "will introduce later in this section.",
+      "dir": "ltr",
+      "width": 148.34220000000013,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        61.059999999999604,
+        123.76000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "When a new customer applies for credit, the bank will base its decision",
+      "dir": "ltr",
+      "width": 320.3202000000001,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        75.46999999999963,
+        111.29000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "on",
+      "dir": "ltr",
+      "width": 10.445299999999998,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        60.8799999999996,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.1447000000000145,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        71.32529999999959,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "g",
+      "dir": "ltr",
+      "width": 5.8344,
+      "height": 6.8,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        75.4699999999996,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.615600000000001,
+      "height": 0,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        81.3043999999996,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "(the hypothesis that the learning algorithm produced) , not on",
+      "dir": "ltr",
+      "width": 277.2552999999999,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        85.9199999999996,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.494699999999966,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        363.17529999999965,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "f",
+      "dir": "ltr",
+      "width": 5.969600000000001,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        367.6699999999996,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.6503999999999905,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        373.63959999999963,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "(the",
+      "dir": "ltr",
+      "width": 16.921999999999947,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        378.2899999999996,
+        99.40000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "ideal target function which remains unknown) . The decision will be good only",
+      "dir": "ltr",
+      "width": 334.6848999999999,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        60.69999999999965,
+        87.52000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "to the extent that",
+      "dir": "ltr",
+      "width": 80.46899780000003,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        60.51999999999964,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.501002200000016,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        140.98899779999965,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "g",
+      "dir": "ltr",
+      "width": 5.8344,
+      "height": 6.8,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        145.48999999999967,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.345600000000019,
+      "height": 0,
+      "transform": [
+        6.8,
+        0,
+        0,
+        6.8,
+        151.32439999999966,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "faithfully replicates",
+      "dir": "ltr",
+      "width": 84.25120000000004,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        154.66999999999967,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.678799999999967,
+      "height": 0,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        238.9211999999997,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "f.",
+      "dir": "ltr",
+      "width": 7.562099999999991,
+      "height": 10.4,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        243.59999999999965,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 7.667899999999975,
+      "height": 0,
+      "transform": [
+        10.4,
+        0,
+        0,
+        10.4,
+        251.16209999999967,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "To achieve that, the algorithm",
+      "dir": "ltr",
+      "width": 136.18000000000004,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        258.82999999999964,
+        75.51000000000002
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "3",
+      "dir": "ltr",
+      "width": 4.4096,
+      "height": 10.6,
+      "transform": [
+        10.6,
+        0,
+        0,
+        10.6,
+        225.7699999999997,
+        50.170000000000016
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    }
+  ],
+  "styles": {
+    "g_d0_f1": {
+      "fontFamily": "serif",
+      "ascent": 0.791,
+      "descent": -0.228,
+      "vertical": false
+    },
+    "g_d0_f2": {
+      "fontFamily": "serif",
+      "ascent": 0.738,
+      "descent": -0.218,
+      "vertical": false
+    },
+    "g_d0_f3": {
+      "fontFamily": "serif",
+      "ascent": 0.951,
+      "descent": -0.349,
+      "vertical": false
+    },
+    "g_d0_f4": {
+      "fontFamily": "serif",
+      "ascent": 2.109,
+      "descent": -0.575,
+      "vertical": false
+    },
+    "g_d0_f5": {
+      "fontFamily": "serif",
+      "ascent": 0.871,
+      "descent": -0.227,
+      "vertical": false
+    },
+    "g_d0_f6": {
+      "fontFamily": "serif",
+      "ascent": 0.98,
+      "descent": -0.178,
+      "vertical": false
+    },
+    "g_d0_f7": {
+      "fontFamily": "serif",
+      "ascent": 0.78,
+      "descent": -0.141,
+      "vertical": false
+    },
+    "g_d0_f8": {
+      "fontFamily": "serif",
+      "ascent": 0.997,
+      "descent": -0.616,
+      "vertical": false
+    },
+    "g_d0_f9": {
+      "fontFamily": "serif",
+      "ascent": 0.779,
+      "descent": -0.277,
+      "vertical": false
+    },
+    "g_d0_f10": {
+      "fontFamily": "serif",
+      "ascent": 1.042,
+      "descent": 0,
+      "vertical": false
+    },
+    "g_d0_f11": {
+      "fontFamily": "serif",
+      "ascent": 1.443,
+      "descent": -0.862,
+      "vertical": false
+    },
+    "g_d0_f12": {
+      "fontFamily": "serif",
+      "ascent": 0.618,
+      "descent": -0.708,
+      "vertical": false
+    },
+    "g_d0_f13": {
+      "fontFamily": "serif",
+      "ascent": 0.852,
+      "descent": -0.274,
+      "vertical": false
+    }
+  },
+  "lang": null
+}

@@ -1,0 +1,2991 @@
+{
+  "items": [
+    {
+      "str": "Trace-based Just-in-Time Type Specialization for Dynamic",
+      "dir": "ltr",
+      "width": 449.09111040000033,
+      "height": 17.9328,
+      "transform": [
+        17.9328,
+        0,
+        0,
+        17.9328,
+        80.5159,
+        700.6706
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "Languages",
+      "dir": "ltr",
+      "width": 82.70607360000002,
+      "height": 17.9328,
+      "transform": [
+        17.9328,
+        0,
+        0,
+        17.9328,
+        263.706,
+        680.7453
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        120.32240000000002,
+        644.8798
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Andreas Gal",
+      "dir": "ltr",
+      "width": 55.0794314,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        120.32240000000002,
+        644.8798
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        175.40130000000002,
+        648.8386
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "+",
+      "dir": "ltr",
+      "width": 6.583302600000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        180.13360000000003,
+        648.8386
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": ", Brendan Eich",
+      "dir": "ltr",
+      "width": 65.43559189999999,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        187.21820000000002,
+        644.8798
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        252.65330000000003,
+        648.8386
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ", Mike Shaver",
+      "dir": "ltr",
+      "width": 61.293127700000035,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        257.3856,
+        644.8798
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        318.6784,
+        648.8386
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ", David Anderson",
+      "dir": "ltr",
+      "width": 77.39175180000005,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        323.4107,
+        644.8798
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        400.802,
+        648.8386
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ", David Mandelin",
+      "dir": "ltr",
+      "width": 76.78901230000004,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        405.53430000000003,
+        644.8798
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        482.32270000000005,
+        648.8386
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ",",
+      "dir": "ltr",
+      "width": 2.739725,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        487.05500000000006,
+        644.8798
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Mohammad R. Haghighat",
+      "dir": "ltr",
+      "width": 114.14790239999998,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        93.54160000000007,
+        631.9284
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "$",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        207.68860000000006,
+        635.8872
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": ", Blake Kaplan",
+      "dir": "ltr",
+      "width": 65.32600289999999,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        212.42090000000007,
+        631.9284
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        277.7463000000001,
+        635.8872
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ", Graydon Hoare",
+      "dir": "ltr",
+      "width": 73.33695880000003,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        282.4786000000001,
+        631.9284
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        355.8152000000001,
+        635.8872
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ", Boris Zbarsky",
+      "dir": "ltr",
+      "width": 67.71504310000006,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        360.5475000000001,
+        631.9284
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        428.2620000000001,
+        635.8872
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ", Jason Orendorff",
+      "dir": "ltr",
+      "width": 76.10956050000001,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        432.9944000000001,
+        631.9284
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        509.1033000000001,
+        635.8872
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ",",
+      "dir": "ltr",
+      "width": 2.739725,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        513.8356000000001,
+        631.9284
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Jesse Ruderman",
+      "dir": "ltr",
+      "width": 70.9150419,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        68.27490000000012,
+        618.977
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 4.232123100000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        139.1891000000001,
+        622.9358
+      ],
+      "fontName": "g_d0_f3",
+      "hasEOL": false
+    },
+    {
+      "str": ", Edwin Smith",
+      "dir": "ltr",
+      "width": 63.02463389999999,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        143.92140000000012,
+        618.977
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "#",
+      "dir": "ltr",
+      "width": 7.053538500000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        206.94550000000012,
+        622.9358
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": ", Rick Reitmaier",
+      "dir": "ltr",
+      "width": 72.1424387,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        214.50060000000013,
+        618.977
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "#",
+      "dir": "ltr",
+      "width": 7.053538500000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        286.64200000000017,
+        622.9358
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": ", Michael Bebenita",
+      "dir": "ltr",
+      "width": 83.09037980000004,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        294.19710000000015,
+        618.977
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "+",
+      "dir": "ltr",
+      "width": 6.583302600000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        377.2864000000001,
+        622.9358
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": ", Mason Chang",
+      "dir": "ltr",
+      "width": 66.66298870000004,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        384.3711000000001,
+        618.977
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "+#",
+      "dir": "ltr",
+      "width": 14.138957400000013,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        451.0336000000001,
+        622.9358
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": ", Michael Franz",
+      "dir": "ltr",
+      "width": 69.08490560000004,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        465.6734000000001,
+        618.977
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "+",
+      "dir": "ltr",
+      "width": 6.583302600000001,
+      "height": 7.9701,
+      "transform": [
+        7.9701,
+        0,
+        0,
+        7.9701,
+        534.7575,
+        622.9358
+      ],
+      "fontName": "g_d0_f4",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        266.16510000000005,
+        604.033
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Mozilla Corporation",
+      "dir": "ltr",
+      "width": 73.47068160000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        266.16510000000005,
+        604.033
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "∗",
+      "dir": "ltr",
+      "width": 3.8196863999999997,
+      "height": 5.9776,
+      "transform": [
+        5.9776,
+        0,
+        0,
+        5.9776,
+        339.63470000000007,
+        607.842
+      ],
+      "fontName": "g_d0_f5",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        90.97630000000007,
+        594.0704
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": true
+    },
+    {
+      "str": "{",
+      "dir": "ltr",
+      "width": 4.6087296,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        90.97630000000007,
+        594.0704
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "gal,brendan,shaver,danderson,dmandelin,mrbkap,graydon,bz,jorendorff,jruderman",
+      "dir": "ltr",
+      "width": 362.45775359999965,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        95.58400000000006,
+        594.0704
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "}",
+      "dir": "ltr",
+      "width": 4.6087296,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        458.04550000000006,
+        594.0704
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "@mozilla.com",
+      "dir": "ltr",
+      "width": 56.48832000000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        462.6532000000001,
+        594.0704
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        267.0807000000001,
+        577.8910999999999
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Adobe Corporation",
+      "dir": "ltr",
+      "width": 69.48063360000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        267.0807000000001,
+        577.8910999999999
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "#",
+      "dir": "ltr",
+      "width": 5.9776,
+      "height": 5.9776,
+      "transform": [
+        5.9776,
+        0,
+        0,
+        5.9776,
+        336.5607000000001,
+        581.7000999999999
+      ],
+      "fontName": "g_d0_f8",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        236.9024000000001,
+        567.9284999999999
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": true
+    },
+    {
+      "str": "{",
+      "dir": "ltr",
+      "width": 4.6087296,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        236.9024000000001,
+        567.9284999999999
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "edwsmith,rreitmai",
+      "dir": "ltr",
+      "width": 80.02511999999999,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        241.5101000000001,
+        567.9284999999999
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "}",
+      "dir": "ltr",
+      "width": 4.6087296,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        321.5341000000001,
+        567.9284999999999
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "@adobe.com",
+      "dir": "ltr",
+      "width": 47.073600000000006,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        326.1418000000001,
+        567.9284999999999
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        271.9776000000001,
+        551.4170999999999
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Intel Corporation",
+      "dir": "ltr",
+      "width": 62.01162240000003,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        271.9776000000001,
+        551.4170999999999
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "$",
+      "dir": "ltr",
+      "width": 3.6523136,
+      "height": 5.9776,
+      "transform": [
+        5.9776,
+        0,
+        0,
+        5.9776,
+        333.9884000000001,
+        555.2260999999999
+      ],
+      "fontName": "g_d0_f8",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        229.8415000000001,
+        541.4544999999998
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": true
+    },
+    {
+      "str": "{",
+      "dir": "ltr",
+      "width": 4.6087296,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        229.8415000000001,
+        541.4544999999998
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "mohammad.r.haghighat",
+      "dir": "ltr",
+      "width": 94.14719999999997,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        234.4492000000001,
+        541.4544999999998
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "}",
+      "dir": "ltr",
+      "width": 4.6087296,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        328.5950000000001,
+        541.4544999999998
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "@intel.com",
+      "dir": "ltr",
+      "width": 47.073600000000006,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        333.2027000000001,
+        541.4544999999998
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        246.1635000000001,
+        525.6072999999998
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "University of California, Irvine",
+      "dir": "ltr",
+      "width": 111.70341120000003,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        246.1635000000001,
+        525.6072999999998
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "+",
+      "dir": "ltr",
+      "width": 5.589055999999999,
+      "height": 5.9776,
+      "transform": [
+        5.9776,
+        0,
+        0,
+        5.9776,
+        357.86540000000014,
+        529.4162999999998
+      ],
+      "fontName": "g_d0_f8",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        232.19510000000014,
+        515.6446999999997
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": true
+    },
+    {
+      "str": "{",
+      "dir": "ltr",
+      "width": 4.6087296,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        232.19510000000014,
+        515.6446999999997
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "mbebenit,changm,franz",
+      "dir": "ltr",
+      "width": 98.85455999999996,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        236.80280000000013,
+        515.6446999999997
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "}",
+      "dir": "ltr",
+      "width": 4.6087296,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        335.65590000000014,
+        515.6446999999997
+      ],
+      "fontName": "g_d0_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "@uci.edu",
+      "dir": "ltr",
+      "width": 37.65888,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        340.26360000000017,
+        515.6446999999997
+      ],
+      "fontName": "g_d0_f7",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        54.00000000000017,
+        447.89869999999974
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "Abstract",
+      "dir": "ltr",
+      "width": 40.778066900000006,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        54.00000000000017,
+        447.89869999999974
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        433.95099999999974
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Dynamic languages such as JavaScript are more difficult to com-",
+      "dir": "ltr",
+      "width": 239.10698880000007,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        433.95099999999974
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "pile than statically typed ones. Since no concrete type information",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        423.98839999999973
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "is available, traditional compilers need to emit generic code that can",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        414.02569999999974
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "handle all possible type combinations at runtime. We present an al-",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        404.06309999999974
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "ternative compilation technique for dynamically-typed languages",
+      "dir": "ltr",
+      "width": 239.10698880000015,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        394.1004999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "that identifies frequently executed loop traces at run-time and then",
+      "dir": "ltr",
+      "width": 239.10698880000012,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        384.13779999999974
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "generates machine code on the fly that is specialized for the ac-",
+      "dir": "ltr",
+      "width": 239.1069888,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        374.17519999999973
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "tual dynamic types occurring on each path through the loop. Our",
+      "dir": "ltr",
+      "width": 239.10698880000012,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        364.21249999999975
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "method provides cheap inter-procedural type specialization, and an",
+      "dir": "ltr",
+      "width": 239.10698880000015,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        354.24989999999974
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "elegant and efficient way of incrementally compiling lazily discov-",
+      "dir": "ltr",
+      "width": 239.10698880000004,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        344.28729999999973
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "ered alternative paths through nested loops. We have implemented",
+      "dir": "ltr",
+      "width": 239.10698880000015,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        334.32459999999975
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "a dynamic compiler for JavaScript based on our technique and we",
+      "dir": "ltr",
+      "width": 239.10698880000015,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        324.36199999999974
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "have measured speedups of 10x and more for certain benchmark",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        314.39929999999976
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "programs.",
+      "dir": "ltr",
+      "width": 36.1076928,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        304.43669999999975
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        288.83259999999973
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": true
+    },
+    {
+      "str": "Categories and Subject Descriptors",
+      "dir": "ltr",
+      "width": 133.5814272,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        288.83259999999973
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 8.967372799999964,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        187.5814272000002,
+        288.83259999999973
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "D.3.4 [",
+      "dir": "ltr",
+      "width": 26.42398080000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        196.54880000000017,
+        288.83259999999973
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "Programming Lan-",
+      "dir": "ltr",
+      "width": 70.13518079999997,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        222.97070000000016,
+        288.83259999999973
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": true
+    },
+    {
+      "str": "guages",
+      "dir": "ltr",
+      "width": 25.222483200000006,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000017,
+        278.8699999999997
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": "]: Processors —",
+      "dir": "ltr",
+      "width": 57.27736320000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        79.22230000000017,
+        278.8699999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.240736799999979,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        136.49966320000019,
+        278.8699999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "Incremental compilers, code generation",
+      "dir": "ltr",
+      "width": 142.78992000000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        138.74040000000016,
+        278.8699999999997
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": ".",
+      "dir": "ltr",
+      "width": 2.2416000000000005,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        281.52840000000015,
+        278.8699999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000014,
+        263.2658999999997
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": true
+    },
+    {
+      "str": "General Terms",
+      "dir": "ltr",
+      "width": 55.412352000000006,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000014,
+        263.2658999999997
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 8.963148000000004,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        109.41235200000014,
+        263.2658999999997
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "Design, Experimentation, Measurement, Perfor-",
+      "dir": "ltr",
+      "width": 174.72823680000005,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        118.37550000000014,
+        263.2658999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "mance.",
+      "dir": "ltr",
+      "width": 25.643904000000003,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000014,
+        253.3031999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000014,
+        237.6990999999997
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": true
+    },
+    {
+      "str": "Keywords",
+      "dir": "ltr",
+      "width": 35.50694400000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000014,
+        237.6990999999997
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 8.965856000000002,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        89.50694400000015,
+        237.6990999999997
+      ],
+      "fontName": "g_d0_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "JavaScript, just-in-time compilation, trace trees.",
+      "dir": "ltr",
+      "width": 171.6796608000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        98.47280000000015,
+        237.6990999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        54.00000000000015,
+        215.1211999999997
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "1.",
+      "dir": "ltr",
+      "width": 8.219175,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        54.00000000000015,
+        215.1211999999997
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 10.9589,
+      "height": 0,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        62.21917500000015,
+        215.1211999999997
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "Introduction",
+      "dir": "ltr",
+      "width": 59.4739503,
+      "height": 10.9589,
+      "transform": [
+        10.9589,
+        0,
+        0,
+        10.9589,
+        73.17807500000015,
+        215.1211999999997
+      ],
+      "fontName": "g_d0_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000015,
+        201.1734999999997
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": true
+    },
+    {
+      "str": "Dynamic languages",
+      "dir": "ltr",
+      "width": 71.04078720000004,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.00000000000015,
+        201.1734999999997
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 1.9836128000000173,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        125.04078720000014,
+        201.1734999999997
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": "such as JavaScript, Python, and Ruby, are pop-",
+      "dir": "ltr",
+      "width": 166.0756608000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        127.02440000000016,
+        201.1734999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "ular since they are expressive, accessible to non-experts, and make",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.000000000000156,
+        191.2108999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "deployment as easy as distributing a source file. They are used for",
+      "dir": "ltr",
+      "width": 239.10698880000015,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.000000000000156,
+        181.24819999999968
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "small scripts as well as for complex applications. JavaScript, for",
+      "dir": "ltr",
+      "width": 239.10698880000015,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.000000000000156,
+        171.28559999999968
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "example, is the de facto standard for client-side web programming",
+      "dir": "ltr",
+      "width": 239.10698880000012,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        54.000000000000156,
+        161.32289999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.000000000000156,
+        119.76639999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Permission to make digital or hard copies of all or part of this work for personal or",
+      "dir": "ltr",
+      "width": 239.10370680000005,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.000000000000156,
+        119.76639999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "classroom use is granted without fee provided that copies are not made or distributed",
+      "dir": "ltr",
+      "width": 239.1037068000001,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.000000000000156,
+        111.79629999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "for profit or commercial advantage and that copies bear this notice and the full citation",
+      "dir": "ltr",
+      "width": 239.1037068000001,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.000000000000156,
+        103.82619999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "on the first page. To copy otherwise, to republish, to post on servers or to redistribute",
+      "dir": "ltr",
+      "width": 239.10370679999994,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.000000000000156,
+        95.85609999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "to lists, requires prior specific permission and/or a fee.",
+      "dir": "ltr",
+      "width": 151.4639622,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.000000000000156,
+        87.88599999999965
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.000000000000156,
+        77.92339999999966
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": true
+    },
+    {
+      "str": "PLDI’09,",
+      "dir": "ltr",
+      "width": 26.535308999999994,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.000000000000156,
+        77.92339999999966
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 7.092390999999992,
+      "height": 0,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        80.53530900000015,
+        77.92339999999966
+      ],
+      "fontName": "g_d0_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "June 15–20, 2009, Dublin, Ireland.",
+      "dir": "ltr",
+      "width": 97.23569339999999,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        87.62770000000015,
+        77.92339999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Copyright c",
+      "dir": "ltr",
+      "width": 35.478867199999975,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        54.00000000000015,
+        69.95329999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "©",
+      "dir": "ltr",
+      "width": 7.943158199999999,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        83.95940000000014,
+        69.95329999999966
+      ],
+      "fontName": "g_d0_f12",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 1.7427418000000046,
+      "height": 0,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        91.90255820000014,
+        69.95329999999966
+      ],
+      "fontName": "g_d0_f12",
+      "hasEOL": false
+    },
+    {
+      "str": "2009 ACM 978-1-60558-392-1/09/06. . . $5.00",
+      "dir": "ltr",
+      "width": 129.5453088,
+      "height": 6.9738,
+      "transform": [
+        6.9738,
+        0,
+        0,
+        6.9738,
+        93.64530000000015,
+        69.95329999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        447.89879999999965
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "and is used for the application logic of browser-based productivity",
+      "dir": "ltr",
+      "width": 239.10698880000024,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        447.89879999999965
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "applications such as Google Mail, Google Docs and Zimbra Col-",
+      "dir": "ltr",
+      "width": 239.10698880000012,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        437.93609999999967
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "laboration Suite. In this domain, in order to provide a fluid user",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        427.97349999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "experience and enable a new generation of applications, virtual ma-",
+      "dir": "ltr",
+      "width": 239.10698880000004,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        418.01089999999965
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "chines must provide a low startup time and high performance.",
+      "dir": "ltr",
+      "width": 221.77493760000021,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        408.04819999999967
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Compilers for statically typed languages rely on type informa-",
+      "dir": "ltr",
+      "width": 227.14581120000014,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        328.96890000000013,
+        398.08559999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "tion to generate efficient machine code. In a dynamically typed pro-",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        388.1228999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "gramming language such as JavaScript, the types of expressions",
+      "dir": "ltr",
+      "width": 239.10698880000024,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        378.16029999999967
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "may vary at runtime. This means that the compiler can no longer",
+      "dir": "ltr",
+      "width": 239.1069888,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        368.19769999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "easily transform operations into machine instructions that operate",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        358.2349999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "on one specific type. Without exact type information, the compiler",
+      "dir": "ltr",
+      "width": 239.10698880000004,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        348.27239999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "must emit slower generalized machine code that can deal with all",
+      "dir": "ltr",
+      "width": 239.10698880000007,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        338.3096999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "potential type combinations. While compile-time static type infer-",
+      "dir": "ltr",
+      "width": 239.10698880000015,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        328.34709999999967
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "ence might be able to gather type information to generate opti-",
+      "dir": "ltr",
+      "width": 239.10698879999987,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        318.38449999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "mized machine code, traditional static analysis is very expensive",
+      "dir": "ltr",
+      "width": 239.10698880000027,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        308.4217999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "and hence not well suited for the highly interactive environment of",
+      "dir": "ltr",
+      "width": 239.10698880000015,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        298.45919999999967
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "a web browser.",
+      "dir": "ltr",
+      "width": 53.80736640000003,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        288.4964999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "We present a trace-based compilation technique for dynamic",
+      "dir": "ltr",
+      "width": 227.14581120000022,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        328.96890000000013,
+        278.5338999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "languages that reconciles speed of compilation with excellent per-",
+      "dir": "ltr",
+      "width": 239.10698879999984,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        268.57129999999967
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "formance of the generated machine code. Our system uses a mixed-",
+      "dir": "ltr",
+      "width": 239.10698879999998,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        258.6085999999997
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "mode execution approach: the system starts running JavaScript in a",
+      "dir": "ltr",
+      "width": 239.1069888000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        248.64599999999967
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "fast-starting bytecode interpreter. As the program runs, the system",
+      "dir": "ltr",
+      "width": 239.10698879999998,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        238.68329999999966
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "identifies",
+      "dir": "ltr",
+      "width": 32.8797888,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        228.72069999999965
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.805511200000069,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        349.89348880000006,
+        228.72069999999965
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "hot",
+      "dir": "ltr",
+      "width": 11.459059200000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        353.6990000000001,
+        228.72069999999965
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.9672408000000132,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        365.15805920000014,
+        228.72069999999965
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": "(frequently executed) bytecode sequences, records",
+      "dir": "ltr",
+      "width": 186.994272,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        369.12530000000015,
+        228.72069999999965
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "them, and compiles them to fast native code. We call such a se-",
+      "dir": "ltr",
+      "width": 239.1069888000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        218.75809999999964
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "quence of instructions a",
+      "dir": "ltr",
+      "width": 85.41392640000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        208.79539999999963
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.2404736000000867,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        402.42762640000007,
+        208.79539999999963
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "trace",
+      "dir": "ltr",
+      "width": 18.29145599999999,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        404.66810000000015,
+        208.79539999999963
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": ".",
+      "dir": "ltr",
+      "width": 2.2416000000000005,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        422.9592000000001,
+        208.79539999999963
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Unlike method-based dynamic compilers, our dynamic com-",
+      "dir": "ltr",
+      "width": 227.14581120000008,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        328.96890000000013,
+        198.83279999999962
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "piler operates at the granularity of individual loops. This design",
+      "dir": "ltr",
+      "width": 239.1069888,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        188.8700999999996
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "choice is based on the expectation that programs spend most of",
+      "dir": "ltr",
+      "width": 239.10698880000007,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        178.9074999999996
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "their time in hot loops. Even in dynamically typed languages, we",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        168.9448999999996
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "expect hot loops to be mostly",
+      "dir": "ltr",
+      "width": 103.92954240000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.01370000000014,
+        158.98219999999958
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 1.9857576000000563,
+      "height": 0,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        420.9432424000001,
+        158.98219999999958
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    },
+    {
+      "str": "type-stable",
+      "dir": "ltr",
+      "width": 39.3445632,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        422.92900000000014,
+        158.98219999999958
+      ],
+      "fontName": "g_d0_f10",
+      "hasEOL": false
+    },
+    {
+      "str": ", meaning that the types of",
+      "dir": "ltr",
+      "width": 93.84234239999996,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        462.27290000000016,
+        158.98219999999958
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "values are invariant. (12) For example, we would expect loop coun-",
+      "dir": "ltr",
+      "width": 239.10698880000007,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.0137000000002,
+        149.01959999999957
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "ters that start as integers to remain integers for all iterations. When",
+      "dir": "ltr",
+      "width": 239.10698880000012,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.0137000000002,
+        139.05689999999956
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "both of these expectations hold, a trace-based compiler can cover",
+      "dir": "ltr",
+      "width": 239.1069888000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.0137000000002,
+        129.09429999999955
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "the program execution with a small number of type-specialized, ef-",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.0137000000002,
+        119.13169999999955
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "ficiently compiled traces.",
+      "dir": "ltr",
+      "width": 90.39924480000002,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.0137000000002,
+        109.16899999999956
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "Each compiled trace covers one path through the program with",
+      "dir": "ltr",
+      "width": 227.14581120000003,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        328.9689000000002,
+        99.20639999999956
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "one mapping of values to types. When the VM executes a compiled",
+      "dir": "ltr",
+      "width": 239.10698880000007,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.0137000000002,
+        89.24369999999956
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "trace, it cannot guarantee that the same path will be followed",
+      "dir": "ltr",
+      "width": 239.1069888000001,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.0137000000002,
+        79.28109999999957
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": true
+    },
+    {
+      "str": "or that the same types will occur in subsequent loop iterations.",
+      "dir": "ltr",
+      "width": 239.10698880000027,
+      "height": 8.9664,
+      "transform": [
+        8.9664,
+        0,
+        0,
+        8.9664,
+        317.0137000000002,
+        69.31849999999957
+      ],
+      "fontName": "g_d0_f2",
+      "hasEOL": false
+    }
+  ],
+  "styles": {
+    "g_d0_f1": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.69,
+      "descent": -0.209,
+      "vertical": false
+    },
+    "g_d0_f2": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.678,
+      "descent": -0.216,
+      "vertical": false
+    },
+    "g_d0_f3": {
+      "fontFamily": "monospace",
+      "ascent": 0.75,
+      "descent": -0.194,
+      "vertical": false
+    },
+    "g_d0_f4": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.694,
+      "descent": -0.194,
+      "vertical": false
+    },
+    "g_d0_f5": {
+      "fontFamily": "monospace",
+      "ascent": 0.75,
+      "descent": -0.194,
+      "vertical": false
+    },
+    "g_d0_f6": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.75,
+      "descent": -0.194,
+      "vertical": false
+    },
+    "g_d0_f7": {
+      "fontFamily": "monospace",
+      "ascent": 0.611,
+      "descent": -0.222,
+      "vertical": false
+    },
+    "g_d0_f8": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.694,
+      "descent": -0.194,
+      "vertical": false
+    },
+    "g_d0_f9": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.688,
+      "descent": -0.209,
+      "vertical": false
+    },
+    "g_d0_f10": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.668,
+      "descent": -0.193,
+      "vertical": false
+    },
+    "g_d0_f11": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.678,
+      "descent": -0.216,
+      "vertical": false
+    },
+    "g_d0_f12": {
+      "fontFamily": "monospace",
+      "ascent": 0.75,
+      "descent": -0.194,
+      "vertical": false
+    }
+  },
+  "lang": null
+}
