@@ -268,7 +268,7 @@ H – Help"
           <input id="file-input" type="file" accept="application/pdf" />
         </div>
 
-        <!-- UPDATED PAGE CONTROL WITH TYPABLE PAGE NUMBER -->
+        <!-- PAGE CONTROL WITH TYPABLE PAGE NUMBER -->
         <div class="toolbar-group">
           <button id="prev-page" disabled title="Previous Page (Shortcut: A)">◀</button>
 
@@ -296,12 +296,6 @@ H – Help"
           <button id="toggle-skip-mode" disabled title="Draw rectangles over headers/footers to skip them on all pages">
             🎯 Mark skip areas
           </button>
-        </div>
-      </div>
-
-      <div class="toolbar-section">
-        <button id="read-page" disabled style="display:none">🔊 Read Page</button>
-        <div class="toolbar-group">
           <button
             id="toggle-smart-reading"
             title="Toggle Smart Reading (GPT preprocessing for all speech) (Shortcut: Z)"
@@ -309,6 +303,10 @@ H – Help"
             🧠 Smart Reading: Off
           </button>
         </div>
+      </div>
+
+      <div class="toolbar-section">
+        <button id="read-page" disabled style="display:none">🔊 Read Page</button>
       </div>
       <div style="height:1px; background:var(--border); width:100%;"></div>
       
@@ -318,11 +316,31 @@ H – Help"
           <select id="tts-engine" title="Voice Engine (Shortcut: T)">
             <option value="browser">Browser (Free)</option>
             <option value="minimax">MiniMax (High Quality)</option>
+            <option value="openai">OpenAI (Fast)</option>
           </select>
         </div>
+
         <div class="toolbar-group" id="browser-voice-group">
           <label>Voice:</label>
           <select id="browser-voice" style="max-width: 180px;" title="Voice (Shortcut: V)"></select>
+        </div>
+
+        <!-- OpenAI voice group -->
+        <div class="toolbar-group" id="openai-voice-group" style="display:none;">
+          <label>OpenAI Voice:</label>
+          <select id="openai-voice" style="max-width: 180px;" title="OpenAI Voice (Shortcut: V)">
+            <option value="alloy">Alloy</option>
+            <option value="ash">Ash</option>
+            <option value="ballad">Ballad</option>
+            <option value="coral">Coral</option>
+            <option value="echo">Echo</option>
+            <option value="fable">Fable</option>
+            <option value="onyx">Onyx</option>
+            <option value="nova">Nova</option>
+            <option value="sage">Sage</option>
+            <option value="shimmer">Shimmer</option>
+            <option value="verse">Verse</option>
+          </select>
         </div>
 
         <div class="toolbar-group">
@@ -372,7 +390,7 @@ H – Help"
         <ul class="shortcut-list">
           <li><span><kbd>O</kbd></span><span>Open PDF</span></li>
           <li><span><kbd>A</kbd> / <kbd>D</kbd></span><span>Previous / Next page</span></li>
-          <li><span><kbd>W</kbd> / <kbd>S</kbd></span><span>Previous / Next sentence (while reading with Browser TTS)</span></li>
+          <li><span><kbd>W</kbd> / <kbd>S</kbd></span><span>Previous / Next sentence (while reading)</span></li>
           <li><span><kbd>Q</kbd> / <kbd>E</kbd></span><span>Pause / Resume reading</span></li>
           <li><span><kbd>V</kbd></span><span>Focus voice selection</span></li>
           <li><span><kbd>T</kbd></span><span>Focus TTS engine selection</span></li>
@@ -405,6 +423,7 @@ H – Help"
       minimaxPanel: document.getElementById('minimax-panel'),
       engine: document.getElementById('tts-engine'),
       browserVoiceGroup: document.getElementById('browser-voice-group'),
+      openaiVoiceGroup: document.getElementById('openai-voice-group'),
       helpButton: document.getElementById('help-button'),
       helpModal: document.getElementById('help-modal'),
       helpClose: document.getElementById('help-close'),
@@ -426,6 +445,7 @@ H – Help"
         speed: document.getElementById('global-speed'),
         speedVal: document.getElementById('speed-val'),
         browserVoice: document.getElementById('browser-voice'),
+        openaiVoice: document.getElementById('openai-voice'),
         mode: document.getElementById('reading-mode')  // placeholder for future
       }
     };
@@ -455,8 +475,22 @@ H – Help"
     let pageItemMeta = [];       // { start, end, span }
 
     // Caches for Smart Reading in continuous mode
-    const sentenceCache = new Map();             // idx -> processed text
-    const sentenceFetchInProgress = new Map();   // idx -> promise
+    const sentenceCache = new Map();           // idx -> processed text
+    const sentenceFetchInProgress = new Map(); // idx -> promise
+
+    // Audio prefetch state for continuous mode (minimax & openai)
+    let sentenceAudioPrefetch = {
+      engine: null, // 'minimax' | 'openai'
+      index: -1,
+      url: null
+    };
+
+    function clearSentenceAudioPrefetch() {
+      if (sentenceAudioPrefetch.url) {
+        URL.revokeObjectURL(sentenceAudioPrefetch.url);
+      }
+      sentenceAudioPrefetch = { engine: null, index: -1, url: null };
+    }
 
     // Added generation token to avoid race with old utterances
     const continuousState = {
@@ -492,6 +526,7 @@ H – Help"
       sentenceFetchInProgress.clear();
       continuousState.spinnerIndex = -1;
       showSmartSpinner(false);
+      clearSentenceAudioPrefetch();
     }
 
     function stopContinuousMode() {
@@ -531,6 +566,9 @@ H – Help"
       if (els.settings.customVoice.value !== '') {
         params.set('minimaxVoiceCustom', els.settings.customVoice.value);
       }
+      if (els.settings.openaiVoice && els.settings.openaiVoice.value !== '') {
+        params.set('openaiVoice', els.settings.openaiVoice.value);
+      }
       const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
       window.history.replaceState(null, '', newUrl);
     }
@@ -560,13 +598,28 @@ H – Help"
         els.settings.customVoice.value = minimaxVoiceCustomParam;
       }
 
+      const browserVoiceParam = params.get('browserVoice');
+      if (browserVoiceParam !== null) {
+        els.settings.browserVoice.value = browserVoiceParam;
+      }
+
+      const openaiVoiceParam = params.get('openaiVoice');
+      if (openaiVoiceParam && els.settings.openaiVoice) {
+        els.settings.openaiVoice.value = openaiVoiceParam;
+      }
+
       const isMini = els.engine.value === 'minimax';
+      const isBrowser = els.engine.value === 'browser';
+      const isOpenAI = els.engine.value === 'openai';
+
       els.minimaxPanel.style.display = isMini ? 'block' : 'none';
-      els.browserVoiceGroup.style.display = isMini ? 'none' : 'flex';
+      els.browserVoiceGroup.style.display = isBrowser ? 'flex' : 'none';
+      if (els.openaiVoiceGroup) {
+        els.openaiVoiceGroup.style.display = isOpenAI ? 'flex' : 'none';
+      }
     }
 
     // --- Browser TTS Logic ---
-    
     function loadBrowserVoices() {
       browserVoices = window.speechSynthesis.getVoices();
       els.settings.browserVoice.innerHTML = '';
@@ -605,7 +658,7 @@ H – Help"
       window.speechSynthesis.speak(u);
     }
 
-    // --- MiniMax TTS ---
+    // --- MiniMax TTS (page-level) ---
     const MINI_VOICES = [
       {id:'English_expressive_narrator',l:'English — Narrator'}, {id:'English_male_calm',l:'English — Calm'},
       {id:'Chinese (Mandarin)_Lyrical_Voice',l:'Chinese — Lyrical'}, {id:'__custom__',l:'Custom...'}
@@ -644,7 +697,141 @@ H – Help"
       }
     }
 
-    // --- Smart Reading wrapper ---
+    // --- OpenAI TTS (page-level, gpt-4o-mini-tts) ---
+    async function speakOpenAI(text) {
+      const apiKey = OPENAI_API_KEY;
+      if (!apiKey) {
+        alert('OpenAI API key missing');
+        return;
+      }
+
+      const speed = parseFloat(els.settings.speed.value || '1.0');
+      const voice = (els.settings.openaiVoice && els.settings.openaiVoice.value) || 'alloy';
+
+      setStatus('Loading OpenAI audio...');
+
+      try {
+        const res = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini-tts',
+            voice,
+            input: text,
+            speed
+          })
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || `HTTP ${res.status}`);
+        }
+
+        const blob = await res.blob();
+
+        resetTTS();
+        els.audio.src = URL.createObjectURL(blob);
+        els.audio.hidden = false;
+
+        await els.audio.play();
+        setStatus('Playing (OpenAI)...');
+
+        els.btns.pause.disabled = false;
+        els.btns.stop.disabled = false;
+      } catch (e) {
+        console.error(e);
+        setStatus('OpenAI TTS error: ' + e.message);
+      }
+    }
+
+    // --- Sentence audio prefetch for MiniMax & OpenAI (continuous mode) ---
+    async function prefetchSentenceAudioForIndex(index, gen) {
+      if (!continuousState.active || gen !== continuousState.generation) return;
+      if (index < 0 || index >= pageSentences.length) return;
+      const engine = els.engine.value;
+      if (engine !== 'minimax' && engine !== 'openai') return;
+
+      // Avoid refetch if already prefetched for this engine + index
+      if (sentenceAudioPrefetch.engine === engine &&
+          sentenceAudioPrefetch.index === index &&
+          sentenceAudioPrefetch.url) {
+        return;
+      }
+
+      let text = pageSentences[index];
+      if (!text) return;
+
+      // Use Smart Reading result if available
+      if (smartReadingEnabled && sentenceCache.has(index)) {
+        text = sentenceCache.get(index) || text;
+      }
+
+      try {
+        if (engine === 'minimax') {
+          const key = els.settings.key.value.trim();
+          const voice = els.settings.voice.value === '__custom__' ? els.settings.customVoice.value : els.settings.voice.value;
+          const speed = parseFloat(els.settings.speed.value);
+          if (!key) return; // silent fail on prefetch
+
+          const res = await fetch('https://api.minimax.io/v1/t2a_v2', {
+            method:'POST', headers:{'Authorization':'Bearer '+key, 'Content-Type':'application/json'},
+            body: JSON.stringify({
+              model:'speech-2.6-hd', text: text, stream:false, output_format:'hex',
+              voice_setting:{voice_id:voice, speed:speed}, audio_setting:{sample_rate:32000, format:'mp3'}
+            })
+          });
+          const data = await res.json();
+          if (data.base_resp?.status_code !== 0) throw new Error(data.base_resp?.status_msg || 'API Error');
+          if (!continuousState.active || gen !== continuousState.generation) return;
+
+          const buf = new Uint8Array(data.data.audio.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+          const blob = new Blob([buf], {type:'audio/mpeg'});
+          const url = URL.createObjectURL(blob);
+
+          clearSentenceAudioPrefetch();
+          sentenceAudioPrefetch = { engine: 'minimax', index, url };
+        } else if (engine === 'openai') {
+          const apiKey = OPENAI_API_KEY;
+          if (!apiKey) return;
+          const speed = parseFloat(els.settings.speed.value || '1.0');
+          const voice = (els.settings.openaiVoice && els.settings.openaiVoice.value) || 'alloy';
+
+          const res = await fetch('https://api.openai.com/v1/audio/speech', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini-tts',
+              voice,
+              input: text,
+              speed
+            })
+          });
+
+          if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(errText || `HTTP ${res.status}`);
+          }
+          if (!continuousState.active || gen !== continuousState.generation) return;
+
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+
+          clearSentenceAudioPrefetch();
+          sentenceAudioPrefetch = { engine: 'openai', index, url };
+        }
+      } catch (e) {
+        // Prefetch failure is non-fatal; just log.
+        console.error('Sentence audio prefetch failed:', e);
+      }
+    }
+
+    // --- Smart Reading wrapper (page-level) ---
     async function speak(text) {
       if (!text) return;
 
@@ -659,8 +846,13 @@ H – Help"
         }
       }
 
-      if (els.engine.value === 'minimax') speakMiniMax(finalText);
-      else speakBrowser(finalText);
+      if (els.engine.value === 'minimax') {
+        speakMiniMax(finalText);
+      } else if (els.engine.value === 'openai') {
+        speakOpenAI(finalText);
+      } else {
+        speakBrowser(finalText);
+      }
     }
 
     // --- Skip Zone Logic ---
@@ -715,7 +907,6 @@ H – Help"
     }
 
     // --- Sentence utilities for continuous mode ---
-
     function buildSentenceRanges() {
       pageSentences = [];
       pageSentenceRanges = [];
@@ -779,7 +970,7 @@ H – Help"
       });
     }
 
-    // Prefetch next sentence's Smart Reading result in the background
+    // Smart Reading text prefetch for a sentence, then audio prefetch (for minimax/openai)
     function prefetchSentence(index, gen) {
       if (!smartReadingEnabled) return;
       if (!continuousState.active || gen !== continuousState.generation) return;
@@ -794,6 +985,11 @@ H – Help"
           const processed = await getSpokenTranscript(originalText);
           if (!continuousState.active || gen !== continuousState.generation) return;
           sentenceCache.set(index, processed || originalText);
+
+          // After Smart Reading is ready, prefetch audio for next sentence for minimax/openai
+          if (els.engine.value === 'minimax' || els.engine.value === 'openai') {
+            prefetchSentenceAudioForIndex(index, gen);
+          }
         } catch (e) {
           console.error('Smart Reading prefetch failed:', e);
         } finally {
@@ -804,7 +1000,7 @@ H – Help"
       sentenceFetchInProgress.set(index, p);
     }
 
-    // UPDATED: playNextSentence now async, uses cache & prefetch for Smart Reading
+    // Engine-agnostic sentence playback
     async function playNextSentence(gen) {
       if (!continuousState.active || gen !== continuousState.generation) return;
 
@@ -885,46 +1081,165 @@ H – Help"
           }
         }
 
-        // Start prefetching the next sentence in the background
+        // Text-level Smart Reading prefetch for the NEXT sentence
         prefetchSentence(idx + 1, gen);
       } else {
-        // Ensure spinner is off if Smart Reading is disabled
+        // Smart Reading disabled: still allow audio prefetch for minimax/openai
         showSmartSpinner(false);
+        if (els.engine.value === 'minimax' || els.engine.value === 'openai') {
+          prefetchSentenceAudioForIndex(idx + 1, gen);
+        }
       }
 
-      const u = new SpeechSynthesisUtterance(spokenText);
-      continuousState.utterance = u;
-      u.rate = parseFloat(els.settings.speed.value);
+      // Engine-specific playback
+      const engine = els.engine.value;
 
-      const selectedIndex = els.settings.browserVoice.value;
-      if (browserVoices[selectedIndex]) u.voice = browserVoices[selectedIndex];
+      if (engine === 'browser') {
+        const u = new SpeechSynthesisUtterance(spokenText);
+        continuousState.utterance = u;
+        u.rate = parseFloat(els.settings.speed.value);
 
-      els.btns.pause.disabled = false;
-      els.btns.stop.disabled = false;
+        const selectedIndex = els.settings.browserVoice.value;
+        if (browserVoices[selectedIndex]) u.voice = browserVoices[selectedIndex];
 
-      u.onend = () => {
-        // Ignore if this utterance is stale (old generation or mode stopped)
-        if (!continuousState.active || gen !== continuousState.generation) {
-          return;
+        els.btns.pause.disabled = false;
+        els.btns.stop.disabled = false;
+
+        u.onend = () => {
+          // Ignore if this utterance is stale (old generation or mode stopped)
+          if (!continuousState.active || gen !== continuousState.generation) {
+            return;
+          }
+          continuousState.sentenceIndex++;
+          setTimeout(() => playNextSentence(gen), 40);
+        };
+
+        u.onerror = () => {
+          if (gen !== continuousState.generation) return;
+          stopContinuousMode();
+          setStatus('Error during speech');
+        };
+
+        window.speechSynthesis.speak(u);
+      } else if (engine === 'minimax' || engine === 'openai') {
+        try {
+          // If we already prefetched this sentence's audio, use it
+          if (sentenceAudioPrefetch.engine === engine &&
+              sentenceAudioPrefetch.index === idx &&
+              sentenceAudioPrefetch.url) {
+
+            els.audio.pause();
+            els.audio.currentTime = 0;
+            els.audio.src = sentenceAudioPrefetch.url;
+          } else {
+            // No prefetched audio; fetch on-demand
+            if (engine === 'minimax') {
+              const key = els.settings.key.value.trim();
+              const voice = els.settings.voice.value === '__custom__'
+                ? els.settings.customVoice.value
+                : els.settings.voice.value;
+              const speed = parseFloat(els.settings.speed.value);
+              if (!key) {
+                alert('API Key missing');
+                stopContinuousMode();
+                return;
+              }
+              const res = await fetch('https://api.minimax.io/v1/t2a_v2', {
+                method:'POST',
+                headers:{'Authorization':'Bearer '+key, 'Content-Type':'application/json'},
+                body: JSON.stringify({
+                  model:'speech-2.6-hd',
+                  text: spokenText,
+                  stream:false,
+                  output_format:'hex',
+                  voice_setting:{voice_id:voice, speed:speed},
+                  audio_setting:{sample_rate:32000, format:'mp3'}
+                })
+              });
+              const data = await res.json();
+              if (data.base_resp?.status_code !== 0) throw new Error(data.base_resp?.status_msg || 'API Error');
+              if (!continuousState.active || gen !== continuousState.generation) return;
+
+              const buf = new Uint8Array(data.data.audio.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+              const blob = new Blob([buf], {type:'audio/mpeg'});
+              const url = URL.createObjectURL(blob);
+
+              els.audio.pause();
+              els.audio.currentTime = 0;
+              els.audio.src = url;
+
+              // this becomes "current" audio; no need to store in prefetch struct
+            } else {
+              const apiKey = OPENAI_API_KEY;
+              if (!apiKey) {
+                alert('OpenAI API key missing');
+                stopContinuousMode();
+                return;
+              }
+              const speed = parseFloat(els.settings.speed.value || '1.0');
+              const voice = (els.settings.openaiVoice && els.settings.openaiVoice.value) || 'alloy';
+
+              const res = await fetch('https://api.openai.com/v1/audio/speech', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  model: 'gpt-4o-mini-tts',
+                  voice,
+                  input: spokenText,
+                  speed
+                })
+              });
+              if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || `HTTP ${res.status}`);
+              }
+              if (!continuousState.active || gen !== continuousState.generation) return;
+
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+
+              els.audio.pause();
+              els.audio.currentTime = 0;
+              els.audio.src = url;
+            }
+          }
+
+          els.audio.hidden = false;
+          els.btns.pause.disabled = false;
+          els.btns.stop.disabled = false;
+
+          els.audio.onended = () => {
+            if (!continuousState.active || gen !== continuousState.generation) return;
+            continuousState.sentenceIndex++;
+            setTimeout(() => playNextSentence(gen), 40);
+          };
+
+          els.audio.onerror = () => {
+            if (gen !== continuousState.generation) return;
+            stopContinuousMode();
+            setStatus('Error during speech');
+          };
+
+          await els.audio.play();
+
+          // While this sentence is playing, prefetch audio for the NEXT one
+          if (engine === 'minimax' || engine === 'openai') {
+            prefetchSentenceAudioForIndex(idx + 1, gen);
+          }
+        } catch (e) {
+          console.error('Continuous TTS error:', e);
+          if (gen === continuousState.generation) {
+            stopContinuousMode();
+            setStatus('Error: ' + e.message);
+          }
         }
-        continuousState.sentenceIndex++;
-        setTimeout(() => playNextSentence(gen), 40);
-      };
-
-      u.onerror = () => {
-        if (gen !== continuousState.generation) return;
-        stopContinuousMode();
-        setStatus('Error during speech');
-      };
-
-      window.speechSynthesis.speak(u);
+      }
     }
 
     function startContinuousReadingFromSentence(startIndex) {
-      if (els.engine.value !== 'browser') {
-        alert('Sentence & Continue mode currently works with Browser TTS only.');
-        return;
-      }
       if (startIndex < 0 || startIndex >= pageSentences.length) {
         return;
       }
@@ -938,9 +1253,9 @@ H – Help"
       playNextSentence(gen);
     }
 
-    // UPDATED: Jump between sentences with keyboard (W / S) without breaking highlight
+    // Jump between sentences with keyboard (W / S) for ALL engines
     function jumpSentence(offset) {
-      if (!continuousState.active || els.engine.value !== 'browser') return;
+      if (!continuousState.active) return;
       if (!pageSentences.length) return;
 
       let newIndex = continuousState.sentenceIndex + offset;
@@ -951,7 +1266,11 @@ H – Help"
       continuousState.generation++; // invalidate previous chain
       const gen = continuousState.generation;
 
+      // Stop current playback, regardless of engine
       window.speechSynthesis.cancel();
+      els.audio.pause();
+      els.audio.currentTime = 0;
+
       clearHighlights();
       playNextSentence(gen);
     }
@@ -1097,6 +1416,7 @@ H – Help"
     }
 
     async function getSpokenTranscript(rawText) {
+      const apiKey = OPENAI_API_KEY; // reuse shared key
 
       const systemPrompt = `
         You are a reading assistant for the visually impaired. 
@@ -1185,15 +1505,25 @@ H – Help"
     });
 
     els.btns.pause.addEventListener('click', () => {
-      if(els.engine.value==='minimax') { els.audio.pause(); setStatus('Paused'); }
-      else window.speechSynthesis.pause();
-      els.btns.pause.disabled=true; els.btns.resume.disabled=false;
+      if (els.engine.value === 'minimax' || els.engine.value === 'openai') {
+        els.audio.pause();
+        setStatus('Paused');
+      } else {
+        window.speechSynthesis.pause();
+      }
+      els.btns.pause.disabled = true;
+      els.btns.resume.disabled = false;
     });
     
     els.btns.resume.addEventListener('click', () => {
-      if(els.engine.value==='minimax') { els.audio.play(); setStatus('Playing'); }
-      else window.speechSynthesis.resume();
-      els.btns.pause.disabled=false; els.btns.resume.disabled=true;
+      if (els.engine.value === 'minimax' || els.engine.value === 'openai') {
+        els.audio.play();
+        setStatus('Playing');
+      } else {
+        window.speechSynthesis.resume();
+      }
+      els.btns.pause.disabled = false;
+      els.btns.resume.disabled = true;
     });
 
     els.btns.stop.addEventListener('click', resetTTS);
@@ -1201,10 +1531,19 @@ H – Help"
     // Engine Change: Toggle visibility of Voice Selectors
     els.engine.addEventListener('change', () => {
       const isMini = els.engine.value === 'minimax';
+      const isBrowser = els.engine.value === 'browser';
+      const isOpenAI = els.engine.value === 'openai';
+
       els.minimaxPanel.style.display = isMini ? 'block' : 'none';
-      els.browserVoiceGroup.style.display = isMini ? 'none' : 'flex';
-      // If we were in continuous mode, stop it when engine switches
-      if (isMini) stopContinuousMode();
+      els.browserVoiceGroup.style.display = isBrowser ? 'flex' : 'none';
+
+      if (els.openaiVoiceGroup) {
+        els.openaiVoiceGroup.style.display = isOpenAI ? 'flex' : 'none';
+      }
+
+      // Changing engine stops any ongoing continuous reading
+      stopContinuousMode();
+
       syncSettingsToUrl();
     });
     
@@ -1223,6 +1562,12 @@ H – Help"
     els.settings.browserVoice.addEventListener('change', () => {
       syncSettingsToUrl();
     });
+
+    if (els.settings.openaiVoice) {
+      els.settings.openaiVoice.addEventListener('change', () => {
+        syncSettingsToUrl();
+      });
+    }
 
     els.settings.customVoice.addEventListener('input', () => {
       syncSettingsToUrl();
@@ -1430,6 +1775,8 @@ H – Help"
           e.preventDefault();
           if (els.engine.value === 'minimax') {
             els.settings.voice.focus();
+          } else if (els.engine.value === 'openai') {
+            els.settings.openaiVoice.focus();
           } else {
             els.settings.browserVoice.focus();
           }
