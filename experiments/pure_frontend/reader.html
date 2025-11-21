@@ -144,6 +144,76 @@
 
     ::selection { background: rgba(79, 70, 229, 0.3); }
     .text-span:hover { outline: 1px solid rgba(79, 70, 229, 0.3); }
+
+    /* Help button */
+    #help-button {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.8rem;
+      border-radius: 999px;
+      line-height: 1;
+    }
+
+    /* Help modal */
+    #help-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    #help-modal .modal-content {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 1.5rem 1.75rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 25px 50px -12px rgba(15,23,42,0.4);
+      font-size: 0.9rem;
+    }
+
+    #help-modal h2 {
+      margin: 0 0 0.75rem 0;
+      font-size: 1rem;
+    }
+
+    #help-modal .shortcut-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1rem 0;
+    }
+
+    #help-modal .shortcut-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.25rem 0;
+      border-bottom: 1px dashed #e2e8f0;
+      font-size: 0.85rem;
+    }
+
+    #help-modal .shortcut-list li:last-child {
+      border-bottom: none;
+    }
+
+    #help-modal kbd {
+      font-family: inherit;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      padding: 0.1rem 0.3rem;
+      background: #f8fafc;
+      font-size: 0.8rem;
+      min-width: 2rem;
+      text-align: center;
+    }
+
+    #help-close {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.8rem;
+      border-radius: 999px;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
@@ -152,22 +222,33 @@
     <header>
       <h1>VIVID <span style="color:var(--text-muted); font-weight:400;"> TTS</span></h1>
       <div id="status">Waiting for file...</div>
+      <button
+        id="help-button"
+        title="Keyboard shortcuts:
+O – Open PDF
+A / D – Prev / Next page
+W / S – Prev / Next sentence (while reading)
+Q / E – Pause / Resume
+V – Expand voice selection
+T – Expand TTS engine selection
+H – Help"
+      >Help</button>
     </header>
 
     <div id="toolbar">
       <div class="toolbar-section">
         <div class="toolbar-group">
-          <label for="file-input" class="file-input-label">Choose PDF</label>
+          <label for="file-input" class="file-input-label" title="Choose PDF (Shortcut: O)">Choose PDF</label>
           <input id="file-input" type="file" accept="application/pdf" />
         </div>
         <div class="toolbar-group">
-            <button id="prev-page" disabled>◀</button>
+            <button id="prev-page" disabled title="Previous Page (Shortcut: A)">◀</button>
             <span id="page-info" style="min-width:80px; text-align:center; font-weight:600;">-- / --</span>
-            <button id="next-page" disabled>▶</button>
+            <button id="next-page" disabled title="Next Page (Shortcut: D)">▶</button>
         </div>
         <div class="toolbar-group">
-            <button id="pause-tts" disabled>⏸ Pause</button>
-            <button id="resume-tts" disabled>▶ Resume</button>
+            <button id="pause-tts" disabled title="Pause (Shortcut: Q)">⏸ Pause</button>
+            <button id="resume-tts" disabled title="Resume (Shortcut: E)">▶ Resume</button>
             <button id="stop-tts" disabled  style="display:none"></button>
         </div>
 
@@ -180,17 +261,17 @@
       <div class="toolbar-section">
         <div class="toolbar-group">
             <label>TTS Engine:</label>
-            <select id="tts-engine">
+            <select id="tts-engine" title="TTS Engine (Shortcut: T)">
               <option value="browser">Browser (Free)</option>
               <option value="minimax">MiniMax (High Quality)</option>
             </select>
         </div>
         <div class="toolbar-group" id="browser-voice-group">
             <label>Voice:</label>
-            <select id="browser-voice" style="max-width: 180px;"></select>
+            <select id="browser-voice" style="max-width: 180px;" title="Voice (Shortcut: V)"></select>
         </div>
 
-        <!-- NEW: Mode Dropdown -->
+        <!-- Mode Dropdown placeholder (unused for now) -->
 
         <div class="toolbar-group">
             <label>Speed: <span id="speed-val">1.0</span>x</label>
@@ -206,7 +287,7 @@
             </div>
             <div class="setting-item">
                 <label>Voice</label>
-                <select id="minimax-voice" style="width:100%"></select>
+                <select id="minimax-voice" style="width:100%" title="Voice (Shortcut: V)"></select>
                 <input id="minimax-voice-custom" type="text" placeholder="id" style="display:none; margin-top:5px;" />
             </div>
             </div>
@@ -222,6 +303,31 @@
     </div>
 
     <audio id="player" hidden></audio>
+
+    <!-- Help Modal -->
+    <div id="help-modal">
+      <div class="modal-content">
+        <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted);">
+          This app only allows PDF files up to 200&nbsp;MB in size.
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <h2>Keyboard Shortcuts</h2>
+          <button id="help-close">✕</button>
+        </div>
+        <ul class="shortcut-list">
+          <li><span><kbd>O</kbd></span><span>Open PDF</span></li>
+          <li><span><kbd>A</kbd> / <kbd>D</kbd></span><span>Previous / Next page</span></li>
+          <li><span><kbd>W</kbd> / <kbd>S</kbd></span><span>Previous / Next sentence (while reading with Browser TTS)</span></li>
+          <li><span><kbd>Q</kbd> / <kbd>E</kbd></span><span>Pause / Resume reading</span></li>
+          <li><span><kbd>V</kbd></span><span>Focus voice selection</span></li>
+          <li><span><kbd>T</kbd></span><span>Focus TTS engine selection</span></li>
+          <li><span><kbd>H</kbd></span><span>Open / close this help</span></li>
+        </ul>
+        <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">
+          Shortcuts are ignored while typing in text fields, selects, or text areas.
+        </p>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -240,6 +346,9 @@
       minimaxPanel: document.getElementById('minimax-panel'),
       engine: document.getElementById('tts-engine'),
       browserVoiceGroup: document.getElementById('browser-voice-group'),
+      helpButton: document.getElementById('help-button'),
+      helpModal: document.getElementById('help-modal'),
+      helpClose: document.getElementById('help-close'),
       btns: {
         prev: document.getElementById('prev-page'),
         next: document.getElementById('next-page'),
@@ -255,7 +364,7 @@
         speed: document.getElementById('global-speed'),
         speedVal: document.getElementById('speed-val'),
         browserVoice: document.getElementById('browser-voice'),
-        mode: document.getElementById('reading-mode')  // NEW
+        mode: document.getElementById('reading-mode')  // placeholder for future
       }
     };
 
@@ -269,9 +378,11 @@
     let pageSentenceRanges = []; // { start, end }
     let pageItemMeta = [];       // { start, end, span }
 
+    // Added generation token to avoid race with old utterances
     const continuousState = {
       active: false,
       sentenceIndex: 0,
+      generation: 0,
       utterance: null
     };
     
@@ -301,6 +412,15 @@
       els.audio.pause(); els.audio.currentTime = 0;
       els.btns.pause.disabled = true; els.btns.resume.disabled = true; els.btns.stop.disabled = true;
       stopContinuousMode();
+    }
+
+    // --- Help modal helpers ---
+    function openHelpModal() {
+      els.helpModal.style.display = 'flex';
+    }
+
+    function closeHelpModal() {
+      els.helpModal.style.display = 'none';
     }
 
     // --- Sync settings with URL (excluding sensitive data like API keys) ---
@@ -353,7 +473,6 @@
 
     // --- Browser TTS Logic ---
     
-    // 1. Load Voices
     function loadBrowserVoices() {
       browserVoices = window.speechSynthesis.getVoices();
       els.settings.browserVoice.innerHTML = '';
@@ -502,11 +621,38 @@
       });
     }
 
-    function playNextSentence() {
-      if (!continuousState.active) return;
+    // UPDATED: playNextSentence now uses a generation token to avoid stale onend handlers
+    function playNextSentence(gen) {
+      if (!continuousState.active || gen !== continuousState.generation) return;
 
       const idx = continuousState.sentenceIndex;
+
+      // If we've finished all sentences on this page...
       if (idx >= pageSentences.length) {
+        // ...and there is another page, go to next page and keep reading
+        if (pdfDoc && currentPage < pdfDoc.numPages) {
+          currentPage++;
+
+          // Re-render the next page, then start from its first sentence
+          renderPage(currentPage, () => {
+            if (!continuousState.active || gen !== continuousState.generation) return;
+
+            // Start at the first sentence of the new page
+            continuousState.sentenceIndex = 0;
+
+            // Make sure new page actually has sentences
+            if (pageSentences.length === 0) {
+              // If no text, skip ahead to try the next page
+              continuousState.sentenceIndex = pageSentences.length;
+              playNextSentence(gen);
+            } else {
+              playNextSentence(gen);
+            }
+          });
+          return;
+        }
+
+        // No more pages — stop reading
         stopContinuousMode();
         setStatus('Done');
         return;
@@ -515,7 +661,7 @@
       const text = pageSentences[idx];
       if (!text) {
         continuousState.sentenceIndex++;
-        setTimeout(playNextSentence, 40);
+        setTimeout(() => playNextSentence(gen), 40);
         return;
       }
 
@@ -532,15 +678,16 @@
       els.btns.stop.disabled = false;
 
       u.onend = () => {
-        if (!continuousState.active) {
-          clearHighlights();
+        // Ignore if this utterance is stale (old generation or mode stopped)
+        if (!continuousState.active || gen !== continuousState.generation) {
           return;
         }
         continuousState.sentenceIndex++;
-        setTimeout(playNextSentence, 40);
+        setTimeout(() => playNextSentence(gen), 40);
       };
 
       u.onerror = () => {
+        if (gen !== continuousState.generation) return;
         stopContinuousMode();
         setStatus('Error during speech');
       };
@@ -559,7 +706,27 @@
       resetTTS();
       continuousState.active = true;
       continuousState.sentenceIndex = startIndex;
-      playNextSentence();
+      continuousState.generation++;           // new reading session
+      const gen = continuousState.generation;
+      playNextSentence(gen);
+    }
+
+    // UPDATED: Jump between sentences with keyboard (W / S) without breaking highlight
+    function jumpSentence(offset) {
+      if (!continuousState.active || els.engine.value !== 'browser') return;
+      if (!pageSentences.length) return;
+
+      let newIndex = continuousState.sentenceIndex + offset;
+      if (newIndex < 0) newIndex = 0;
+      if (newIndex >= pageSentences.length) newIndex = pageSentences.length - 1;
+
+      continuousState.sentenceIndex = newIndex;
+      continuousState.generation++; // invalidate previous chain
+      const gen = continuousState.generation;
+
+      window.speechSynthesis.cancel();
+      clearHighlights();
+      playNextSentence(gen);
     }
 
     // --- Interaction Logic ---
@@ -610,7 +777,8 @@
       pageSentenceRanges = [];
       pageItemMeta = [];
 
-      page.getTextContent().then(content => {
+      // ⬇️ IMPORTANT: return this promise
+      return page.getTextContent().then(content => {
         content.items.forEach(item => {
           if (!item.str.trim()) return;
 
@@ -620,7 +788,7 @@
           const end = start + item.str.length;
 
           const s = document.createElement('span');
-          s.textContent = item.str; 
+          s.textContent = item.str;
           s.className = 'text-span';
           
           const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
@@ -645,16 +813,28 @@
       });
     }
 
-    function renderPage(num) {
+    function renderPage(num, onDone) {
       pdfDoc.getPage(num).then(page => {
         const viewport = page.getViewport({ scale });
-        els.canvas.height = viewport.height; els.canvas.width = viewport.width;
-        els.textLayer.style.width = viewport.width+'px'; els.textLayer.style.height = viewport.height+'px';
-        page.render({canvasContext:ctx, viewport}).promise.then(() => setStatus('Ready'));
-        renderTextLayer(page, viewport);
+        els.canvas.height = viewport.height;
+        els.canvas.width = viewport.width;
+        els.textLayer.style.width = viewport.width + 'px';
+        els.textLayer.style.height = viewport.height + 'px';
+
+        const renderPromise = page.render({ canvasContext: ctx, viewport }).promise;
+        const textPromise = renderTextLayer(page, viewport);
+
+        return Promise.all([renderPromise, textPromise]);
+      }).then(() => {
+        setStatus('Ready');
         els.pageInfo.textContent = `${num} / ${pdfDoc.numPages}`;
-        els.btns.prev.disabled = num<=1; els.btns.next.disabled = num>=pdfDoc.numPages;
+        els.btns.prev.disabled = num <= 1;
+        els.btns.next.disabled = num >= pdfDoc.numPages;
         els.btns.read.disabled = false;
+
+        if (typeof onDone === 'function') {
+          onDone();
+        }
       });
     }
 
@@ -779,6 +959,90 @@
 
     MINI_VOICES.forEach(v => {
       const o = document.createElement('option'); o.value=v.id; o.textContent=v.l; els.settings.voice.appendChild(o);
+    });
+
+    // Help modal events
+    els.helpButton.addEventListener('click', () => {
+      openHelpModal();
+    });
+
+    els.helpClose.addEventListener('click', () => {
+      closeHelpModal();
+    });
+
+    els.helpModal.addEventListener('click', (e) => {
+      if (e.target === els.helpModal) {
+        closeHelpModal();
+      }
+    });
+
+    // Global keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      const tag = (e.target.tagName || '').toLowerCase();
+      const isInputLike = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+      if (isInputLike) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const key = e.key.toLowerCase();
+
+      if (key === 'escape' && els.helpModal.style.display === 'flex') {
+        e.preventDefault();
+        closeHelpModal();
+        return;
+      }
+
+      switch (key) {
+        case 'o': // Open PDF
+          e.preventDefault();
+          els.file.click();
+          break;
+        case 'a': // Previous page
+          e.preventDefault();
+          if (!els.btns.prev.disabled) els.btns.prev.click();
+          break;
+        case 'd': // Next page
+          e.preventDefault();
+          if (!els.btns.next.disabled) els.btns.next.click();
+          break;
+        case 'q': // Pause
+          e.preventDefault();
+          if (!els.btns.pause.disabled) els.btns.pause.click();
+          break;
+        case 'e': // Resume
+          e.preventDefault();
+          if (!els.btns.resume.disabled) els.btns.resume.click();
+          break;
+        case 'v': // Voice selection
+          e.preventDefault();
+          if (els.engine.value === 'minimax') {
+            els.settings.voice.focus();
+          } else {
+            els.settings.browserVoice.focus();
+          }
+          break;
+        case 't': // TTS engine selection
+          e.preventDefault();
+          els.engine.focus();
+          break;
+        case 'h': // Help
+          e.preventDefault();
+          if (els.helpModal.style.display === 'flex') {
+            closeHelpModal();
+          } else {
+            openHelpModal();
+          }
+          break;
+        case 'w': // Previous sentence while reading
+          e.preventDefault();
+          jumpSentence(-1);
+          break;
+        case 's': // Next sentence while reading
+          e.preventDefault();
+          jumpSentence(1);
+          break;
+        default:
+          break;
+      }
     });
 
     // Load persisted settings from URL on startup
