@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart VIVID TTS</title>
   <style>
+    .skip-zone {
+      position: absolute;
+      border: 2px dashed rgba(239, 68, 68, 0.8);
+      background: rgba(239, 68, 68, 0.15);
+      pointer-events: none;
+      border-radius: 4px;
+    }
+
+    /* Optional: visual toggle state */
+    #toggle-skip-mode.active {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
     :root {
       --primary: #4f46e5;
       --primary-hover: #4338ca;
@@ -221,7 +235,17 @@
   <div class="app">
     <header>
       <h1>VIVID <span style="color:var(--text-muted); font-weight:400;"> TTS</span></h1>
-      <div id="status">Waiting for file...</div>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <div id="status">Waiting for file...</div>
+        <div
+          id="smart-spinner"
+          style="display:none;"
+          aria-label="Smart Reading processing"
+          title="Smart Reading processing"
+        >
+          ⏳
+        </div>
+      </div>
       <button
         id="help-button"
         title="Keyboard shortcuts:
@@ -231,6 +255,8 @@ W / S – Prev / Next sentence (while reading)
 Q / E – Pause / Resume
 V – Expand voice selection
 T – Expand TTS engine selection
+M – Mark skip areas
+Z – Toggle Smart Reading
 H – Help"
       >Help</button>
     </header>
@@ -241,65 +267,94 @@ H – Help"
           <label for="file-input" class="file-input-label" title="Choose PDF (Shortcut: O)">Choose PDF</label>
           <input id="file-input" type="file" accept="application/pdf" />
         </div>
+
+        <!-- UPDATED PAGE CONTROL WITH TYPABLE PAGE NUMBER -->
         <div class="toolbar-group">
-            <button id="prev-page" disabled title="Previous Page (Shortcut: A)">◀</button>
-            <span id="page-info" style="min-width:80px; text-align:center; font-weight:600;">-- / --</span>
-            <button id="next-page" disabled title="Next Page (Shortcut: D)">▶</button>
-        </div>
-        <div class="toolbar-group">
-            <button id="pause-tts" disabled title="Pause (Shortcut: Q)">⏸ Pause</button>
-            <button id="resume-tts" disabled title="Resume (Shortcut: E)">▶ Resume</button>
-            <button id="stop-tts" disabled  style="display:none"></button>
+          <button id="prev-page" disabled title="Previous Page (Shortcut: A)">◀</button>
+
+          <div style="display:flex; align-items:center; gap:0.35rem;">
+            <input
+              id="page-input"
+              type="number"
+              min="1"
+              value="1"
+              style="width:60px; text-align:center; padding:0.2rem 0.4rem; border-radius:6px; border:1px solid var(--border);"
+              title="Go to page (press Enter)"
+            />
+            <span style="font-weight:600;">/ <span id="page-count">--</span></span>
+          </div>
+
+          <button id="next-page" disabled title="Next Page (Shortcut: D)">▶</button>
         </div>
 
+        <div class="toolbar-group">
+          <button id="pause-tts" disabled title="Pause (Shortcut: Q)">⏸ Pause</button>
+          <button id="resume-tts" disabled title="Resume (Shortcut: E)">▶ Resume</button>
+          <button id="stop-tts" disabled style="display:none"></button>
+        </div>
+        <div class="toolbar-group">
+          <button id="toggle-skip-mode" disabled title="Draw rectangles over headers/footers to skip them on all pages">
+            🎯 Mark skip areas
+          </button>
+        </div>
       </div>
+
       <div class="toolbar-section">
         <button id="read-page" disabled style="display:none">🔊 Read Page</button>
+        <div class="toolbar-group">
+          <button
+            id="toggle-smart-reading"
+            title="Toggle Smart Reading (GPT preprocessing for all speech) (Shortcut: Z)"
+          >
+            🧠 Smart Reading: Off
+          </button>
+        </div>
       </div>
       <div style="height:1px; background:var(--border); width:100%;"></div>
       
       <div class="toolbar-section">
         <div class="toolbar-group">
-            <label>TTS Engine:</label>
-            <select id="tts-engine" title="TTS Engine (Shortcut: T)">
-              <option value="browser">Browser (Free)</option>
-              <option value="minimax">MiniMax (High Quality)</option>
-            </select>
+          <label>Voice Engine:</label>
+          <select id="tts-engine" title="Voice Engine (Shortcut: T)">
+            <option value="browser">Browser (Free)</option>
+            <option value="minimax">MiniMax (High Quality)</option>
+          </select>
         </div>
         <div class="toolbar-group" id="browser-voice-group">
-            <label>Voice:</label>
-            <select id="browser-voice" style="max-width: 180px;" title="Voice (Shortcut: V)"></select>
+          <label>Voice:</label>
+          <select id="browser-voice" style="max-width: 180px;" title="Voice (Shortcut: V)"></select>
         </div>
 
-        <!-- Mode Dropdown placeholder (unused for now) -->
-
         <div class="toolbar-group">
-            <label>Speed: <span id="speed-val">1.0</span>x</label>
-            <input id="global-speed" type="range" min="0.5" max="3.0" step="0.1" value="1.0" style="width:100px; cursor:pointer;" />
+          <label>Speed: <span id="speed-val">1.0</span>x</label>
+          <input id="global-speed" type="range" min="0.5" max="3.0" step="0.1" value="1.0" style="width:100px; cursor:pointer;" />
         </div>
       </div>
 
       <div id="minimax-panel">
         <div class="settings-grid">
-            <div class="setting-item" style="grid-column: span 2;">
-                <label>API Key</label>
-                <input id="minimax-key" type="password" placeholder="Enter MiniMax Key" />
-            </div>
-            <div class="setting-item">
-                <label>Voice</label>
-                <select id="minimax-voice" style="width:100%" title="Voice (Shortcut: V)"></select>
-                <input id="minimax-voice-custom" type="text" placeholder="id" style="display:none; margin-top:5px;" />
-            </div>
-            </div>
+          <div class="setting-item" style="grid-column: span 2;">
+            <label>API Key</label>
+            <input id="minimax-key" type="password" placeholder="Enter MiniMax Key" />
+          </div>
+          <div class="setting-item">
+            <label>Voice</label>
+            <select id="minimax-voice" style="width:100%" title="Voice (Shortcut: V)"></select>
+            <input id="minimax-voice-custom" type="text" placeholder="id" style="display:none; margin-top:5px;" />
+          </div>
+        </div>
       </div>
     </div>
 
     <div style="text-align: center; background: #e2e8f0; padding: 2rem; border-radius: 8px; overflow: auto;">
-        <div id="pdf-container">
-            <canvas id="pdf-canvas"></canvas>
-            <div id="text-layer"></div>
-        </div>
-        <p style="margin-top:1rem; color:var(--text-muted); font-size:0.9rem;">💡 Tip: <b>Drag mouse</b> to read sentences, or <b>Click</b> to read single words or entire sentences (depending on mode).</p>
+      <div id="pdf-container">
+        <canvas id="pdf-canvas"></canvas>
+        <div id="text-layer"></div>
+      </div>
+      <p style="margin-top:1rem; color:var(--text-muted); font-size:0.9rem;">
+        💡 Tip: <b>Drag mouse</b> to read sentences, or <b>Click</b> to read single words or entire sentences (depending on mode).
+        Use <b>Z</b> to toggle Smart Reading.
+      </p>
     </div>
 
     <audio id="player" hidden></audio>
@@ -321,6 +376,8 @@ H – Help"
           <li><span><kbd>Q</kbd> / <kbd>E</kbd></span><span>Pause / Resume reading</span></li>
           <li><span><kbd>V</kbd></span><span>Focus voice selection</span></li>
           <li><span><kbd>T</kbd></span><span>Focus TTS engine selection</span></li>
+          <li><span><kbd>M</kbd></span><span>Enter / Exit mark skip areas mode</span></li>
+          <li><span><kbd>Z</kbd></span><span>Toggle Smart Reading</span></li>
           <li><span><kbd>H</kbd></span><span>Open / close this help</span></li>
         </ul>
         <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">
@@ -340,8 +397,10 @@ H – Help"
       file: document.getElementById('file-input'),
       canvas: document.getElementById('pdf-canvas'),
       textLayer: document.getElementById('text-layer'),
+      pdfContainer: document.getElementById('pdf-container'),
       status: document.getElementById('status'),
-      pageInfo: document.getElementById('page-info'),
+      pageInput: document.getElementById('page-input'),
+      pageCount: document.getElementById('page-count'),
       audio: document.getElementById('player'),
       minimaxPanel: document.getElementById('minimax-panel'),
       engine: document.getElementById('tts-engine'),
@@ -349,13 +408,16 @@ H – Help"
       helpButton: document.getElementById('help-button'),
       helpModal: document.getElementById('help-modal'),
       helpClose: document.getElementById('help-close'),
+      smartSpinner: document.getElementById('smart-spinner'),
       btns: {
         prev: document.getElementById('prev-page'),
         next: document.getElementById('next-page'),
         read: document.getElementById('read-page'),
         pause: document.getElementById('pause-tts'),
         resume: document.getElementById('resume-tts'),
-        stop: document.getElementById('stop-tts')
+        stop: document.getElementById('stop-tts'),
+        toggleSkipMode: document.getElementById('toggle-skip-mode'),
+        toggleSmartReading: document.getElementById('toggle-smart-reading')
       },
       settings: {
         key: document.getElementById('minimax-key'),
@@ -372,22 +434,46 @@ H – Help"
     let pdfDoc = null, currentPage = 1, scale = 1.5;
     let browserVoices = []; // Store available system voices
 
+    // Smart Reading flag
+    let smartReadingEnabled = false;
+
+    // --- Skip zones (headers / footers / page numbers) ---
+    // Normalized coordinates relative to the canvas (0–1)
+    // { x: 0..1, y: 0..1, w: 0..1, h: 0..1 }
+    let skipZones = [];
+
+    let drawMode = false;
+    let isDrawingZone = false;
+    let drawStartX = 0;
+    let drawStartY = 0;
+    let currentSkipRectEl = null;
+
     // --- Globals for sentence-based reading ---
     let pageFullText = '';
     let pageSentences = [];
     let pageSentenceRanges = []; // { start, end }
     let pageItemMeta = [];       // { start, end, span }
 
+    // Caches for Smart Reading in continuous mode
+    const sentenceCache = new Map();             // idx -> processed text
+    const sentenceFetchInProgress = new Map();   // idx -> promise
+
     // Added generation token to avoid race with old utterances
     const continuousState = {
       active: false,
       sentenceIndex: 0,
       generation: 0,
-      utterance: null
+      utterance: null,
+      spinnerIndex: -1    // which sentence index should show the first-spinner
     };
     
     // --- Helpers ---
     function setStatus(msg) { els.status.textContent = msg; }
+
+    function showSmartSpinner(show) {
+      if (!els.smartSpinner) return;
+      els.smartSpinner.style.display = show ? 'inline-block' : 'none';
+    }
 
     function clearHighlights() {
       els.textLayer.querySelectorAll('.text-span-reading').forEach(el => {
@@ -401,10 +487,18 @@ H – Help"
       });
     }
 
+    function resetContinuousCache() {
+      sentenceCache.clear();
+      sentenceFetchInProgress.clear();
+      continuousState.spinnerIndex = -1;
+      showSmartSpinner(false);
+    }
+
     function stopContinuousMode() {
       continuousState.active = false;
       continuousState.utterance = null;
       clearHighlights();
+      resetContinuousCache();
     }
     
     function resetTTS() {
@@ -550,10 +644,74 @@ H – Help"
       }
     }
 
-    function speak(text) {
+    // --- Smart Reading wrapper ---
+    async function speak(text) {
       if (!text) return;
-      if (els.engine.value === 'minimax') speakMiniMax(text);
-      else speakBrowser(text);
+
+      let finalText = text;
+
+      if (smartReadingEnabled) {
+        try {
+          finalText = await getSpokenTranscript(text);
+        } catch (err) {
+          console.error('Smart Reading failed, falling back to raw text:', err);
+          finalText = text;
+        }
+      }
+
+      if (els.engine.value === 'minimax') speakMiniMax(finalText);
+      else speakBrowser(finalText);
+    }
+
+    // --- Skip Zone Logic ---
+    function isInSkipZone(x, y, w, h) {
+      if (!skipZones.length) return false;
+      const canvasWidth = els.canvas.width;
+      const canvasHeight = els.canvas.height;
+
+      const itemLeft = x;
+      const itemTop = y;
+      const itemRight = x + w;
+      const itemBottom = y + h;
+
+      return skipZones.some(z => {
+        const zx = z.x * canvasWidth;
+        const zy = z.y * canvasHeight;
+        const zw = z.w * canvasWidth;
+        const zh = z.h * canvasHeight;
+
+        const zRight = zx + zw;
+        const zBottom = zy + zh;
+
+        // basic AABB intersection (touch counts as intersect)
+        const noOverlap =
+          itemRight < zx ||
+          itemLeft > zRight ||
+          itemBottom < zy ||
+          itemTop > zBottom;
+
+        return !noOverlap;
+      });
+    }
+
+    function renderSkipZones() {
+      if (!els.pdfContainer) return;
+
+      // Remove old overlays
+      els.pdfContainer.querySelectorAll('.skip-zone').forEach(el => el.remove());
+
+      const canvasWidth = els.canvas.width;
+      const canvasHeight = els.canvas.height;
+
+      skipZones.forEach(z => {
+        const div = document.createElement('div');
+        div.className = 'skip-zone';
+        div.style.left = (z.x * canvasWidth) + 'px';
+        div.style.top = (z.y * canvasHeight) + 'px';
+        div.style.width = (z.w * canvasWidth) + 'px';
+        div.style.height = (z.h * canvasHeight) + 'px';
+        els.pdfContainer.appendChild(div);
+      });
     }
 
     // --- Sentence utilities for continuous mode ---
@@ -621,8 +779,33 @@ H – Help"
       });
     }
 
-    // UPDATED: playNextSentence now uses a generation token to avoid stale onend handlers
-    function playNextSentence(gen) {
+    // Prefetch next sentence's Smart Reading result in the background
+    function prefetchSentence(index, gen) {
+      if (!smartReadingEnabled) return;
+      if (!continuousState.active || gen !== continuousState.generation) return;
+      if (index < 0 || index >= pageSentences.length) return;
+      if (sentenceCache.has(index) || sentenceFetchInProgress.has(index)) return;
+
+      const originalText = pageSentences[index];
+      if (!originalText) return;
+
+      const p = (async () => {
+        try {
+          const processed = await getSpokenTranscript(originalText);
+          if (!continuousState.active || gen !== continuousState.generation) return;
+          sentenceCache.set(index, processed || originalText);
+        } catch (e) {
+          console.error('Smart Reading prefetch failed:', e);
+        } finally {
+          sentenceFetchInProgress.delete(index);
+        }
+      })();
+
+      sentenceFetchInProgress.set(index, p);
+    }
+
+    // UPDATED: playNextSentence now async, uses cache & prefetch for Smart Reading
+    async function playNextSentence(gen) {
       if (!continuousState.active || gen !== continuousState.generation) return;
 
       const idx = continuousState.sentenceIndex;
@@ -633,12 +816,16 @@ H – Help"
         if (pdfDoc && currentPage < pdfDoc.numPages) {
           currentPage++;
 
+          // New page => clear cache
+          resetContinuousCache();
+
           // Re-render the next page, then start from its first sentence
           renderPage(currentPage, () => {
             if (!continuousState.active || gen !== continuousState.generation) return;
 
             // Start at the first sentence of the new page
             continuousState.sentenceIndex = 0;
+            continuousState.spinnerIndex = 0;
 
             // Make sure new page actually has sentences
             if (pageSentences.length === 0) {
@@ -658,7 +845,7 @@ H – Help"
         return;
       }
 
-      const text = pageSentences[idx];
+      let text = pageSentences[idx];
       if (!text) {
         continuousState.sentenceIndex++;
         setTimeout(() => playNextSentence(gen), 40);
@@ -667,7 +854,45 @@ H – Help"
 
       highlightSentence(idx);
 
-      const u = new SpeechSynthesisUtterance(text);
+      // Apply Smart Reading with cache, spinner only for first sentence in session
+      let spokenText = text;
+      if (smartReadingEnabled) {
+        const isFirstForSession = (idx === continuousState.spinnerIndex);
+
+        if (sentenceCache.has(idx)) {
+          spokenText = sentenceCache.get(idx);
+        } else {
+          if (isFirstForSession) {
+            showSmartSpinner(true);
+          }
+          try {
+            const processed = await getSpokenTranscript(text);
+            if (!continuousState.active || gen !== continuousState.generation) {
+              // Session changed while we were waiting
+              if (isFirstForSession) showSmartSpinner(false);
+              return;
+            }
+            spokenText = processed || text;
+            sentenceCache.set(idx, spokenText);
+          } catch (err) {
+            console.error('Smart Reading (continuous) failed, using raw sentence:', err);
+            spokenText = text;
+          } finally {
+            if (isFirstForSession) {
+              showSmartSpinner(false);
+              continuousState.spinnerIndex = -1;
+            }
+          }
+        }
+
+        // Start prefetching the next sentence in the background
+        prefetchSentence(idx + 1, gen);
+      } else {
+        // Ensure spinner is off if Smart Reading is disabled
+        showSmartSpinner(false);
+      }
+
+      const u = new SpeechSynthesisUtterance(spokenText);
       continuousState.utterance = u;
       u.rate = parseFloat(els.settings.speed.value);
 
@@ -703,10 +928,12 @@ H – Help"
       if (startIndex < 0 || startIndex >= pageSentences.length) {
         return;
       }
-      resetTTS();
+      resetTTS();               // also stops previous continuous sessions
+      resetContinuousCache();   // fresh cache for this new session
       continuousState.active = true;
       continuousState.sentenceIndex = startIndex;
       continuousState.generation++;           // new reading session
+      continuousState.spinnerIndex = startIndex; // first sentence in this session
       const gen = continuousState.generation;
       playNextSentence(gen);
     }
@@ -731,14 +958,18 @@ H – Help"
 
     // --- Interaction Logic ---
     document.addEventListener('mouseup', () => {
+      if (drawMode) return; // ignore selection while defining skip zones
       const selection = window.getSelection();
       const selectedText = selection.toString().trim();
       if (selectedText.length > 0 && els.textLayer.contains(selection.anchorNode)) {
-        resetTTS(); speak(selectedText);
+        resetTTS();
+        speak(selectedText);
       }
     });
 
+
     function handleSpanClick(e, metaIndex) {
+      if (drawMode) return; // clicking spans is disabled while drawing skip zones
       const selection = window.getSelection();
       if (selection.toString().length === 0 && pageSentenceRanges.length > 0) {
         e.stopPropagation();
@@ -756,6 +987,7 @@ H – Help"
     }
 
     function handleSpanMouseEnter(e, metaIndex) {
+      if (drawMode) return;
       const meta = pageItemMeta[metaIndex];
       if (!meta) return;
 
@@ -782,6 +1014,19 @@ H – Help"
         content.items.forEach(item => {
           if (!item.str.trim()) return;
 
+          const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+          const h = Math.hypot(tx[2], tx[3]);
+
+          const left = tx[4];
+          const top = (tx[5] - h * 0.9);
+          const width = (item.width > 0 ? item.width * viewport.scale : 0);
+          const height = h;
+
+          // Skip any text item whose bounding box touches a skip zone
+          if (isInSkipZone(left, top, width, height)) {
+            return;
+          }
+
           const prefix = pageFullText.length === 0 ? '' : ' ';
           const start = pageFullText.length + prefix.length;
           pageFullText += prefix + item.str;
@@ -790,19 +1035,16 @@ H – Help"
           const s = document.createElement('span');
           s.textContent = item.str;
           s.className = 'text-span';
-          
-          const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-          const h = Math.hypot(tx[2], tx[3]);
-          
-          s.style.left = tx[4] + 'px';
-          s.style.top = (tx[5] - h * 0.9) + 'px';
+
+          s.style.left = left + 'px';
+          s.style.top = top + 'px';
           s.style.fontSize = h + 'px';
-          if (item.width > 0) s.style.width = (item.width * viewport.scale) + 'px';
-          
+          if (width > 0) s.style.width = width + 'px';
+
           const metaIndex = pageItemMeta.length;
           pageItemMeta.push({ start, end, span: s });
 
-          s.addEventListener('mousedown', (ev) => ev.stopPropagation()); 
+          s.addEventListener('mousedown', (ev) => ev.stopPropagation());
           s.addEventListener('click', (ev) => handleSpanClick(ev, metaIndex));
           s.addEventListener('mouseenter', (ev) => handleSpanMouseEnter(ev, metaIndex));
           s.addEventListener('mouseleave', (ev) => handleSpanMouseLeave(ev, metaIndex));
@@ -827,10 +1069,26 @@ H – Help"
         return Promise.all([renderPromise, textPromise]);
       }).then(() => {
         setStatus('Ready');
-        els.pageInfo.textContent = `${num} / ${pdfDoc.numPages}`;
+
+        // Sync typable page input and total page count
+        if (els.pageInput) {
+          els.pageInput.value = String(num);
+          els.pageInput.min = 1;
+          if (pdfDoc) {
+            els.pageInput.max = pdfDoc.numPages;
+          }
+        }
+        if (els.pageCount && pdfDoc) {
+          els.pageCount.textContent = String(pdfDoc.numPages);
+        }
+
         els.btns.prev.disabled = num <= 1;
         els.btns.next.disabled = num >= pdfDoc.numPages;
         els.btns.read.disabled = false;
+        els.btns.toggleSkipMode.disabled = false;
+
+        // Draw the skip rectangles overlay for this page
+        renderSkipZones();
 
         if (typeof onDone === 'function') {
           onDone();
@@ -840,48 +1098,48 @@ H – Help"
 
     async function getSpokenTranscript(rawText) {
 
-        const systemPrompt = `
-            You are a reading assistant for the visually impaired. 
-            Your job is to convert raw text (which may contain LaTeX, math symbols, or messy PDF formatting) into a "spoken script" optimized for Text-to-Speech engines.
-            
-            Rules:
-            1. Convert all math equations into natural spoken English.
-               - Example: "n^2" becomes "n to the power of two" or "n squared".
-               - Example: "f(x) = \\\\frac{1}{2}" becomes "f of x equals one half".
-            2. Expand abbreviations (e.g., "Fig. 1" becomes "Figure one").
-            3. Remove page numbers, headers, or footers if they appear in the middle of sentences.
-            4. Do NOT reply with "Here is the text". Just output the spoken script.
-        `;
+      const systemPrompt = `
+        You are a reading assistant for the visually impaired. 
+        Your job is to convert raw text (which may contain LaTeX, math symbols, or messy PDF formatting) into a "spoken script" optimized for Text-to-Speech engines.
+        
+        Rules:
+        1. Convert all math equations into natural spoken English.
+           - Example: "n^2" becomes "n to the power of two" or "n squared".
+           - Example: "f(x) = \\\\frac{1}{2}" becomes "f of x equals one half".
+        2. Expand abbreviations (e.g., "Fig. 1" becomes "Figure one").
+        3. Remove page numbers, headers, or footers if they appear in the middle of sentences.
+        4. Do NOT reply with "Here is the text". Just output the spoken script.
+      `;
 
-        try {
-            const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: "gpt-4o-mini",
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: rawText }
-                    ],
-                    temperature: 0.3
-                })
-            });
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: rawText }
+            ],
+            temperature: 0.3
+          })
+        });
 
-            const data = await response.json();
-            
-            if (!data.choices || data.choices.length === 0) {
-                throw new Error("No response from OpenAI");
-            }
-
-            return data.choices[0].message.content;
-
-        } catch (error) {
-            console.error("Rewriting failed, falling back to raw text:", error);
-            return rawText;
+        const data = await response.json();
+        
+        if (!data.choices || data.choices.length === 0) {
+          throw new Error("No response from OpenAI");
         }
+
+        return data.choices[0].message.content;
+
+      } catch (error) {
+        console.error("Rewriting failed, falling back to raw text:", error);
+        return rawText;
+      }
     }
 
     // --- Event Listeners ---
@@ -901,28 +1159,41 @@ H – Help"
     els.btns.prev.addEventListener('click', () => { if(currentPage>1) { resetTTS(); renderPage(--currentPage); } });
     els.btns.next.addEventListener('click', () => { if(currentPage<pdfDoc.numPages) { resetTTS(); renderPage(++currentPage); } });
     
-    els.btns.read.addEventListener('click', () => {
-      pdfDoc.getPage(currentPage)
-        .then(p => p.getTextContent())
-        .then(async c => {
-            const text = c.items.map(i => i.str).join(' ');
-            resetTTS();
-            const gptText = await getSpokenTranscript(text);
-            speak(gptText);
-        })
-        .catch(err => console.error("Error in reading process:", err));
+    // Read-page: now just uses speak(), Smart Reading handled globally
+    els.btns.read.addEventListener('click', async () => {
+      try {
+        resetTTS();
+
+        // Use the already-built pageFullText, which has skip zones removed
+        let text = (pageFullText || '').trim();
+
+        // Fallback: if for some reason pageFullText is empty but there IS a PDF,
+        // still try to read from the PDF (rare edge case)
+        if (!text && pdfDoc) {
+          const p = await pdfDoc.getPage(currentPage);
+          const c = await p.getTextContent();
+          text = c.items.map(i => i.str).join(' ');
+        }
+
+        if (!text) return;
+
+        // Smart Reading is applied inside speak() when enabled
+        speak(text);
+      } catch (err) {
+        console.error("Error in reading process:", err);
+      }
     });
 
     els.btns.pause.addEventListener('click', () => {
-       if(els.engine.value==='minimax') { els.audio.pause(); setStatus('Paused'); }
-       else window.speechSynthesis.pause();
-       els.btns.pause.disabled=true; els.btns.resume.disabled=false;
+      if(els.engine.value==='minimax') { els.audio.pause(); setStatus('Paused'); }
+      else window.speechSynthesis.pause();
+      els.btns.pause.disabled=true; els.btns.resume.disabled=false;
     });
     
     els.btns.resume.addEventListener('click', () => {
-       if(els.engine.value==='minimax') { els.audio.play(); setStatus('Playing'); }
-       else window.speechSynthesis.resume();
-       els.btns.pause.disabled=false; els.btns.resume.disabled=true;
+      if(els.engine.value==='minimax') { els.audio.play(); setStatus('Playing'); }
+      else window.speechSynthesis.resume();
+      els.btns.pause.disabled=false; els.btns.resume.disabled=true;
     });
 
     els.btns.stop.addEventListener('click', resetTTS);
@@ -938,8 +1209,8 @@ H – Help"
     });
     
     els.settings.voice.addEventListener('change', () => {
-       els.settings.customVoice.style.display = els.settings.voice.value==='__custom__'?'block':'none';
-       syncSettingsToUrl();
+      els.settings.customVoice.style.display = els.settings.voice.value==='__custom__'?'block':'none';
+      syncSettingsToUrl();
     });
     
     els.settings.speed.addEventListener('input', () => {
@@ -961,6 +1232,18 @@ H – Help"
       const o = document.createElement('option'); o.value=v.id; o.textContent=v.l; els.settings.voice.appendChild(o);
     });
 
+    // Smart Reading toggle button
+    els.btns.toggleSmartReading.addEventListener('click', () => {
+      smartReadingEnabled = !smartReadingEnabled;
+      els.btns.toggleSmartReading.textContent = smartReadingEnabled
+        ? '🧠 Smart Reading: On'
+        : '🧠 Smart Reading: Off';
+      setStatus(smartReadingEnabled ? 'Smart Reading enabled' : 'Smart Reading disabled');
+      if (!smartReadingEnabled) {
+        showSmartSpinner(false);
+      }
+    });
+
     // Help modal events
     els.helpButton.addEventListener('click', () => {
       openHelpModal();
@@ -975,6 +1258,137 @@ H – Help"
         closeHelpModal();
       }
     });
+
+    // --- Skip zone drawing (headers/footers/page numbers) ---
+    els.btns.toggleSkipMode.addEventListener('click', () => {
+      drawMode = !drawMode;
+      els.btns.toggleSkipMode.classList.toggle('active', drawMode);
+      els.btns.toggleSkipMode.textContent = drawMode ? '✅ Done marking' : '🎯 Mark skip areas';
+      setStatus(drawMode ? 'Draw rectangles over areas to skip on all pages.' : 'Ready');
+    });
+
+    els.pdfContainer.addEventListener('mousedown', (e) => {
+      if (!drawMode || e.button !== 0) return;
+
+      // Don't start drawing outside the visible page
+      const rect = els.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+
+      e.preventDefault();
+      isDrawingZone = true;
+      drawStartX = x;
+      drawStartY = y;
+
+      currentSkipRectEl = document.createElement('div');
+      currentSkipRectEl.className = 'skip-zone';
+      currentSkipRectEl.style.left = x + 'px';
+      currentSkipRectEl.style.top = y + 'px';
+      currentSkipRectEl.style.width = '0px';
+      currentSkipRectEl.style.height = '0px';
+      els.pdfContainer.appendChild(currentSkipRectEl);
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDrawingZone || !currentSkipRectEl) return;
+
+      const rect = els.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const curX = Math.max(0, Math.min(rect.width, x));
+      const curY = Math.max(0, Math.min(rect.height, y));
+
+      const left = Math.min(drawStartX, curX);
+      const top = Math.min(drawStartY, curY);
+      const width = Math.abs(curX - drawStartX);
+      const height = Math.abs(curY - drawStartY);
+
+      currentSkipRectEl.style.left = left + 'px';
+      currentSkipRectEl.style.top = top + 'px';
+      currentSkipRectEl.style.width = width + 'px';
+      currentSkipRectEl.style.height = height + 'px';
+    });
+
+    document.addEventListener('mouseup', (e) => {
+      if (!isDrawingZone || !currentSkipRectEl) return;
+
+      isDrawingZone = false;
+
+      const rect = els.canvas.getBoundingClientRect();
+      const widthPx = parseFloat(currentSkipRectEl.style.width);
+      const heightPx = parseFloat(currentSkipRectEl.style.height);
+      const leftPx = parseFloat(currentSkipRectEl.style.left);
+      const topPx = parseFloat(currentSkipRectEl.style.top);
+
+      // If it's just a tiny click, discard
+      if (widthPx < 5 || heightPx < 5) {
+        currentSkipRectEl.remove();
+        currentSkipRectEl = null;
+        return;
+      }
+
+      // Normalize to 0..1 relative to canvas size
+      const norm = {
+        x: leftPx / rect.width,
+        y: topPx / rect.height,
+        w: widthPx / rect.width,
+        h: heightPx / rect.height
+      };
+
+      skipZones.push(norm);
+      currentSkipRectEl = null;
+
+      // Re-render current page so new skip zone is applied
+      if (pdfDoc) {
+        resetTTS();
+        renderPage(currentPage);
+      }
+    });
+
+    // --- Go to page from typable page input ---
+    function goToPageFromInput() {
+      if (!pdfDoc) return;
+
+      const raw = (els.pageInput.value || '').trim();
+      let target = parseInt(raw, 10);
+
+      if (isNaN(target)) {
+        // Reset to current page if invalid
+        els.pageInput.value = String(currentPage);
+        return;
+      }
+
+      // Clamp between 1 and numPages
+      if (target < 1) target = 1;
+      if (target > pdfDoc.numPages) target = pdfDoc.numPages;
+
+      // If it's the same page, do nothing
+      if (target === currentPage) {
+        els.pageInput.value = String(currentPage);
+        return;
+      }
+
+      currentPage = target;
+      resetTTS();
+      renderPage(currentPage);
+    }
+
+    if (els.pageInput) {
+      // On change (blur or losing focus)
+      els.pageInput.addEventListener('change', goToPageFromInput);
+
+      // On Enter key
+      els.pageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          goToPageFromInput();
+          els.pageInput.blur();
+        }
+      });
+    }
 
     // Global keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -1032,6 +1446,10 @@ H – Help"
             openHelpModal();
           }
           break;
+        case 'm': // Mark skip areas
+          e.preventDefault();
+          if (!els.btns.toggleSkipMode.disabled) els.btns.toggleSkipMode.click();
+          break;
         case 'w': // Previous sentence while reading
           e.preventDefault();
           jumpSentence(-1);
@@ -1039,6 +1457,10 @@ H – Help"
         case 's': // Next sentence while reading
           e.preventDefault();
           jumpSentence(1);
+          break;
+        case 'z': // Toggle Smart Reading
+          e.preventDefault();
+          els.btns.toggleSmartReading.click();
           break;
         default:
           break;
