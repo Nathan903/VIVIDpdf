@@ -5,7 +5,7 @@ from matplotlib.patches import Rectangle, Patch
 from itertools import cycle
 
 # --- config ---
-INPUT_JSON = Path("attention.json")
+INPUT_JSON = Path("ece461.json")
 SHOW_TEXT = True           # toggle to hide/show the overlaid text
 FONT_SIZE_FALLBACK = 8     # used when we can't infer size cleanly
 EDGE_WIDTH = 1.0           # box edge width
@@ -145,7 +145,7 @@ def find_islands(items, margin):
 
 def main():
     items = load_pdfjs_items(INPUT_JSON)
-    items = find_islands(items,30)
+    # items = find_islands(items,30)
     text = ""
     for it in items:
         text += it.get("str", "")

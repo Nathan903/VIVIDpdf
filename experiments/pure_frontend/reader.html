@@ -76,6 +76,12 @@
       min-width: 0;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
     h1 {
       margin: 0;
       font-size: 1.25rem;
@@ -199,6 +205,37 @@
       cursor: not-allowed;
     }
 
+    /* Grouped, subtle button colors */
+    .btn-page-control {
+      background: #eef2ff;
+      border-color: #e0e7ff;
+    }
+
+    .btn-page-control:hover:not(:disabled) {
+      background: #e0e7ff;
+      border-color: #c7d2fe;
+    }
+
+    .btn-playback-control {
+      background: #ecfdf3;
+      border-color: #d1fae5;
+    }
+
+    .btn-playback-control:hover:not(:disabled) {
+      background: #d1fae5;
+      border-color: #a7f3d0;
+    }
+
+    .btn-skip-control {
+      background: #fefce8;
+      border-color: #fef9c3;
+    }
+
+    .btn-skip-control:hover:not(:disabled) {
+      background: #fef9c3;
+      border-color: #fef08a;
+    }
+
     #read-page {
       background: var(--primary);
       color: white;
@@ -248,9 +285,71 @@
       margin-top: 0.2rem;
     }
 
-    @keyframes fadeIn {
-      from { opacity:0; transform:translateY(-3px); }
-      to { opacity:1; transform:translateY(0); }
+    /* Customization panel */
+    #custom-panel {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: none;
+      animation: fadeIn 0.2s ease;
+      margin-top: 0.4rem;
+    }
+
+    #custom-panel h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .custom-section-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .custom-panel-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+
+    .custom-panel-row input[type="text"] {
+      border-radius: 6px;
+      font-size: 0.78rem;
+      padding: 0.25rem 0.45rem;
+      min-width: 80px;
+    }
+
+    .custom-panel-row small {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .custom-panel-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .custom-skip-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+    }
+
+    .custom-skip-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+    }
+
+    .custom-skip-group input[type="checkbox"] {
+      transform: scale(0.9);
     }
 
     .settings-grid {
@@ -269,6 +368,11 @@
     .setting-item label {
       font-size: 0.8rem;
       color: var(--text-muted);
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(-3px); }
+      to { opacity:1; transform:translateY(0); }
     }
 
     #pdf-container {
@@ -433,9 +537,17 @@
           </div>
         </div>
       </div>
-      <button
-        id="help-button"
-        title="Keyboard shortcuts:
+      <div class="header-actions">
+        <button
+          id="toggle-customization"
+          class="btn-skip-control"
+          title="Customize pronunciations and skipping rules"
+        >
+          ⚙️ Customize speech
+        </button>
+        <button
+          id="help-button"
+          title="Keyboard shortcuts:
 O – Open PDF
 A / D – Prev / Next page
 W / S – Prev / Next sentence (while reading)
@@ -445,9 +557,10 @@ T – Expand TTS engine selection
 M – Mark skip areas
 Z – Toggle Smart Reading
 H – Help"
-      >
-        ❔ Help
-      </button>
+        >
+          ❔ Help
+        </button>
+      </div>
     </header>
 
     <div id="toolbar">
@@ -461,7 +574,7 @@ H – Help"
 
         <div class="toolbar-group">
           <label>Page</label>
-          <button id="prev-page" disabled title="Previous Page (Shortcut: A)">◀</button>
+          <button id="prev-page" class="btn-page-control" disabled title="Previous Page (Shortcut: A)">◀</button>
 
           <div style="display:flex; align-items:center; gap:0.3rem;">
             <input
@@ -475,23 +588,24 @@ H – Help"
             <span style="font-weight:500; font-size:0.8rem;">/ <span id="page-count">--</span></span>
           </div>
 
-          <button id="next-page" disabled title="Next Page (Shortcut: D)">▶</button>
+          <button id="next-page" class="btn-page-control" disabled title="Next Page (Shortcut: D)">▶</button>
         </div>
 
         <div class="toolbar-group">
           <label>Playback</label>
-          <button id="pause-tts" disabled title="Pause (Shortcut: Q)">⏸</button>
-          <button id="resume-tts" disabled title="Resume (Shortcut: E)">▶</button>
-          <button id="stop-tts" disabled style="display:none"></button>
+          <button id="pause-tts" class="btn-playback-control" disabled title="Pause (Shortcut: Q)">⏸</button>
+          <button id="resume-tts" class="btn-playback-control" disabled title="Resume (Shortcut: E)">▶</button>
+          <button id="stop-tts" class="btn-playback-control" disabled style="display:none"></button>
         </div>
 
         <div class="toolbar-group">
           <label>Skip</label>
-          <button id="toggle-skip-mode" disabled title="Draw rectangles over headers/footers to skip them on all pages">
+          <button id="toggle-skip-mode" class="btn-skip-control" disabled title="Draw rectangles over headers/footers to skip them on all pages">
             🎯 Mark skip areas
           </button>
           <button
             id="toggle-smart-reading"
+            class="btn-skip-control"
             title="Toggle Smart Reading (GPT preprocessing for all speech) (Shortcut: Z)"
           >
             🧠 Smart Reading: Off
@@ -539,8 +653,8 @@ H – Help"
         </div>
       </div>
 
-      <div class="toolbar-section" style="justify-content:flex-start;">
-        <button id="read-page" disabled style="display:none">🔊 Read Page</button>
+      <div class="toolbar-section" style="justify-content:flex-start; gap:0.5rem;">
+        <button id="read-page" class="btn-playback-control" disabled style="display:none">🔊 Read Page</button>
       </div>
 
       <div id="minimax-panel">
@@ -556,6 +670,47 @@ H – Help"
           </div>
         </div>
       </div>
+
+      <!-- Customization Panel -->
+      <div id="custom-panel">
+        <h3>Speech customization</h3>
+
+        <div style="margin-bottom:0.6rem;">
+          <div class="custom-section-title">Custom Pronunciation</div>
+          <div id="pronunciation-list"></div>
+          <button id="add-pronunciation" class="btn-skip-control" style="padding:0.3rem 0.8rem; font-size:0.78rem;">
+            ➕ Add pronunciation
+          </button>
+          <div class="custom-panel-note">
+            Example: map <code>SQL</code> → <code>sequel</code>, <code>UofT</code> → <code>U of Tears</code>.
+          </div>
+        </div>
+
+        <div>
+          <div class="custom-section-title">Custom Skipping Rules</div>
+          <div class="custom-skip-group">
+            <label>
+              <input type="checkbox" id="skip-urls" />
+              Skip URLs (http://, https://, www.)
+            </label>
+            <label>
+              <input type="checkbox" id="skip-square" />
+              Skip content inside square brackets <code>[ ... ]</code>
+            </label>
+            <label>
+              <input type="checkbox" id="skip-parens" />
+              Skip content inside parentheses <code>( ... )</code>
+            </label>
+            <label>
+              <input type="checkbox" id="skip-curly" />
+              Skip content inside curly braces <code>{ ... }</code>
+            </label>
+          </div>
+          <div class="custom-panel-note">
+            These rules apply to all spoken speech, including Smart Reading and continuous reading.
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="pdf-shell">
@@ -565,7 +720,7 @@ H – Help"
       </div>
       <p class="tip-text">
         💡 Tip: <b>Drag</b> to read a selection, or <b>Click</b> a sentence to keep reading from there.
-        Press <b>Z</b> to toggle Smart Reading.
+        Press <b>Z</b> to toggle Smart Reading. Use <b>⚙️ Customize speech</b> to tune pronunciations and skipping.
       </p>
     </div>
 
@@ -604,6 +759,8 @@ H – Help"
     const pdfjsLib = window['pdfjsLib'];
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+    // --- Shared OpenAI API key (same as Smart Reading) ---
+
     // --- UI Elements ---
     const els = {
       file: document.getElementById('file-input'),
@@ -615,6 +772,7 @@ H – Help"
       pageCount: document.getElementById('page-count'),
       audio: document.getElementById('player'),
       minimaxPanel: document.getElementById('minimax-panel'),
+      customPanel: document.getElementById('custom-panel'),
       engine: document.getElementById('tts-engine'),
       browserVoiceGroup: document.getElementById('browser-voice-group'),
       openaiVoiceGroup: document.getElementById('openai-voice-group'),
@@ -630,7 +788,8 @@ H – Help"
         resume: document.getElementById('resume-tts'),
         stop: document.getElementById('stop-tts'),
         toggleSkipMode: document.getElementById('toggle-skip-mode'),
-        toggleSmartReading: document.getElementById('toggle-smart-reading')
+        toggleSmartReading: document.getElementById('toggle-smart-reading'),
+        toggleCustomization: document.getElementById('toggle-customization'),
       },
       settings: {
         key: document.getElementById('minimax-key'),
@@ -640,7 +799,14 @@ H – Help"
         speedVal: document.getElementById('speed-val'),
         browserVoice: document.getElementById('browser-voice'),
         openaiVoice: document.getElementById('openai-voice'),
-        mode: document.getElementById('reading-mode')  // placeholder for future
+        mode: document.getElementById('reading-mode'),  // placeholder for future
+        // Customization UI
+        pronList: document.getElementById('pronunciation-list'),
+        addPron: document.getElementById('add-pronunciation'),
+        skipUrls: document.getElementById('skip-urls'),
+        skipSquare: document.getElementById('skip-square'),
+        skipParens: document.getElementById('skip-parens'),
+        skipCurly: document.getElementById('skip-curly'),
       }
     };
 
@@ -650,6 +816,15 @@ H – Help"
 
     // Smart Reading flag
     let smartReadingEnabled = false;
+
+    // --- Custom speech configuration ---
+    const customPronunciations = [];
+    const speechCustomization = {
+      skipUrls: false,
+      skipSquare: false,
+      skipParens: false,
+      skipCurly: false
+    };
 
     // --- Skip zones (headers / footers / page numbers) ---
     // Normalized coordinates relative to the canvas (0–1)
@@ -669,7 +844,7 @@ H – Help"
     let pageItemMeta = [];       // { start, end, span }
 
     // Caches for Smart Reading in continuous mode
-    const sentenceCache = new Map();           // idx -> processed text
+    const sentenceCache = new Map();           // idx -> processed Smart Reading text
     const sentenceFetchInProgress = new Map(); // idx -> promise
 
     // Audio prefetch state for continuous mode (minimax & openai)
@@ -694,7 +869,7 @@ H – Help"
       utterance: null,
       spinnerIndex: -1    // which sentence index should show the first-spinner
     };
-    
+
     // --- Helpers ---
     function setStatus(msg) { els.status.textContent = msg; }
 
@@ -729,7 +904,7 @@ H – Help"
       clearHighlights();
       resetContinuousCache();
     }
-    
+
     function resetTTS() {
       window.speechSynthesis.cancel();
       els.audio.pause(); els.audio.currentTime = 0;
@@ -744,6 +919,240 @@ H – Help"
 
     function closeHelpModal() {
       els.helpModal.style.display = 'none';
+    }
+
+    // --- Custom speech logic ---
+
+    function applySkippingRules(text) {
+      if (!text) return text;
+      let result = text;
+
+      if (speechCustomization.skipUrls) {
+        result = result.replace(/https?:\/\/\S+|www\.\S+/gi, '');
+      }
+      if (speechCustomization.skipSquare) {
+        result = result.replace(/\[[^\]]*]/g, '');
+      }
+      if (speechCustomization.skipParens) {
+        result = result.replace(/\([^)]*\)/g, '');
+      }
+      if (speechCustomization.skipCurly) {
+        result = result.replace(/\{[^}]*}/g, '');
+      }
+      return result;
+    }
+
+    function applyCustomPronunciations(text) {
+      if (!text || !customPronunciations.length) return text;
+      let result = text;
+      customPronunciations.forEach(rule => {
+        const pattern = (rule.pattern || '').trim();
+        if (!pattern) return;
+        const replacement = rule.replacement || '';
+        const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const flags = rule.caseSensitive ? 'g' : 'gi';
+        const re = new RegExp(escaped, flags);
+        result = result.replace(re, replacement);
+      });
+      return result;
+    }
+
+    async function buildSpokenText(rawText) {
+      if (!rawText) return rawText;
+      let text = applySkippingRules(rawText);
+
+      if (smartReadingEnabled) {
+        try {
+          const processed = await getSpokenTranscript(text);
+          text = processed || text;
+        } catch (err) {
+          console.error('Smart Reading failed, falling back to filtered text:', err);
+        }
+      }
+
+      return applyCustomPronunciations(text);
+    }
+
+    // --- Customization persistence ---
+
+    function saveCustomizationState() {
+      try {
+        const data = {
+          pronunciations: customPronunciations,
+          skip: {
+            skipUrls: speechCustomization.skipUrls,
+            skipSquare: speechCustomization.skipSquare,
+            skipParens: speechCustomization.skipParens,
+            skipCurly: speechCustomization.skipCurly
+          }
+        };
+        localStorage.setItem('vividPdfCustomSpeech', JSON.stringify(data));
+      } catch (e) {
+        console.error('Failed to save customization state:', e);
+      }
+    }
+
+    function loadCustomizationState() {
+      try {
+        const raw = localStorage.getItem('vividPdfCustomSpeech');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (Array.isArray(data.pronunciations)) {
+            customPronunciations.length = 0;
+            data.pronunciations.forEach(r => {
+              if (!r) return;
+              customPronunciations.push({
+                pattern: r.pattern || '',
+                replacement: r.replacement || '',
+                caseSensitive: !!r.caseSensitive
+              });
+            });
+          }
+          if (data.skip) {
+            speechCustomization.skipUrls = !!data.skip.skipUrls;
+            speechCustomization.skipSquare = !!data.skip.skipSquare;
+            speechCustomization.skipParens = !!data.skip.skipParens;
+            speechCustomization.skipCurly = !!data.skip.skipCurly;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load customization state:', e);
+      }
+
+      // Reflect skip checkboxes
+      if (els.settings.skipUrls) els.settings.skipUrls.checked = speechCustomization.skipUrls;
+      if (els.settings.skipSquare) els.settings.skipSquare.checked = speechCustomization.skipSquare;
+      if (els.settings.skipParens) els.settings.skipParens.checked = speechCustomization.skipParens;
+      if (els.settings.skipCurly) els.settings.skipCurly.checked = speechCustomization.skipCurly;
+
+      renderPronunciationList();
+    }
+
+    // --- Customization panel UI ---
+
+    function renderPronunciationList() {
+      const container = els.settings.pronList;
+      container.innerHTML = '';
+
+      if (!customPronunciations.length) {
+        const empty = document.createElement('div');
+        empty.style.fontSize = '0.78rem';
+        empty.style.color = 'var(--text-muted)';
+        empty.textContent = 'No custom pronunciations yet.';
+        container.appendChild(empty);
+        return;
+      }
+
+      customPronunciations.forEach((rule, index) => {
+        const row = document.createElement('div');
+        row.className = 'custom-panel-row';
+
+        const fromInput = document.createElement('input');
+        fromInput.type = 'text';
+        fromInput.placeholder = 'Original text';
+        fromInput.value = rule.pattern || '';
+
+        const arrow = document.createElement('span');
+        arrow.textContent = '→';
+        arrow.style.fontSize = '0.8rem';
+        arrow.style.color = 'var(--text-muted)';
+
+        const toInput = document.createElement('input');
+        toInput.type = 'text';
+        toInput.placeholder = 'Spoken as...';
+        toInput.value = rule.replacement || '';
+
+        const caseLabel = document.createElement('label');
+        caseLabel.style.fontSize = '0.78rem';
+        caseLabel.style.display = 'flex';
+        caseLabel.style.alignItems = 'center';
+        caseLabel.style.gap = '0.25rem';
+
+        const caseCheckbox = document.createElement('input');
+        caseCheckbox.type = 'checkbox';
+        caseCheckbox.checked = !!rule.caseSensitive;
+
+        caseLabel.appendChild(caseCheckbox);
+        caseLabel.appendChild(document.createTextNode('Case sensitive'));
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '✕';
+        removeBtn.style.padding = '0.2rem 0.5rem';
+        removeBtn.style.fontSize = '0.75rem';
+        removeBtn.className = 'btn-skip-control';
+
+        fromInput.addEventListener('input', () => {
+          rule.pattern = fromInput.value;
+          saveCustomizationState();
+        });
+        toInput.addEventListener('input', () => {
+          rule.replacement = toInput.value;
+          saveCustomizationState();
+        });
+        caseCheckbox.addEventListener('change', () => {
+          rule.caseSensitive = caseCheckbox.checked;
+          saveCustomizationState();
+        });
+        removeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          customPronunciations.splice(index, 1);
+          renderPronunciationList();
+          saveCustomizationState();
+        });
+
+        row.appendChild(fromInput);
+        row.appendChild(arrow);
+        row.appendChild(toInput);
+        row.appendChild(caseLabel);
+        row.appendChild(removeBtn);
+
+        container.appendChild(row);
+      });
+    }
+
+    if (els.settings.addPron) {
+      els.settings.addPron.addEventListener('click', (e) => {
+        e.preventDefault();
+        customPronunciations.push({
+          pattern: '',
+          replacement: '',
+          caseSensitive: false
+        });
+        renderPronunciationList();
+        saveCustomizationState();
+      });
+    }
+
+    if (els.btns.toggleCustomization) {
+      els.btns.toggleCustomization.addEventListener('click', () => {
+        const isVisible = els.customPanel.style.display === 'block';
+        els.customPanel.style.display = isVisible ? 'none' : 'block';
+      });
+    }
+
+    if (els.settings.skipUrls) {
+      els.settings.skipUrls.addEventListener('change', () => {
+        speechCustomization.skipUrls = els.settings.skipUrls.checked;
+        saveCustomizationState();
+      });
+    }
+    if (els.settings.skipSquare) {
+      els.settings.skipSquare.addEventListener('change', () => {
+        speechCustomization.skipSquare = els.settings.skipSquare.checked;
+        saveCustomizationState();
+      });
+    }
+    if (els.settings.skipParens) {
+      els.settings.skipParens.addEventListener('change', () => {
+        speechCustomization.skipParens = els.settings.skipParens.checked;
+        saveCustomizationState();
+      });
+    }
+    if (els.settings.skipCurly) {
+      els.settings.skipCurly.addEventListener('change', () => {
+        speechCustomization.skipCurly = els.settings.skipCurly.checked;
+        saveCustomizationState();
+      });
     }
 
     // --- Sync settings with URL (excluding sensitive data like API keys) ---
@@ -817,11 +1226,11 @@ H – Help"
     function loadBrowserVoices() {
       browserVoices = window.speechSynthesis.getVoices();
       els.settings.browserVoice.innerHTML = '';
-      
+
       browserVoices.forEach((v, index) => {
         const opt = document.createElement('option');
         opt.value = index;
-        opt.textContent = `${v.name} (${v.lang})`; 
+        opt.textContent = `${v.name} (${v.lang})`;
         els.settings.browserVoice.appendChild(opt);
       });
 
@@ -832,16 +1241,16 @@ H – Help"
         els.settings.browserVoice.value = browserVoiceParam;
       }
     }
-    
+
     window.speechSynthesis.onvoiceschanged = loadBrowserVoices;
     loadBrowserVoices();
 
     function speakBrowser(text) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      
+
       u.rate = parseFloat(els.settings.speed.value);
-      
+
       const selectedIndex = els.settings.browserVoice.value;
       if (browserVoices[selectedIndex]) {
         u.voice = browserVoices[selectedIndex];
@@ -857,15 +1266,15 @@ H – Help"
       {id:'English_expressive_narrator',l:'English — Narrator'}, {id:'English_male_calm',l:'English — Calm'},
       {id:'Chinese (Mandarin)_Lyrical_Voice',l:'Chinese — Lyrical'}, {id:'__custom__',l:'Custom...'}
     ];
-    
+
     async function speakMiniMax(text) {
       const key = els.settings.key.value.trim();
       const voice = els.settings.voice.value === '__custom__' ? els.settings.customVoice.value : els.settings.voice.value;
       const speed = parseFloat(els.settings.speed.value);
-      
+
       if (!key) { alert('API Key missing'); return; }
       setStatus('Loading Audio...');
-      
+
       try {
         const res = await fetch('https://api.minimax.io/v1/t2a_v2', {
           method:'POST', headers:{'Authorization':'Bearer '+key, 'Content-Type':'application/json'},
@@ -876,10 +1285,10 @@ H – Help"
         });
         const data = await res.json();
         if (data.base_resp?.status_code !== 0) throw new Error(data.base_resp?.status_msg || 'API Error');
-        
+
         const buf = new Uint8Array(data.data.audio.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
         const blob = new Blob([buf], {type:'audio/mpeg'});
-        
+
         resetTTS();
         els.audio.src = URL.createObjectURL(blob);
         els.audio.hidden = false;
@@ -955,13 +1364,15 @@ H – Help"
         return;
       }
 
-      let text = pageSentences[index];
+      let text = applySkippingRules(pageSentences[index] || '');
       if (!text) return;
 
       // Use Smart Reading result if available
       if (smartReadingEnabled && sentenceCache.has(index)) {
         text = sentenceCache.get(index) || text;
       }
+
+      text = applyCustomPronunciations(text);
 
       try {
         if (engine === 'minimax') {
@@ -1029,16 +1440,7 @@ H – Help"
     async function speak(text) {
       if (!text) return;
 
-      let finalText = text;
-
-      if (smartReadingEnabled) {
-        try {
-          finalText = await getSpokenTranscript(text);
-        } catch (err) {
-          console.error('Smart Reading failed, falling back to raw text:', err);
-          finalText = text;
-        }
-      }
+      const finalText = await buildSpokenText(text);
 
       if (els.engine.value === 'minimax') {
         speakMiniMax(finalText);
@@ -1101,6 +1503,11 @@ H – Help"
     }
 
     // --- Sentence utilities for continuous mode ---
+
+    function isDigit(ch) {
+      return ch >= '0' && ch <= '9';
+    }
+
     function buildSentenceRanges() {
       pageSentences = [];
       pageSentenceRanges = [];
@@ -1108,26 +1515,72 @@ H – Help"
       const text = pageFullText;
       if (!text) return;
 
-      // Group by sentence terminators, include punctuation in range
-      const regex = /[^.!?]+[.!?]+|\S+/g;
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        const raw = match[0];
-        if (!raw.trim()) continue;
+      const len = text.length;
+      let start = 0;
 
-        const start = match.index;
-        let end = start + raw.length;
+      function pushSentence(endIndexInclusive) {
+        if (endIndexInclusive < start) return;
+        let s = start;
+        let e = endIndexInclusive + 1;
 
-        // Trim trailing whitespace from the range
-        while (end > start && /\s/.test(text[end - 1])) {
-          end--;
+        // Trim leading whitespace
+        while (s < e && /\s/.test(text[s])) {
+          s++;
+        }
+        // Trim trailing whitespace
+        while (e > s && /\s/.test(text[e - 1])) {
+          e--;
         }
 
-        const sentenceText = text.slice(start, end).trim();
-        if (!sentenceText) continue;
+        if (e <= s) {
+          start = endIndexInclusive + 1;
+          return;
+        }
+
+        const sentenceText = text.slice(s, e).trim();
+        if (!sentenceText) {
+          start = endIndexInclusive + 1;
+          return;
+        }
 
         pageSentences.push(sentenceText);
-        pageSentenceRanges.push({ start, end });
+        pageSentenceRanges.push({ start: s, end: e });
+
+        start = endIndexInclusive + 1;
+      }
+
+      for (let i = 0; i < len; i++) {
+        const ch = text[i];
+
+        const isTerminator = (ch === '.' || ch === '!' || ch === '?');
+        if (!isTerminator) continue;
+
+        // Skip cases like "2.0" where period is between digits
+        if (
+          ch === '.' &&
+          i > 0 && i < len - 1 &&
+          isDigit(text[i - 1]) &&
+          isDigit(text[i + 1])
+        ) {
+          continue;
+        }
+
+        // Extend through consecutive terminators, e.g. "!!!" or "?!"
+        let endIdx = i;
+        while (
+          endIdx + 1 < len &&
+          (text[endIdx + 1] === '.' || text[endIdx + 1] === '!' || text[endIdx + 1] === '?')
+        ) {
+          endIdx++;
+        }
+
+        pushSentence(endIdx);
+        i = endIdx; // continue after the punctuation group
+      }
+
+      // Tail without terminator
+      if (start < len) {
+        pushSentence(len - 1);
       }
     }
 
@@ -1171,14 +1624,15 @@ H – Help"
       if (index < 0 || index >= pageSentences.length) return;
       if (sentenceCache.has(index) || sentenceFetchInProgress.has(index)) return;
 
-      const originalText = pageSentences[index];
-      if (!originalText) return;
+      const baseOriginal = applySkippingRules(pageSentences[index] || '');
+      if (!baseOriginal) return;
 
       const p = (async () => {
         try {
-          const processed = await getSpokenTranscript(originalText);
+          const processed = await getSpokenTranscript(baseOriginal);
           if (!continuousState.active || gen !== continuousState.generation) return;
-          sentenceCache.set(index, processed || originalText);
+          const smartText = processed || baseOriginal;
+          sentenceCache.set(index, smartText);
 
           // After Smart Reading is ready, prefetch audio for next sentence for minimax/openai
           if (els.engine.value === 'minimax' || els.engine.value === 'openai') {
@@ -1235,8 +1689,8 @@ H – Help"
         return;
       }
 
-      let text = pageSentences[idx];
-      if (!text) {
+      let rawSentence = pageSentences[idx];
+      if (!rawSentence) {
         continuousState.sentenceIndex++;
         setTimeout(() => playNextSentence(gen), 40);
         return;
@@ -1244,29 +1698,39 @@ H – Help"
 
       highlightSentence(idx);
 
+      // Apply skipping rules first
+      let baseSentence = applySkippingRules(rawSentence);
+
+      // If the entire sentence is removed by skipping rules, skip it
+      if (!baseSentence.trim()) {
+        continuousState.sentenceIndex++;
+        setTimeout(() => playNextSentence(gen), 40);
+        return;
+      }
+
       // Apply Smart Reading with cache, spinner only for first sentence in session
-      let spokenText = text;
+      let spokenText = baseSentence;
       if (smartReadingEnabled) {
         const isFirstForSession = (idx === continuousState.spinnerIndex);
 
         if (sentenceCache.has(idx)) {
-          spokenText = sentenceCache.get(idx);
+          spokenText = sentenceCache.get(idx) || baseSentence;
         } else {
           if (isFirstForSession) {
             showSmartSpinner(true);
           }
           try {
-            const processed = await getSpokenTranscript(text);
+            const processed = await getSpokenTranscript(baseSentence);
             if (!continuousState.active || gen !== continuousState.generation) {
               // Session changed while we were waiting
               if (isFirstForSession) showSmartSpinner(false);
               return;
             }
-            spokenText = processed || text;
+            spokenText = processed || baseSentence;
             sentenceCache.set(idx, spokenText);
           } catch (err) {
             console.error('Smart Reading (continuous) failed, using raw sentence:', err);
-            spokenText = text;
+            spokenText = baseSentence;
           } finally {
             if (isFirstForSession) {
               showSmartSpinner(false);
@@ -1284,6 +1748,9 @@ H – Help"
           prefetchSentenceAudioForIndex(idx + 1, gen);
         }
       }
+
+      // Apply custom pronunciations last
+      spokenText = applyCustomPronunciations(spokenText);
 
       // Engine-specific playback
       const engine = els.engine.value;
@@ -1480,7 +1947,6 @@ H – Help"
       }
     });
 
-
     function handleSpanClick(e, metaIndex) {
       if (drawMode) return; // clicking spans is disabled while drawing skip zones
       const selection = window.getSelection();
@@ -1621,7 +2087,7 @@ H – Help"
            - Example: "n^2" becomes "n to the power of two" or "n squared".
            - Example: "f(x) = \\\\frac{1}{2}" becomes "f of x equals one half".
         2. Expand abbreviations (e.g., "Fig. 1" becomes "Figure one").
-        3. Remove page numbers, headers, or footers if they appear in the middle of sentences.
+        3. Do not remove anything, especially equations. Ensure to read them.
         4. Do NOT reply with "Here is the text". Just output the spoken script.
       `;
 
@@ -1643,7 +2109,7 @@ H – Help"
         });
 
         const data = await response.json();
-        
+
         if (!data.choices || data.choices.length === 0) {
           throw new Error("No response from OpenAI");
         }
@@ -1672,8 +2138,8 @@ H – Help"
 
     els.btns.prev.addEventListener('click', () => { if(currentPage>1) { resetTTS(); renderPage(--currentPage); } });
     els.btns.next.addEventListener('click', () => { if(currentPage<pdfDoc.numPages) { resetTTS(); renderPage(++currentPage); } });
-    
-    // Read-page: now just uses speak(), Smart Reading handled globally
+
+    // Read-page: now just uses speak(), Smart Reading & customization handled globally
     els.btns.read.addEventListener('click', async () => {
       try {
         resetTTS();
@@ -1691,7 +2157,6 @@ H – Help"
 
         if (!text) return;
 
-        // Smart Reading is applied inside speak() when enabled
         speak(text);
       } catch (err) {
         console.error("Error in reading process:", err);
@@ -1708,7 +2173,7 @@ H – Help"
       els.btns.pause.disabled = true;
       els.btns.resume.disabled = false;
     });
-    
+
     els.btns.resume.addEventListener('click', () => {
       if (els.engine.value === 'minimax' || els.engine.value === 'openai') {
         els.audio.play();
@@ -1740,12 +2205,12 @@ H – Help"
 
       syncSettingsToUrl();
     });
-    
+
     els.settings.voice.addEventListener('change', () => {
       els.settings.customVoice.style.display = els.settings.voice.value==='__custom__'?'block':'none';
       syncSettingsToUrl();
     });
-    
+
     els.settings.speed.addEventListener('input', () => {
       const raw = els.settings.speed.value;            // keep the raw value (e.g., "2.5")
       const formatted = Number(raw).toFixed(1);        // display formatting only
@@ -2008,7 +2473,8 @@ H – Help"
       }
     });
 
-    // Load persisted settings from URL on startup
+    // Load customization from localStorage first, then settings from URL
+    loadCustomizationState();
     loadSettingsFromUrl();
   </script>
 </body>

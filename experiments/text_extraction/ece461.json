@@ -1,0 +1,1963 @@
+{
+  "items": [
+    {
+      "str": "ECE 461",
+      "dir": "ltr",
+      "width": 55.77600000000002,
+      "height": 14,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        217.85,
+        650.95
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.004000000000019,
+      "height": 0,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        273.626,
+        650.95
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "–",
+      "dir": "ltr",
+      "width": 7.784,
+      "height": 14,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        277.63,
+        650.95
+      ],
+      "fontName": "g_d1_f5",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 3.966000000000008,
+      "height": 0,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        285.414,
+        650.95
+      ],
+      "fontName": "g_d1_f5",
+      "hasEOL": false
+    },
+    {
+      "str": "Internetworking",
+      "dir": "ltr",
+      "width": 105.21000000000004,
+      "height": 14,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        289.38,
+        650.95
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        261.6,
+        618.7
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": true
+    },
+    {
+      "str": "Problem S",
+      "dir": "ltr",
+      "width": 65.29599999999995,
+      "height": 14,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        261.6,
+        618.7
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "et",
+      "dir": "ltr",
+      "width": 11.642000000000008,
+      "height": 14,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        326.88,
+        618.7
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 4.127999999999986,
+      "height": 0,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        338.522,
+        618.7
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "8",
+      "dir": "ltr",
+      "width": 7.784,
+      "height": 14,
+      "transform": [
+        14,
+        0,
+        0,
+        14,
+        342.65,
+        618.7
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        66.025,
+        594.17
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": true
+    },
+    {
+      "str": "Problem 1.",
+      "dir": "ltr",
+      "width": 51.46899999999998,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        66.025,
+        594.17
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.805999999999997,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        117.494,
+        594.17
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "Consider the state of a sliding window at the sending side of a TCP connections as shown in",
+      "dir": "ltr",
+      "width": 405.878,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        123.3,
+        594.17
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        66.025,
+        581.67
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "Figure 1. (Each number corresponds to one byte).",
+      "dir": "ltr",
+      "width": 218.658,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        66.025,
+        581.67
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        102.05,
+        556.17
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "(a)",
+      "dir": "ltr",
+      "width": 12.396999999999997,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        102.05,
+        556.17
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.603000000000009,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        114.44699999999999,
+        556.17
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "Explain the difference between the advertised window and the usable window.",
+      "dir": "ltr",
+      "width": 346.06,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        556.17
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        102.05,
+        543.67
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "(b)",
+      "dir": "ltr",
+      "width": 12.902999999999999,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        102.05,
+        543.67
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.097000000000008,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        114.95299999999999,
+        543.67
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "Start with the state shown in Figure 2. How many bytes can be transmitted in the shown state?",
+      "dir": "ltr",
+      "width": 414.7770000000001,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        543.67
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        530.92
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "What are the sequence numbers of the bytes that can be transmitted?",
+      "dir": "ltr",
+      "width": 301.279,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        530.92
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        102.05,
+        518.42
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "(c)",
+      "dir": "ltr",
+      "width": 12.396999999999997,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        102.05,
+        518.42
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.603000000000009,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        114.44699999999999,
+        518.42
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "Start with the state shown in Figure 2. Show how the advertised and usable windows change",
+      "dir": "ltr",
+      "width": 406.9450000000001,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        518.42
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        505.65
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "when the sender transmits a 2",
+      "dir": "ltr",
+      "width": 130.43800000000005,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        505.65
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "-",
+      "dir": "ltr",
+      "width": 3.663,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        250.6,
+        505.65
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "byte long segment.",
+      "dir": "ltr",
+      "width": 83.49000000000001,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        254.35,
+        505.65
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        102.05,
+        492.9
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "(d)",
+      "dir": "ltr",
+      "width": 12.902999999999999,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        102.05,
+        492.9
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.097000000000008,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        114.95299999999999,
+        492.9
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "Start with the state shown in Figure 2. Show how the advertised and usable windows change",
+      "dir": "ltr",
+      "width": 406.9450000000001,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        492.9
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        480.4
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "when a segment with",
+      "dir": "ltr",
+      "width": 93.21400000000003,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        480.4
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.586000000000041,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        213.26399999999995,
+        480.4
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "(AckNo=5, Window size = 5)",
+      "dir": "ltr",
+      "width": 128.85399999999993,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        218.85,
+        480.4
+      ],
+      "fontName": "g_d1_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.946000000000083,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        347.7039999999999,
+        480.4
+      ],
+      "fontName": "g_d1_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "is received.",
+      "dir": "ltr",
+      "width": 49.99500000000001,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        350.65,
+        480.4
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        102.05,
+        467.65
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "(e)",
+      "dir": "ltr",
+      "width": 11.07,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        102.05,
+        467.65
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 6.930000000000007,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        113.11999999999999,
+        467.65
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "Start with the state shown in Figure 2. Show how the advertised and usable windows change",
+      "dir": "ltr",
+      "width": 406.9450000000001,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        467.65
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        455.15
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "when a segment with",
+      "dir": "ltr",
+      "width": 93.21400000000003,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        120.05,
+        455.15
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.836000000000041,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        213.26399999999995,
+        455.15
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "(AckNo=3, Window size = 5)",
+      "dir": "ltr",
+      "width": 128.85399999999993,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        216.1,
+        455.15
+      ],
+      "fontName": "g_d1_f11",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.946000000000083,
+      "height": 0,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        344.9539999999999,
+        455.15
+      ],
+      "fontName": "g_d1_f11",
+      "hasEOL": false
+    },
+    {
+      "str": "is received.",
+      "dir": "ltr",
+      "width": 49.75299999999999,
+      "height": 11,
+      "transform": [
+        11,
+        0,
+        0,
+        11,
+        347.9,
+        455.15
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        66.025,
+        443.4
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": ".",
+      "dir": "ltr",
+      "width": 2.5,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        66.025,
+        443.4
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        84.025,
+        235.83
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": true
+    },
+    {
+      "str": "(a)",
+      "dir": "ltr",
+      "width": 11.580000000000002,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        84.025,
+        235.83
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 6.444999999999993,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        95.605,
+        235.83
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "The advertised windows is the maximum number of unacknowledged bytes that the sender can transmit. The",
+      "dir": "ltr",
+      "width": 435.4000000000002,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        102.05,
+        235.83
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        102.05,
+        224.33
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "advertised window is set (=advertised) by the receiver. The usable windows is the advertised window minus",
+      "dir": "ltr",
+      "width": 432.5700000000003,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        102.05,
+        224.33
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        102.05,
+        212.83
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "the number of bytes which have been transmitted",
+      "dir": "ltr",
+      "width": 196.87000000000012,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        102.05,
+        212.83
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 2.7100000000000364,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        298.91999999999996,
+        212.83
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "but have not been acknowledged.",
+      "dir": "ltr",
+      "width": 133.67000000000013,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        301.63,
+        212.83
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        84.025,
+        201.3
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": true
+    },
+    {
+      "str": "(b)",
+      "dir": "ltr",
+      "width": 12.08,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        84.025,
+        201.3
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 5.944999999999993,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        96.105,
+        201.3
+      ],
+      "fontName": "g_d1_f9",
+      "hasEOL": false
+    },
+    {
+      "str": "The sender can transmit 3 bytes with sequence number 6,7,8.",
+      "dir": "ltr",
+      "width": 244.33,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        102.05,
+        201.3
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "1",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        158.9325073661542,
+        359.30887631725227
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 25.928500000000003,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        167.4001042280192,
+        359.30887576974703
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "2",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        189.18646842875017,
+        359.30887436106536
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 25.93249999999997,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        197.65406529061516,
+        359.3088738135601
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "3",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        219.44379048241015,
+        359.30887240466114
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 25.932500000000037,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        227.91138734427514,
+        359.3088718571559
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "4",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        249.70111253607016,
+        359.3088704482569
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 25.93249999999997,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        258.1687093979351,
+        359.3088699007517
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "5",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        279.95843458973013,
+        359.3088684918527
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 25.932500000000037,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        288.4260314515951,
+        359.30886794434747
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "6",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        310.21575664339014,
+        359.3088665354485
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 25.93249999999997,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        318.6833535052551,
+        359.30886598794325
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "7",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        340.47307869705014,
+        359.30886457904427
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 25.93249999999997,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        348.94067555891513,
+        359.30886403153903
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "8",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        370.73040075071015,
+        359.30886262264005
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 25.93249999999997,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        379.19799761257514,
+        359.3088620751348
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "9",
+      "dir": "ltr",
+      "width": 8.467596861865013,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        400.98772280437015,
+        359.3088606662359
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 20.89249999999996,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        409.45531966623514,
+        359.30886011873065
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "10",
+      "dir": "ltr",
+      "width": 16.742776985316073,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        427.01019611739014,
+        359.30885898365216
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 16.083999999999943,
+      "height": 0,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        443.75297310270616,
+        359.3088579010831
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "11",
+      "dir": "ltr",
+      "width": 16.742776985316073,
+      "height": 15.17015802750001,
+      "transform": [
+        15.229490758749996,
+        -9.8472164375e-7,
+        -6.041327125e-7,
+        15.1701580275,
+        457.26751817105014,
+        359.30885702724794
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        11.773551697191998,
+        -7.612645336399999e-7,
+        -4.6704041752e-7,
+        11.727682994832,
+        250.91946938223919,
+        419.9392840253192
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": true
+    },
+    {
+      "str": "Advertised window",
+      "dir": "ltr",
+      "width": 99.9810010125546,
+      "height": 11.727682994832007,
+      "transform": [
+        11.773551697191998,
+        -7.612645336399999e-7,
+        -4.6704041752e-7,
+        11.727682994832,
+        250.91946938223919,
+        419.9392840253192
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10.166997968599997,
+        -6.573865869999999e-7,
+        -4.0331066599999996e-7,
+        10.1273882556,
+        328.7768314683027,
+        317.2743452549185
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": true
+    },
+    {
+      "str": "Usable",
+      "dir": "ltr",
+      "width": 30.856838834700852,
+      "height": 10.127388255600007,
+      "transform": [
+        10.166997968599997,
+        -6.573865869999999e-7,
+        -4.0331066599999996e-7,
+        10.1273882556,
+        328.7768314683027,
+        317.2743452549185
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": true
+    },
+    {
+      "str": "Window",
+      "dir": "ltr",
+      "width": 35.7674988535349,
+      "height": 10.127388255600007,
+      "transform": [
+        10.166997968599997,
+        -6.573865869999999e-7,
+        -4.0331066599999996e-7,
+        10.1273882556,
+        326.35691838476225,
+        305.1574693968154
+      ],
+      "fontName": "g_d1_f6",
+      "hasEOL": false
+    },
+    {
+      "str": "",
+      "dir": "ltr",
+      "width": 0,
+      "height": 0,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        312.63,
+        281.35
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": true
+    },
+    {
+      "str": "Figure 1.",
+      "dir": "ltr",
+      "width": 35.99000000000005,
+      "height": 10,
+      "transform": [
+        10,
+        0,
+        0,
+        10,
+        312.63,
+        281.35
+      ],
+      "fontName": "g_d1_f1",
+      "hasEOL": false
+    },
+    {
+      "str": "1",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        193.36881051793387,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 26.032076000000014,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        201.78451867697103,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "2",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        223.57918747767786,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 26.0380759999999,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        231.99489563671506,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "3",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        253.79458777911782,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 26.028076000000034,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        262.210295938155,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "4",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        284.00161584439786,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 26.038076,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        292.41732400343506,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "5",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        314.2170161458379,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 26.038075999999933,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        322.63272430487507,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "6",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        344.43241644727783,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 26.028076000000034,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        352.848124606315,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "7",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        374.6394445125579,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 26.038076,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        383.055152671595,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "8",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        404.85484481399783,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 26.038076,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        413.270552973035,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "9",
+      "dir": "ltr",
+      "width": 8.415708159037186,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        435.07024511543784,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 20.95807600000004,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        443.48595327447504,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "10",
+      "dir": "ltr",
+      "width": 16.869426270240734,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        461.0325494475979,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": " ",
+      "dir": "ltr",
+      "width": 15.93075200000007,
+      "height": 0,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        477.9019757178386,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "11",
+      "dir": "ltr",
+      "width": 16.86942627024079,
+      "height": 15.095490607040174,
+      "transform": [
+        15.136165753664002,
+        0,
+        -0.0000022997992172800003,
+        15.09549060704,
+        491.2395775128779,
+        132.76329588
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    },
+    {
+      "str": "(c)",
+      "dir": "ltr",
+      "width": 12.084813865001458,
+      "height": 9.977101458240115,
+      "transform": [
+        10.003984987584001,
+        0,
+        -0.00000152001221568,
+        9.97710145824,
+        142.6263613677595,
+        134.28378309696
+      ],
+      "fontName": "g_d1_f3",
+      "hasEOL": false
+    }
+  ],
+  "styles": {
+    "g_d1_f3": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.905,
+      "descent": -0.21,
+      "vertical": false
+    },
+    "g_d1_f5": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.9052734375,
+      "descent": -0.2119140625,
+      "vertical": false
+    },
+    "g_d1_f6": {
+      "fontFamily": "sans-serif",
+      "ascent": 0.905,
+      "descent": -0.21,
+      "vertical": false
+    },
+    "g_d1_f9": {
+      "fontFamily": "serif",
+      "ascent": 0.891,
+      "descent": -0.216,
+      "vertical": false
+    },
+    "g_d1_f1": {
+      "fontFamily": "serif",
+      "ascent": 0.891,
+      "descent": -0.216,
+      "vertical": false
+    },
+    "g_d1_f11": {
+      "fontFamily": "serif",
+      "ascent": 0.891,
+      "descent": -0.216,
+      "vertical": false
+    }
+  },
+  "lang": "en"
+}
