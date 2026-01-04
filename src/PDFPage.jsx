@@ -3,20 +3,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { Icons } from './Icons';
 
 // --- Text Merging Heuristics ---
-// Constants relative to font height to ensure zoom/scale invariance.
 const MERGE_CONFIG = {
-  // If the vertical difference between two tokens is > 50% of the font height,
-  // we consider them to be on separate lines.
   MAX_VERTICAL_MISALIGNMENT: 0.5, 
-
-  // Max allowable horizontal gap between letters to merge them.
-  // 0.1 (10%) handles tiny rendering gaps but is strictly smaller than a 
-  // space character (usually ~0.25 - 0.33).
   MAX_INTRA_WORD_GAP: 0.1, 
-
-  // Max allowable overlap (negative gap) between letters.
-  // 0.5 (50%) allows for italics (leaning characters) and ligatures (fi, fl)
-  // but prevents merging text that is simply printed on top of other text.
   MAX_ALLOWED_OVERLAP: 0.5  
 };
 
@@ -122,7 +111,7 @@ const PDFPage = ({
             const spans = Array.from(textLayerRef.current.querySelectorAll('span'));
             let rawTokens = [];
             
-            // 1. Extraction Pass: Get atomic tokens and physical bounds
+            // 1. Extraction Pass
             spans.forEach(span => {
                 const text = span.textContent;
                 if (!text.trim()) return; 
@@ -153,15 +142,9 @@ const PDFPage = ({
                 }
             });
 
-            // 2. Merging Pass: Combine touching tokens
+            // 2. Merging Pass
             const mergedTokens = [];
             if (rawTokens.length > 0) {
-                // FIXED: Do NOT sort rawTokens. 
-                // We rely on the DOM order provided by PDF.js, which usually respects 
-                // the logical reading order (columns, forms, etc.).
-                // We only merge if items are sequential in the DOM AND physically touching.
-                // CLONE the first token to start a merged token. 
-                // We MUST clone so we don't mutate rawTokens[0].bounds, ensuring parts[0] stays accurate.
                 let currentToken = { ...rawTokens[0], parts: [rawTokens[0]] };
 
                 for (let i = 1; i < rawTokens.length; i++) {
@@ -169,11 +152,9 @@ const PDFPage = ({
                     const prevBounds = currentToken.bounds;
                     const nextBounds = nextToken.bounds;
 
-                    // Check 1: Vertical Alignment (Same Line?)
                     const isSameLine = Math.abs(prevBounds.top - nextBounds.top) < 
                                      (prevBounds.height * MERGE_CONFIG.MAX_VERTICAL_MISALIGNMENT);
                     
-                    // Check 2: Horizontal Proximity (Touching?)
                     const gap = nextBounds.left - prevBounds.right;
                     const isTouching = gap < (prevBounds.height * MERGE_CONFIG.MAX_INTRA_WORD_GAP) && 
                                        gap > -(prevBounds.height * MERGE_CONFIG.MAX_ALLOWED_OVERLAP);
@@ -182,14 +163,12 @@ const PDFPage = ({
                     const isLineBreakSplit = isHyphenated && !isSameLine;
 
                     if ((isSameLine && isTouching) || isLineBreakSplit) {
-                        // MERGE
                         if (isLineBreakSplit) {
                             currentToken.text = currentToken.text.slice(0, -1) + nextToken.text;
                         } else {
                             currentToken.text += nextToken.text;
                         }
 
-                        // Union Bounds (Global union, useful for click detection, but not highlighting)
                         const newLeft = Math.min(prevBounds.left, nextBounds.left);
                         const newTop = Math.min(prevBounds.top, nextBounds.top);
                         const newRight = Math.max(prevBounds.right, nextBounds.right);
@@ -205,9 +184,7 @@ const PDFPage = ({
                         };
                         currentToken.parts.push(nextToken);
                     } else {
-                        // NEW TOKEN
                         mergedTokens.push(currentToken);
-                        // Clone next token to start new current
                         currentToken = { ...nextToken, parts: [nextToken] };
                     }
                 }
@@ -224,8 +201,8 @@ const PDFPage = ({
                     pageNum,
                     text: t.text,
                     spokenText: t.text,
-                    bounds: t.bounds, // The union bounds (for hit detection)
-                    parts: t.parts    // The individual parts (for precise highlighting)
+                    bounds: t.bounds, 
+                    parts: t.parts    
                 };
 
                 const isSkipped = skipZones.some(zone => {
@@ -254,10 +231,6 @@ const PDFPage = ({
 
                 finalTokens.push(finalToken);
             });
-
-            // DEBUG LOGGING
-            const pageTranscript = finalTokens.map(t => t.text).join(' ');
-            console.log(`[DEBUG] Page ${pageNum} Transcript:`, pageTranscript);
 
             pageTokensRef.current = finalTokens;
             registerPageTokens(pageNum, finalTokens);
@@ -364,25 +337,27 @@ const PDFPage = ({
   };
 
   // --- Multi-Rect Calculation ---
-  // Returns an array of rectangles to highlight, handling line breaks gracefully.
-  const getHighlightRects = useCallback((tokenId) => {
-    if (!tokenId || !pageTokensRef.current.length) return [];
-    const token = pageTokensRef.current.find(t => t.id === tokenId);
+  const getHighlightRects = useCallback((tokenOrId) => {
+    // Determine if input is a Token Object or an ID
+    let token = null;
+    if (typeof tokenOrId === 'string') {
+        token = pageTokensRef.current.find(t => t.id === tokenOrId);
+    } else {
+        token = tokenOrId;
+    }
+
     if (!token || !token.parts || token.parts.length === 0) return [];
 
-    // Group parts by line
     const rects = [];
     let currentRect = { ...token.parts[0].bounds }; 
 
     for (let i = 1; i < token.parts.length; i++) {
         const partBounds = token.parts[i].bounds;
         
-        // Are they on the same line?
         const isSameLine = Math.abs(currentRect.top - partBounds.top) < 
                            (currentRect.height * MERGE_CONFIG.MAX_VERTICAL_MISALIGNMENT);
 
         if (isSameLine) {
-            // Merge into current rect
             const newLeft = Math.min(currentRect.left, partBounds.left);
             const newTop = Math.min(currentRect.top, partBounds.top);
             const newRight = Math.max(currentRect.left + currentRect.width, partBounds.left + partBounds.width);
@@ -395,7 +370,6 @@ const PDFPage = ({
                 height: newBottom - newTop
             };
         } else {
-            // Push current and start new
             rects.push(currentRect);
             currentRect = { ...partBounds };
         }
@@ -404,8 +378,18 @@ const PDFPage = ({
     return rects;
   }, []);
 
-  const activeRects = useMemo(() => getHighlightRects(activeTokenId), [activeTokenId, getHighlightRects]);
-  const hoverRects = useMemo(() => getHighlightRects(hoveredTokenId), [hoveredTokenId, getHighlightRects]);
+  // --- HIGHLIGHT FIX: Check for Self OR Linked ---
+  const activeRects = useMemo(() => {
+      if (!activeTokenId) return [];
+      const matches = pageTokensRef.current.filter(t => t.id === activeTokenId || t.linkedTo === activeTokenId);
+      return matches.flatMap(t => getHighlightRects(t));
+  }, [activeTokenId, getHighlightRects]);
+
+  const hoverRects = useMemo(() => {
+      if (!hoveredTokenId) return [];
+      const matches = pageTokensRef.current.filter(t => t.id === hoveredTokenId || t.linkedTo === hoveredTokenId);
+      return matches.flatMap(t => getHighlightRects(t));
+  }, [hoveredTokenId, getHighlightRects]);
 
   return (
     <div 
@@ -436,7 +420,6 @@ const PDFPage = ({
                 style={{ pointerEvents: isMarkingMode ? 'none' : 'auto' }}
             />
             
-            {/* Render Multi-Part Highlights */}
             {activeRects.map((style, i) => (
                 !isMarkingMode && <div key={`active-${i}`} className="highlight-box" style={style} />
             ))}
