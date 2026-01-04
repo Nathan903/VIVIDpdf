@@ -20,7 +20,7 @@ const App = () => {
 
   // Zoom / View / Rotation State
   const [scale, setScale] = useState(1.5);
-  const [rotation, setRotation] = useState(0); //
+  const [rotation, setRotation] = useState(0); 
   const [zoomInput, setZoomInput] = useState("150"); 
   const [fitMode, setFitMode] = useState('custom'); 
 
@@ -29,6 +29,10 @@ const App = () => {
   const [selectedVoiceURI, setSelectedVoiceURI] = useState("");
   const [currentTokens, setCurrentTokens] = useState([]);
   const [activeTokenId, setActiveTokenId] = useState(null);
+
+  // AI Refine State
+  const [isRefining, setIsRefining] = useState(false);
+  const [refinedScriptMap, setRefinedScriptMap] = useState(new Map()); 
 
   // Skip State
   const [isMarkingMode, setIsMarkingMode] = useState(false);
@@ -53,7 +57,6 @@ const App = () => {
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { rateRef.current = rate; }, [rate]);
 
-  // Sync Zoom Input
   useEffect(() => {
       setZoomInput(Math.round(scale * 100).toString());
   }, [scale]);
@@ -106,7 +109,6 @@ const App = () => {
     if (!pdf || !viewportRef.current) return;
     try {
         const page = await pdf.getPage(activePage);
-        // We must consider rotation when calculating fit
         const unscaledViewport = page.getViewport({ scale: 1.0, rotation: (page.rotate + rotation) % 360 });
         
         const containerWidth = viewportRef.current.clientWidth;
@@ -127,7 +129,33 @@ const App = () => {
     }
   };
 
-  // --- Existing Logic ---
+  // --- Helper: Check Intersection for Skip Zones ---
+  const isTokenInSkipZone = (token, zones, pageNum) => {
+    if (!token || !zones || zones.length === 0) return false;
+    
+    const tLeft = token.left !== undefined ? token.left : token.x;
+    const tTop = token.top !== undefined ? token.top : token.y;
+    const tWidth = token.width || 0;
+    const tHeight = token.height || 0;
+
+    const tRight = tLeft + tWidth;
+    const tBottom = tTop + tHeight;
+
+    return zones.some(zone => {
+        if (zone.pageNum !== pageNum) return false;
+
+        const zLeft = zone.left;
+        const zTop = zone.top;
+        const zRight = zone.left + zone.width;
+        const zBottom = zone.top + zone.height;
+
+        return !(tRight < zLeft || 
+                 tLeft > zRight || 
+                 tBottom < zTop || 
+                 tTop > zBottom);
+    });
+  };
+
   const handleAddSkipZone = useCallback((zone) => {
       setSkipZones(prev => [...prev, zone]);
   }, []);
@@ -158,13 +186,14 @@ const App = () => {
         setJumpInput("1");
         
         setScale(1.5);
-        setRotation(0); // Reset rotation on new file
+        setRotation(0); 
         setFitMode('custom');
 
         setCurrentTokens([]);
         setActiveTokenId(null);
         setIsPlaying(false);
         pageTokensMap.current.clear();
+        setRefinedScriptMap(new Map()); 
         waitingForPageRef.current = null;
         
         setSkipZones([]);
@@ -226,27 +255,117 @@ const App = () => {
       waitingForPageRef.current = null;
       speakFromToken(clickedTokenId, pageTokens, pageNum);
       setTimeout(() => { isSwitchingRef.current = false; }, 200);
-  }, [voices, selectedVoiceURI, rate]);
+  }, [voices, selectedVoiceURI, rate, refinedScriptMap, skipZones]); // Added skipZones dependency
+
+  const renderPageToImage = async (pageNum) => {
+    if (!pdf) return null;
+    try {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.5, rotation: (page.rotate + rotation) % 360 });
+      
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      await page.render({ canvasContext: context, viewport: viewport }).promise;
+      const base64String = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+      return base64String;
+    } catch (err) {
+      console.error("Error capturing page image:", err);
+      return null;
+    }
+  };
+
+  const handleRefinePage = async () => {
+    const originalTokens = pageTokensMap.current.get(activePage);
+    if (!originalTokens || originalTokens.length === 0) {
+        alert("No text found on this page to refine.");
+        return;
+    }
+
+    setIsRefining(true);
+    try {
+        const payloadTokens = originalTokens.map(t => ({ id: t.id, text: t.text }));
+        const imageBase64 = await renderPageToImage(activePage);
+
+        const response = await fetch('http://localhost:5000/refine-script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                tokens: payloadTokens,
+                image: imageBase64 
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.refinedTokens) {
+            const patchMap = new Map();
+            data.refinedTokens.forEach(item => {
+                patchMap.set(item.id, item.spokenText);
+            });
+
+            const mergedTokens = originalTokens.map(token => {
+                if (patchMap.has(token.id)) {
+                    return { ...token, spokenText: patchMap.get(token.id) };
+                }
+                return { ...token, spokenText: token.text };
+            });
+
+            setRefinedScriptMap(prev => new Map(prev).set(activePage, mergedTokens));
+            console.log(`Optimized ${data.refinedTokens.length} tokens using Vision+Text.`);
+        } else if (data.error) {
+            console.error("Server error:", data.error);
+            alert("Optimization failed: " + data.error);
+        }
+    } catch (error) {
+        console.error("Refine error:", error);
+        alert("Failed to connect to AI server. Is python server.py running?");
+    } finally {
+        setIsRefining(false);
+    }
+  };
 
   const speakFromToken = (startTokenId, tokensToRead, pageNum) => {
     if (!isPlayingRef.current) return;
     setCurrentTokens(tokensToRead); 
+    
+    const refinedTokens = refinedScriptMap.get(pageNum);
+    const sourceData = refinedTokens || tokensToRead;
+
     let script = "";
     const map = []; 
     let startIndexInArray = 0;
+
     if (startTokenId) {
-        startIndexInArray = tokensToRead.findIndex(t => t.id === startTokenId);
+        startIndexInArray = sourceData.findIndex(t => t.id === startTokenId);
         if (startIndexInArray === -1) startIndexInArray = 0;
     }
-    for (let i = startIndexInArray; i < tokensToRead.length; i++) {
-        const token = tokensToRead[i];
-        if (!token) continue;
+
+    for (let i = startIndexInArray; i < sourceData.length; i++) {
+        const item = sourceData[i];
+        if (!item) continue;
+        
+        if (isTokenInSkipZone(item, skipZones, pageNum)) {
+            continue;
+        }
+        // ---------------------------------------------
+
+        const textToRead = item.spokenText || item.text; 
+        if (!textToRead) continue;
+
         const start = script.length;
-        const textToRead = token.spokenText;
-        const end = start + textToRead.length;
-        map.push({ start, end, token });
         script += textToRead + " "; 
+        const end = start + textToRead.length;
+        
+        map.push({ 
+            start, 
+            end, 
+            token: { id: item.id } 
+        });
     }
+
     audioMapRef.current = map;
     if (!script.trim()) { handlePageEnd(pageNum); return; }
 
@@ -254,12 +373,16 @@ const App = () => {
     utter.rate = rateRef.current;
     const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
     if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+    
     utter.onboundary = (event) => {
         if (!isPlayingRef.current) { synth.cancel(); return; }
         const currentIdx = event.charIndex;
+        
         const entry = audioMapRef.current.find(m => currentIdx >= m.start && currentIdx < m.end);
+        
         if (entry) setActiveTokenId(entry.token.id);
     };
+    
     utter.onend = () => {
         if (isSwitchingRef.current || !isPlayingRef.current) return;
         handlePageEnd(pageNum);
@@ -331,7 +454,7 @@ const App = () => {
                             pdfDoc={pdf}
                             pageNum={pageNum}
                             scale={scale}
-                            rotation={rotation} // Pass rotation prop
+                            rotation={rotation} 
                             activeTokenId={activeTokenId}
                             onTokensParsed={handleTokenClick}
                             registerPageRef={registerPageRef}
@@ -406,7 +529,6 @@ const App = () => {
 
                         <div style={{width: '1px', height: '16px', background: '#ccc', margin: '0 8px'}}></div>
 
-                         {/* NEW ROTATE BUTTON */}
                         <button onClick={handleRotate} title="Rotate 90°" style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '16px', fontWeight: '600', color: '#444' }}>
                             <Icons.Rotate style={{ fontSize: '20px' }} />
                         </button>
@@ -414,6 +536,16 @@ const App = () => {
                 </div>
 
                 <div className="right-controls" style={{display:'flex', gap:'10px', alignItems:'center'}}>
+                    <button 
+                        className={`icon-btn ${isRefining ? 'active' : ''}`} 
+                        onClick={handleRefinePage}
+                        disabled={isRefining}
+                        title={refinedScriptMap.has(activePage) ? "Re-optimize Page" : "AI Optimize Reading (Vision + Text)"}
+                        style={{ color: refinedScriptMap.has(activePage) ? '#4CAF50' : 'inherit' }}
+                    >
+                        {isRefining ? "..." : <span style={{fontSize:'14px', fontWeight: 'bold'}}>✨ AI</span>}
+                    </button>
+
                     <button 
                         className={`icon-btn ${darkMode ? 'active' : ''}`} 
                         onClick={() => setDarkMode(!darkMode)} 
