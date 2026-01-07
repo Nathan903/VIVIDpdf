@@ -26,6 +26,8 @@ const DEFAULT_GLOBALS = {
   aiInstructions: "Fix formatting and read math formulas naturally."
 };
 
+const MAX_CONCURRENT_AI_REQUESTS = 2;
+
 const App = () => {
   // --- Global Settings (Init from LocalStorage) ---
   const [globalSettings, setGlobalSettings] = useState(() => {
@@ -104,6 +106,10 @@ const App = () => {
   const waitingForPageRef = useRef(null);
   const aiCacheRef = useRef({}); // Mirror state for access in callbacks
   
+  // --- ROBUST AI QUEUE SYSTEM ---
+  const queueRef = useRef([]); // Array of { id, text, image, priority (0=low, 1=med, 2=high) }
+  const processingRef = useRef(new Set()); // Set of IDs currently in flight (prevent duplicates)
+  
   // Visual
   const [isLoading, setIsLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -145,70 +151,133 @@ const App = () => {
     }
   }, [aiEnabled, readingMode]);
 
-  // --- AI Pre-fetching Logic ---
-  const triggerAiProcessing = useCallback(async (pageNum) => {
-    if (!aiEnabled || !openaiKey) return;
-    
-    const pagesToProcess = [pageNum, pageNum + 1];
+  // --- AI Processing Queue Logic ---
 
-    pagesToProcess.forEach(async (p) => {
-        if (p > numPages) return;
-        
-        const pageRef = pageRefs.current[p];
-        if (!pageRef || !pageRef.extractSentenceData) return;
+  // Main Processor: Recursively consumes queue based on priority
+  const processAiQueue = useCallback(async () => {
+      // 1. Check Concurrency Limit
+      if (processingRef.current.size >= MAX_CONCURRENT_AI_REQUESTS) return;
+      
+      // 2. Check Queue Availability
+      if (queueRef.current.length === 0) return;
+
+      // 3. Sort Queue: High Priority First
+      queueRef.current.sort((a, b) => b.priority - a.priority);
+
+      // 4. Pop item
+      const item = queueRef.current.shift();
+      
+      // Safety check: ensure we aren't already processing this ID (double-safety)
+      if (processingRef.current.has(item.id) || aiCacheRef.current[item.id]) {
+          processAiQueue(); // Skip and try next
+          return;
+      }
+
+      // 5. Mark as Processing
+      processingRef.current.add(item.id);
+
+      try {
+           // Execute API Call
+           const result = await fixTranscriptWithAI(item.image, item.text, openaiKey, aiInstructions);
+
+           if (result.transcript !== "NO CHANGE") {
+               setAiCache(prev => ({
+                   ...prev,
+                   [item.id]: result.transcript
+               }));
+               
+               // Optional: Show status update for user
+               setAiStatusMsg(`Fixed: "${result.transcript.substring(0, 20)}..."`);
+               setTimeout(() => setAiStatusMsg(""), 2000);
+           }
+           
+           // Update tokens UI
+           setTotalTokens(getStoredTokenUsage());
+
+      } catch (e) {
+           console.error(`[AI Queue] Failed ID: ${item.id}`, e);
+      } finally {
+           // 6. Cleanup & Recurse
+           processingRef.current.delete(item.id);
+           // Try to process next item immediately
+           processAiQueue();
+      }
+  }, [openaiKey, aiInstructions]);
+
+  // Function to add items to queue (called by triggers)
+  const addToAiQueue = useCallback(async (pageNum) => {
+    if (!aiEnabled || !openaiKey) return;
+
+    // Define priority based on page logic
+    // Current page = Priority 1 (Normal)
+    // Next page = Priority 0 (Background)
+    
+    // We handle current page and next page
+    const pages = [
+        { num: pageNum, priority: 1 },
+        { num: pageNum + 1, priority: 0 }
+    ];
+
+    for (const p of pages) {
+        if (p.num > numPages) continue;
+
+        const pageRef = pageRefs.current[p.num];
+        if (!pageRef || !pageRef.extractSentenceData) continue;
 
         try {
             const sentences = await pageRef.extractSentenceData();
-            
-            // Filter out already cached items
-            const toProcess = sentences.filter(s => !aiCacheRef.current[s.id]);
-            
-            if (toProcess.length > 0) {
-                let fixedCount = 0;
-                let processedCount = 0;
 
-                // Process concurrently
-                const promises = toProcess.map(async (item) => {
-                     const result = await fixTranscriptWithAI(item.image, item.text, openaiKey, aiInstructions);
-                     
-                     processedCount++;
+            // Filter out items that are:
+            // 1. Already Cached
+            // 2. Already Processing
+            // 3. Already in Queue
+            const newItems = sentences.filter(s => {
+                if (aiCacheRef.current[s.id]) return false;
+                if (processingRef.current.has(s.id)) return false;
+                if (queueRef.current.some(q => q.id === s.id)) return false;
+                return true;
+            });
 
-                     if (result.transcript !== "NO CHANGE") {
-                         // console.log(`[AI Fix] Page ${p} | ID: ${item.id}\nFROM: ${item.text}\nTO:   ${result.transcript}`);
-                         
-                         fixedCount++;
-                         setAiCache(prev => ({
-                             ...prev,
-                             [item.id]: result.transcript
-                         }));
-                     }
-                     
-                     // Update tokens UI occasionally
-                     setTotalTokens(getStoredTokenUsage());
+            if (newItems.length > 0) {
+                // Determine priority (if active token is here, give it 2)
+                newItems.forEach(item => {
+                    const prio = (activeTokenId === item.id) ? 2 : p.priority;
+                    queueRef.current.push({ ...item, priority: prio });
                 });
-
-                // Wait for this page batch to finish to notify user
-                await Promise.allSettled(promises);
-
-                if (fixedCount > 0) {
-                    setAiStatusMsg(`Page ${p} AI Ready: ${fixedCount} sentences fixed.`);
-                    setTimeout(() => setAiStatusMsg(""), 4000);
-                }
+                
+                // Trigger Processor
+                processAiQueue();
             }
         } catch (e) {
-            console.error("AI Processing failed for page " + p, e);
+            console.error("Failed to extract data for AI queue", e);
         }
-    });
-  }, [aiEnabled, openaiKey, aiInstructions, numPages]);
+    }
+  }, [aiEnabled, openaiKey, numPages, activeTokenId, processAiQueue]);
+
+  // Dynamic Re-prioritization: When user clicks/navigates to a specific token
+  useEffect(() => {
+      if (!aiEnabled || !activeTokenId) return;
+
+      // Check if this token is in the queue waiting
+      const queueIndex = queueRef.current.findIndex(i => i.id === activeTokenId);
+      
+      if (queueIndex > -1) {
+          // Bump priority to High (2)
+          queueRef.current[queueIndex].priority = 2;
+          // Trigger queue to re-sort and process immediately if slot available
+          processAiQueue();
+      }
+  }, [activeTokenId, aiEnabled, processAiQueue]);
 
   // Trigger AI when page changes or tokens registered
   useEffect(() => {
       if (aiEnabled && activePage) {
-          // Small debounce to let render finish
-          const t = setTimeout(() => triggerAiProcessing(activePage), 500);
+          // Debounce slightly to allow rendering to settle
+          const t = setTimeout(() => addToAiQueue(activePage), 500);
           return () => clearTimeout(t);
       }
-  }, [activePage, aiEnabled, triggerAiProcessing]);
+  }, [activePage, aiEnabled, addToAiQueue]);
+
 
   const loadRecentFilesList = async () => {
     try {
@@ -373,11 +442,12 @@ const App = () => {
         scheduleNextBatch(pageNum, []);
     }
 
-    // Trigger AI if enabled
+    // Trigger AI if enabled (Robust call)
     if (aiEnabled) {
-        setTimeout(() => triggerAiProcessing(pageNum), 500);
+        // We use a small timeout to let the UI breathe, but duplication is handled by queueRef check
+        setTimeout(() => addToAiQueue(pageNum), 500);
     }
-  }, [aiEnabled, triggerAiProcessing]);
+  }, [aiEnabled, addToAiQueue]);
 
   // --- Smart Jump Logic ---
   const performJump = async (pageNumber, doc = pdf) => {
@@ -462,6 +532,11 @@ const App = () => {
         setIsPlaying(false);
         pageTokensMap.current.clear();
         setAiCache({}); // Clear AI Cache on new file load
+        
+        // Clear Queue and Processing on new file
+        queueRef.current = [];
+        processingRef.current.clear();
+
         waitingForPageRef.current = null;
         setDebugImages([]);
         synth.cancel();
@@ -536,9 +611,12 @@ const App = () => {
       if (clickedTokenId) {
           startIndex = pageTokens.findIndex(t => t.id === clickedTokenId);
           if (startIndex === -1) startIndex = 0;
+          
+          // Force set active token ID immediately to trigger useEffect prioritization
+          setActiveTokenId(clickedTokenId);
       }
-      const tokens = pageTokens.slice(startIndex);
       
+      const tokens = pageTokens.slice(startIndex);
       scheduleNextBatch(pageNum, tokens, true);
   }, [voices, selectedVoiceURI, rate]);
 
