@@ -92,6 +92,15 @@ Return valid JSON only.
 
     // --- DEBUGGING START ---
     
+    // // Download image for debugging
+    // const link = document.createElement("a");
+    // link.href = imageDataUrl;
+    // link.download = `debug_segment_${Date.now()}.png`; 
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+    // // --- DEBUGGING END ---
+
     const startTime = performance.now(); // Start Timer
 
     try {
@@ -108,7 +117,7 @@ Return valid JSON only.
               role: "user",
               content: [
                 { type: "text", text: promptText },
-                { type: "image_url", image_url: { url: imageDataUrl } }
+                { type: "image_url", image_url: { url: imageDataUrl, detail: "low" } }
               ]
             }
           ],
@@ -139,6 +148,7 @@ Return valid JSON only.
       const durationMs = (endTime - startTime).toFixed(2);
       
       console.log("[Prompt]", rawText);
+      console.log(parsed.transcript);
       console.log(`[Metrics] Model: ${model} | Time: ${durationMs}ms | Cost: $${cost.toFixed(6)} | Tokens: ${data.usage?.total_tokens}`);
       
       return {

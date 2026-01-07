@@ -145,7 +145,7 @@ const PDFPage = forwardRef(({
         ? sentenceGroupsRef.current 
         : groupTokensIntoSentences(tokens);
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = 1;
     const results = [];
 
     for (const sentenceTokens of sentences) {
