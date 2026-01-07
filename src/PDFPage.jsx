@@ -171,6 +171,71 @@ const PDFPage = forwardRef(({
         
         return thumbCanvas.toDataURL('image/jpeg', 0.7);
     },
+    // NEW: Extract Data specifically for AI Processing
+    extractSentenceData: async () => {
+        if (!canvasRef.current || pageTokensRef.current.length === 0) return [];
+        
+        // Ensure sentences are grouped
+        const sentences = sentenceGroupsRef.current.length > 0 
+            ? sentenceGroupsRef.current 
+            : groupTokensIntoSentences(pageTokensRef.current);
+
+        const dpr = window.devicePixelRatio || 1;
+        const results = [];
+
+        for (const sentenceTokens of sentences) {
+            if (!sentenceTokens.length) continue;
+            
+            // Calculate Union Bounds
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            sentenceTokens.forEach(t => {
+                t.parts.forEach(p => {
+                    minX = Math.min(minX, p.bounds.left);
+                    minY = Math.min(minY, p.bounds.top);
+                    maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
+                    maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
+                });
+            });
+
+            // Add Context Padding (so AI sees surrounding whitespace or nearby symbols)
+            const pad = 10;
+            minX = Math.max(0, minX - pad);
+            minY = Math.max(0, minY - pad);
+            maxX = Math.min(pageDimensions.width, maxX + pad);
+            maxY = Math.min(pageDimensions.height, maxY + pad);
+
+            const width = maxX - minX;
+            const height = maxY - minY;
+
+            if (width <= 0 || height <= 0) continue;
+
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = width * dpr;
+            cropCanvas.height = height * dpr;
+            const ctx = cropCanvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            // Draw full page section
+            ctx.drawImage(
+                canvasRef.current, 
+                minX * dpr, minY * dpr, width * dpr, height * dpr, 
+                0, 0, width, height 
+            );
+
+            // Optional: Mask out other text to focus AI? 
+            // For now, sending the crop is usually safer context, 
+            // but we might mask neighbors if dense. Keeping simple for now.
+
+            const rawText = sentenceTokens.map(t => t.spokenText).join(' ');
+            
+            results.push({
+                id: sentenceTokens[0].id, // Key by first token
+                text: rawText,
+                image: cropCanvas.toDataURL('image/jpeg', 0.8)
+            });
+        }
+        return results;
+    },
     generateDebugImages: async () => {
         if (!canvasRef.current || pageTokensRef.current.length === 0) return [];
         
@@ -244,6 +309,7 @@ const PDFPage = forwardRef(({
             ctx.drawImage(maskCanvas, 0, 0, width, height);
 
             results.push({
+                id: sentenceTokens[0].id, // Add ID for cross-referencing AI Cache
                 text: sentenceTokens.map(t => t.spokenText).join(' '),
                 img: cropCanvas.toDataURL('image/jpeg', 0.8)
             });

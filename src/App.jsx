@@ -3,6 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId } from './db';
+import { fixTranscriptWithAI, getStoredTokenUsage, resetTokenUsage } from './aiService';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -18,7 +19,11 @@ const DEFAULT_GLOBALS = {
   highlightColor: '#ffeb3b',
   highlightOpacity: 0.4,
   autoHide: false,
-  autoScroll: true // New Default
+  autoScroll: true,
+  // AI Settings
+  aiEnabled: false,
+  openaiKey: "",
+  aiInstructions: "Fix formatting and read math formulas naturally."
 };
 
 const App = () => {
@@ -34,7 +39,7 @@ const App = () => {
 
   // state for auto-hide
   const [autoHide, setAutoHide] = useState(globalSettings.autoHide);
-  const [autoScroll, setAutoScroll] = useState(globalSettings.autoScroll); // New State
+  const [autoScroll, setAutoScroll] = useState(globalSettings.autoScroll);
   const [pdf, setPdf] = useState(null);
   const [fileId, setFileId] = useState(null); // Current DB ID
   const [isPlaying, setIsPlaying] = useState(false);
@@ -50,6 +55,14 @@ const App = () => {
   const [highlightEnabled, setHighlightEnabled] = useState(globalSettings.highlightEnabled);
   const [highlightColor, setHighlightColor] = useState(globalSettings.highlightColor); 
   const [highlightOpacity, setHighlightOpacity] = useState(globalSettings.highlightOpacity);
+
+  // AI Settings
+  const [aiEnabled, setAiEnabled] = useState(globalSettings.aiEnabled || false);
+  const [openaiKey, setOpenaiKey] = useState(globalSettings.openaiKey || "");
+  const [aiInstructions, setAiInstructions] = useState(globalSettings.aiInstructions || "");
+  const [totalTokens, setTotalTokens] = useState(getStoredTokenUsage());
+  const [aiCache, setAiCache] = useState({}); // { tokenId: "Fixed text" }
+  const [aiStatusMsg, setAiStatusMsg] = useState(""); // Notification state
 
   // Navigation
   const [numPages, setNumPages] = useState(0);
@@ -82,13 +95,14 @@ const App = () => {
   // Refs
   const isPlayingRef = useRef(false); 
   const rateRef = useRef(rate);
-  const autoScrollRef = useRef(autoScroll); // Ref for closure access
+  const autoScrollRef = useRef(autoScroll); 
   const synth = window.speechSynthesis;
   const pageRefs = useRef({}); 
   const viewportRef = useRef(null); 
   
   const pageTokensMap = useRef(new Map());
   const waitingForPageRef = useRef(null);
+  const aiCacheRef = useRef({}); // Mirror state for access in callbacks
   
   // Visual
   const [isLoading, setIsLoading] = useState(false);
@@ -97,6 +111,7 @@ const App = () => {
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { rateRef.current = rate; }, [rate]);
   useEffect(() => { autoScrollRef.current = autoScroll; }, [autoScroll]);
+  useEffect(() => { aiCacheRef.current = aiCache; }, [aiCache]);
 
   // --- Persistence Effects ---
 
@@ -110,15 +125,90 @@ const App = () => {
       highlightColor,
       highlightOpacity,
       autoHide,
-      autoScroll
+      autoScroll,
+      aiEnabled,
+      openaiKey,
+      aiInstructions
     };
     localStorage.setItem(LS_GLOBALS, JSON.stringify(settings));
-  }, [selectedVoiceURI, readingMode, rate, highlightEnabled, highlightColor, highlightOpacity, autoHide, autoScroll]);
+  }, [selectedVoiceURI, readingMode, rate, highlightEnabled, highlightColor, highlightOpacity, autoHide, autoScroll, aiEnabled, openaiKey, aiInstructions]);
 
   // 2. Load Recent Files on Mount
   useEffect(() => {
     loadRecentFilesList();
   }, []);
+
+  // Force Sentence Mode if AI is Enabled
+  useEffect(() => {
+    if (aiEnabled && readingMode !== 'sentence') {
+        setReadingMode('sentence');
+    }
+  }, [aiEnabled, readingMode]);
+
+  // --- AI Pre-fetching Logic ---
+  const triggerAiProcessing = useCallback(async (pageNum) => {
+    if (!aiEnabled || !openaiKey) return;
+    
+    const pagesToProcess = [pageNum, pageNum + 1];
+
+    pagesToProcess.forEach(async (p) => {
+        if (p > numPages) return;
+        
+        const pageRef = pageRefs.current[p];
+        if (!pageRef || !pageRef.extractSentenceData) return;
+
+        try {
+            const sentences = await pageRef.extractSentenceData();
+            
+            // Filter out already cached items
+            const toProcess = sentences.filter(s => !aiCacheRef.current[s.id]);
+            
+            if (toProcess.length > 0) {
+                let fixedCount = 0;
+                let processedCount = 0;
+
+                // Process concurrently
+                const promises = toProcess.map(async (item) => {
+                     const result = await fixTranscriptWithAI(item.image, item.text, openaiKey, aiInstructions);
+                     
+                     processedCount++;
+
+                     if (result.transcript !== "NO CHANGE") {
+                         // console.log(`[AI Fix] Page ${p} | ID: ${item.id}\nFROM: ${item.text}\nTO:   ${result.transcript}`);
+                         
+                         fixedCount++;
+                         setAiCache(prev => ({
+                             ...prev,
+                             [item.id]: result.transcript
+                         }));
+                     }
+                     
+                     // Update tokens UI occasionally
+                     setTotalTokens(getStoredTokenUsage());
+                });
+
+                // Wait for this page batch to finish to notify user
+                await Promise.allSettled(promises);
+
+                if (fixedCount > 0) {
+                    setAiStatusMsg(`Page ${p} AI Ready: ${fixedCount} sentences fixed.`);
+                    setTimeout(() => setAiStatusMsg(""), 4000);
+                }
+            }
+        } catch (e) {
+            console.error("AI Processing failed for page " + p, e);
+        }
+    });
+  }, [aiEnabled, openaiKey, aiInstructions, numPages]);
+
+  // Trigger AI when page changes or tokens registered
+  useEffect(() => {
+      if (aiEnabled && activePage) {
+          // Small debounce to let render finish
+          const t = setTimeout(() => triggerAiProcessing(activePage), 500);
+          return () => clearTimeout(t);
+      }
+  }, [activePage, aiEnabled, triggerAiProcessing]);
 
   const loadRecentFilesList = async () => {
     try {
@@ -282,7 +372,12 @@ const App = () => {
         waitingForPageRef.current = null;
         scheduleNextBatch(pageNum, []);
     }
-  }, []);
+
+    // Trigger AI if enabled
+    if (aiEnabled) {
+        setTimeout(() => triggerAiProcessing(pageNum), 500);
+    }
+  }, [aiEnabled, triggerAiProcessing]);
 
   // --- Smart Jump Logic ---
   const performJump = async (pageNumber, doc = pdf) => {
@@ -366,6 +461,7 @@ const App = () => {
         setActiveTokenId(null);
         setIsPlaying(false);
         pageTokensMap.current.clear();
+        setAiCache({}); // Clear AI Cache on new file load
         waitingForPageRef.current = null;
         setDebugImages([]);
         synth.cancel();
@@ -547,17 +643,46 @@ const App = () => {
         }
     }
 
+    // --- AI Replacement Logic ---
     let script = "";
     const map = [];
-    pool.forEach(token => {
-        const text = token.spokenText;
-        if (!text) return; 
-
-        const start = script.length;
-        script += text + " ";
-        const end = start + text.length;
-        map.push({ start, end, token });
-    });
+    
+    // We iterate linear pool.
+    for (let i = 0; i < pool.length; i++) {
+        const token = pool[i];
+        
+        // Check if this token is the start of a fixed sentence
+        if (aiEnabled && aiCacheRef.current[token.id]) {
+            const fixedText = aiCacheRef.current[token.id];
+            
+            // Add fixed text to script
+            const start = script.length;
+            script += fixedText + " ";
+            const end = start + fixedText.length;
+            
+            map.push({ start, end, token });
+            
+            // Skip subsequent tokens until end of sentence heuristic
+            let j = i + 1;
+            while(j < pool.length) {
+                const nextT = pool[j];
+                if (aiCacheRef.current[nextT.id]) break; // Found next start
+                if (/[.!?]["']?$/.test(pool[j-1].spokenText.trim())) break; // End of previous word was punctuation
+                j++;
+            }
+            i = j - 1; // Advance loop
+            
+        } else {
+            // Standard Logic
+            const text = token.spokenText;
+            if (!text) continue; 
+    
+            const start = script.length;
+            script += text + " ";
+            const end = start + text.length;
+            map.push({ start, end, token });
+        }
+    }
 
     if (!script.trim()) {
         if (startPageNum < numPages) {
@@ -670,12 +795,38 @@ const App = () => {
       }
   };
 
+  const handleResetTokens = () => {
+      if(confirm("Reset total token usage count?")) {
+          setTotalTokens(resetTokenUsage());
+      }
+  };
+
   return (
     <div className="app-layout" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       {isDragging && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '24px', pointerEvents: 'none' }}>
             <div><Icons.Upload style={{width: 64, height: 64, marginBottom: 20}} /><p>Drop PDF to Open</p></div>
         </div>
+      )}
+
+      {/* AI Status Notification */}
+      {aiStatusMsg && (
+          <div style={{
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              backgroundColor: '#2196F3',
+              color: 'white',
+              padding: '10px 20px',
+              borderRadius: '5px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+              zIndex: 10000,
+              fontSize: '14px',
+              animation: 'fadeIn 0.3s ease'
+          }}>
+              <Icons.Voice style={{marginRight: '8px', verticalAlign: 'middle', width: '16px'}}/>
+              {aiStatusMsg}
+          </div>
       )}
 
       <main className="main-content">
@@ -762,8 +913,13 @@ const App = () => {
                                 {debugImages.map((item, idx) => (
                                     <div key={idx} style={{ background: 'white', padding: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                                         <div style={{ marginBottom: '5px', fontSize: '12px', color: '#555', fontFamily: 'monospace' }}>
-                                            {item.text}
+                                            <strong>Original:</strong> {item.text}
                                         </div>
+                                        {aiCache[item.id] && (
+                                            <div style={{ marginBottom: '5px', fontSize: '12px', color: '#2196F3', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                                                <strong>AI Fix:</strong> {aiCache[item.id]}
+                                            </div>
+                                        )}
                                         <img src={item.img} alt={`Sentence ${idx}`} style={{ maxWidth: '100%', border: '1px solid #ddd' }} />
                                     </div>
                                 ))}
@@ -873,6 +1029,8 @@ const App = () => {
                                             <button 
                                                 className={`toggle-btn ${readingMode === 'word' ? 'active' : ''}`}
                                                 onClick={() => setReadingMode('word')}
+                                                disabled={aiEnabled} 
+                                                title={aiEnabled ? "Disabled when AI Fix is ON" : ""}
                                             >
                                                 Word
                                             </button>
@@ -926,6 +1084,44 @@ const App = () => {
                                             <span>0.5x</span>
                                             <span>3.0x</span>
                                         </div>
+                                    </div>
+
+                                    <div className="setting-divider"></div>
+
+                                    {/* AI SETTINGS */}
+                                    <div className="setting-item">
+                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
+                                            <label style={{fontWeight: 'bold', color: '#2196F3'}}>AI Transcript Fix (Beta)</label>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={aiEnabled} 
+                                                onChange={e => setAiEnabled(e.target.checked)} 
+                                                style={{ width: 'auto' }}
+                                            />
+                                        </div>
+                                        
+                                        {aiEnabled && (
+                                            <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="OpenAI API Key (sk-...)" 
+                                                    value={openaiKey}
+                                                    onChange={e => setOpenaiKey(e.target.value)}
+                                                    className="page-input"
+                                                    style={{width: '100%', fontSize: '12px'}}
+                                                />
+                                                <textarea 
+                                                    placeholder="Custom Instructions (e.g., 'Read formulas')" 
+                                                    value={aiInstructions}
+                                                    onChange={e => setAiInstructions(e.target.value)}
+                                                    style={{width: '100%', height: '50px', fontSize: '12px', borderRadius: '4px', border:'1px solid #ccc', resize:'none', padding: '5px'}}
+                                                />
+                                                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#666'}}>
+                                                    <span>Used: {totalTokens.toLocaleString()} tokens</span>
+                                                    <span style={{cursor: 'pointer', textDecoration: 'underline'}} onClick={handleResetTokens}>Reset</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="setting-divider"></div>
