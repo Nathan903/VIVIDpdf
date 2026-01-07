@@ -11,7 +11,19 @@ export const resetTokenUsage = () => {
   return 0;
 };
 
-// Simple queue to prevent browser from choking on 50 simultaneous fetch requests
+/**
+ * Calculates cost for gpt-4o-mini
+ * Input: $0.15 / 1M tokens
+ * Output: $0.60 / 1M tokens
+ */
+const calculateCost = (usage) => {
+  if (!usage) return 0;
+  const inputCost = (usage.prompt_tokens / 1_000_000) * 0.15;
+  const outputCost = (usage.completion_tokens / 1_000_000) * 0.60;
+  return inputCost + outputCost;
+};
+
+// Simple queue to prevent browser from choking on simultaneous fetch requests
 class RequestQueue {
   constructor(concurrency = 3) {
     this.queue = [];
@@ -66,16 +78,8 @@ Return valid JSON only.
 `;
 
     // --- DEBUGGING START ---
-    console.log("[Prompt]", rawText);
     
-    // // Download image for debugging
-    // const link = document.createElement("a");
-    // link.href = imageDataUrl;
-    // link.download = `debug_segment_${Date.now()}.png`; 
-    // document.body.appendChild(link);
-    // link.click();
-    // document.body.removeChild(link);
-    // // --- DEBUGGING END ---
+    const startTime = performance.now(); // Start Timer
 
     try {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -106,6 +110,7 @@ Return valid JSON only.
       }
 
       const data = await response.json();
+      const endTime = performance.now(); // End Timer
       
       // Update Token Usage
       if (data.usage) {
@@ -117,12 +122,19 @@ Return valid JSON only.
       const content = data.choices[0].message.content;
       const parsed = JSON.parse(content);
       
-      // --- DEBUGGING OUTPUT ---
+      // --- METRICS CALCULATION ---
+      const durationMs = (endTime - startTime).toFixed(2);
+      const cost = calculateCost(data.usage);
+      
+      console.log("[Prompt]", rawText);
+      console.log(`[Metrics] Time: ${durationMs}ms | Cost: $${cost.toFixed(6)} | Tokens: ${data.usage?.total_tokens}`);
       console.log("[JSON]", parsed);
       
       return {
         transcript: parsed.transcript || "NO CHANGE",
-        usage: data.usage?.total_tokens || 0
+        usage: data.usage?.total_tokens || 0,
+        cost: cost,
+        duration: durationMs
       };
 
     } catch (error) {
