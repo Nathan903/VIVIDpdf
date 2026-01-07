@@ -135,7 +135,104 @@ const PDFPage = forwardRef(({
     } catch (e) { return 'rgb(255,255,255)'; }
   };
 
-  // --- Debug / Extraction Logic ---
+  // --- Shared Logic for Sentence Image Generation (Masked/White-out) ---
+  const generateSegmentedImages = useCallback(async () => {
+    if (!canvasRef.current || pageTokensRef.current.length === 0 || !pageDimensions) return [];
+    
+    const tokens = pageTokensRef.current;
+    // Use cached sentences or group them
+    const sentences = sentenceGroupsRef.current.length > 0 
+        ? sentenceGroupsRef.current 
+        : groupTokensIntoSentences(tokens);
+
+    const dpr = window.devicePixelRatio || 1;
+    const results = [];
+
+    for (const sentenceTokens of sentences) {
+        if (!sentenceTokens.length) continue;
+
+        // Calculate Union Bounds
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        sentenceTokens.forEach(t => {
+            t.parts.forEach(p => {
+                minX = Math.min(minX, p.bounds.left);
+                minY = Math.min(minY, p.bounds.top);
+                maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
+                maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
+            });
+        });
+
+        // Add padding (using Debug style: 5px)
+        const pad = 5;
+        minX = Math.max(0, minX - pad);
+        minY = Math.max(0, minY - pad);
+        maxX = Math.min(pageDimensions.width, maxX + pad);
+        maxY = Math.min(pageDimensions.height, maxY + pad);
+
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        if (width <= 0 || height <= 0) continue;
+
+        const cropCanvas = document.createElement('canvas');
+        cropCanvas.width = width * dpr;
+        cropCanvas.height = height * dpr;
+        const ctx = cropCanvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        // Draw full page section
+        ctx.drawImage(
+            canvasRef.current, 
+            minX * dpr, minY * dpr, width * dpr, height * dpr, 
+            0, 0, width, height 
+        );
+
+        // --- MASKING LOGIC ---
+        const bgColor = getDominantColor(ctx, width * dpr, height * dpr);
+
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = width * dpr;
+        maskCanvas.height = height * dpr;
+        const mCtx = maskCanvas.getContext('2d');
+        mCtx.scale(dpr, dpr);
+
+        const sentenceTokenIds = new Set(sentenceTokens.map(t => t.id));
+
+        // 1. Draw boxes over neighbors (everything NOT in the sentence)
+        mCtx.fillStyle = bgColor;
+        tokens.forEach(t => {
+            if (!sentenceTokenIds.has(t.id)) {
+                t.parts.forEach(p => {
+                    // Draw relative to crop
+                    mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
+                });
+            }
+        });
+
+        // 2. Clear the mask where the target sentence IS
+        // This ensures we don't accidentally cover parts of our sentence if bounding boxes overlap slightly
+        mCtx.globalCompositeOperation = 'destination-out';
+        sentenceTokens.forEach(t => {
+            t.parts.forEach(p => {
+                mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
+            });
+        });
+
+        // 3. Apply the mask to the crop
+        ctx.drawImage(maskCanvas, 0, 0, width, height);
+        // ---------------------
+
+        results.push({
+            id: sentenceTokens[0].id, 
+            text: sentenceTokens.map(t => t.spokenText).join(' '),
+            dataUrl: cropCanvas.toDataURL('image/jpeg', 0.8)
+        });
+    }
+    return results;
+  }, [pageDimensions]);
+
+  // --- Imperative Handle ---
   useImperativeHandle(ref, () => ({
     scrollIntoView: (opts) => {
       if (containerRef.current) containerRef.current.scrollIntoView(opts);
@@ -149,7 +246,6 @@ const PDFPage = forwardRef(({
         const token = pageTokensRef.current.find(t => t.id === tokenId);
         if (token && token.parts && token.parts.length > 0) {
             // Return the bounding client rect of the first span part
-            // This is relative to the viewport
             return token.parts[0].spanElement.getBoundingClientRect();
         }
         return null;
@@ -171,150 +267,23 @@ const PDFPage = forwardRef(({
         
         return thumbCanvas.toDataURL('image/jpeg', 0.7);
     },
-    // NEW: Extract Data specifically for AI Processing
+    // NEW: Extract Data specifically for AI Processing (Now uses Shared Logic)
     extractSentenceData: async () => {
-        if (!canvasRef.current || pageTokensRef.current.length === 0) return [];
-        
-        // Ensure sentences are grouped
-        const sentences = sentenceGroupsRef.current.length > 0 
-            ? sentenceGroupsRef.current 
-            : groupTokensIntoSentences(pageTokensRef.current);
-
-        const dpr = window.devicePixelRatio || 1;
-        const results = [];
-
-        for (const sentenceTokens of sentences) {
-            if (!sentenceTokens.length) continue;
-            
-            // Calculate Union Bounds
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            sentenceTokens.forEach(t => {
-                t.parts.forEach(p => {
-                    minX = Math.min(minX, p.bounds.left);
-                    minY = Math.min(minY, p.bounds.top);
-                    maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
-                    maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
-                });
-            });
-
-            // Add Context Padding (so AI sees surrounding whitespace or nearby symbols)
-            const pad = 10;
-            minX = Math.max(0, minX - pad);
-            minY = Math.max(0, minY - pad);
-            maxX = Math.min(pageDimensions.width, maxX + pad);
-            maxY = Math.min(pageDimensions.height, maxY + pad);
-
-            const width = maxX - minX;
-            const height = maxY - minY;
-
-            if (width <= 0 || height <= 0) continue;
-
-            const cropCanvas = document.createElement('canvas');
-            cropCanvas.width = width * dpr;
-            cropCanvas.height = height * dpr;
-            const ctx = cropCanvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-
-            // Draw full page section
-            ctx.drawImage(
-                canvasRef.current, 
-                minX * dpr, minY * dpr, width * dpr, height * dpr, 
-                0, 0, width, height 
-            );
-
-            // Optional: Mask out other text to focus AI? 
-            // For now, sending the crop is usually safer context, 
-            // but we might mask neighbors if dense. Keeping simple for now.
-
-            const rawText = sentenceTokens.map(t => t.spokenText).join(' ');
-            
-            results.push({
-                id: sentenceTokens[0].id, // Key by first token
-                text: rawText,
-                image: cropCanvas.toDataURL('image/jpeg', 0.8)
-            });
-        }
-        return results;
+        const data = await generateSegmentedImages();
+        return data.map(d => ({
+            id: d.id,
+            text: d.text,
+            image: d.dataUrl // Map to 'image' for AI Service
+        }));
     },
+    // Debug Images (Now uses Shared Logic)
     generateDebugImages: async () => {
-        if (!canvasRef.current || pageTokensRef.current.length === 0) return [];
-        
-        const tokens = pageTokensRef.current;
-        const sentences = groupTokensIntoSentences(tokens);
-
-        const dpr = window.devicePixelRatio || 1;
-        const results = [];
-
-        for (const sentenceTokens of sentences) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            
-            sentenceTokens.forEach(t => {
-                t.parts.forEach(p => {
-                    minX = Math.min(minX, p.bounds.left);
-                    minY = Math.min(minY, p.bounds.top);
-                    maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
-                    maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
-                });
-            });
-
-            const pad = 5;
-            minX = Math.max(0, minX - pad);
-            minY = Math.max(0, minY - pad);
-            maxX = Math.min(pageDimensions.width, maxX + pad);
-            maxY = Math.min(pageDimensions.height, maxY + pad);
-
-            const width = maxX - minX;
-            const height = maxY - minY;
-
-            if (width <= 0 || height <= 0) continue;
-
-            const cropCanvas = document.createElement('canvas');
-            cropCanvas.width = width * dpr;
-            cropCanvas.height = height * dpr;
-            const ctx = cropCanvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-
-            ctx.drawImage(
-                canvasRef.current, 
-                minX * dpr, minY * dpr, width * dpr, height * dpr, 
-                0, 0, width, height 
-            );
-
-            const bgColor = getDominantColor(ctx, width * dpr, height * dpr);
-
-            const maskCanvas = document.createElement('canvas');
-            maskCanvas.width = width * dpr;
-            maskCanvas.height = height * dpr;
-            const mCtx = maskCanvas.getContext('2d');
-            mCtx.scale(dpr, dpr);
-
-            const sentenceTokenIds = new Set(sentenceTokens.map(t => t.id));
-
-            mCtx.fillStyle = bgColor;
-            tokens.forEach(t => {
-                if (!sentenceTokenIds.has(t.id)) {
-                    t.parts.forEach(p => {
-                        mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
-                    });
-                }
-            });
-
-            mCtx.globalCompositeOperation = 'destination-out';
-            sentenceTokens.forEach(t => {
-                t.parts.forEach(p => {
-                    mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
-                });
-            });
-
-            ctx.drawImage(maskCanvas, 0, 0, width, height);
-
-            results.push({
-                id: sentenceTokens[0].id, // Add ID for cross-referencing AI Cache
-                text: sentenceTokens.map(t => t.spokenText).join(' '),
-                img: cropCanvas.toDataURL('image/jpeg', 0.8)
-            });
-        }
-        return results;
+        const data = await generateSegmentedImages();
+        return data.map(d => ({
+            id: d.id,
+            text: d.text,
+            img: d.dataUrl // Map to 'img' for Debug Panel
+        }));
     }
   }));
 

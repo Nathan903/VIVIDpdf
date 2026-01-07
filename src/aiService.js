@@ -65,6 +65,18 @@ Return valid JSON only.
 }
 `;
 
+    // --- DEBUGGING START ---
+    console.log("[Prompt]", rawText);
+    
+    // // Download image for debugging
+    // const link = document.createElement("a");
+    // link.href = imageDataUrl;
+    // link.download = `debug_segment_${Date.now()}.png`; 
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+    // // --- DEBUGGING END ---
+
     try {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -73,7 +85,7 @@ Return valid JSON only.
           "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "gpt-4o", 
+          model: "gpt-4o-mini", 
           messages: [
             {
               role: "user",
@@ -104,6 +116,9 @@ Return valid JSON only.
 
       const content = data.choices[0].message.content;
       const parsed = JSON.parse(content);
+      
+      // --- DEBUGGING OUTPUT ---
+      console.log("[JSON]", parsed);
       
       return {
         transcript: parsed.transcript || "NO CHANGE",
