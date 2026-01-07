@@ -1,25 +1,38 @@
 // aiService.js
 
-const LS_TOKEN_COUNT = 'pdf_reader_token_count';
+const LS_COST_COUNT = 'pdf_reader_total_cost'; // Changed from token count to cost
 
-export const getStoredTokenUsage = () => {
-  return parseInt(localStorage.getItem(LS_TOKEN_COUNT) || '0', 10);
+export const getStoredCost = () => {
+  return parseFloat(localStorage.getItem(LS_COST_COUNT) || '0.000000');
 };
 
-export const resetTokenUsage = () => {
-  localStorage.setItem(LS_TOKEN_COUNT, '0');
-  return 0;
+export const resetCostUsage = () => {
+  localStorage.setItem(LS_COST_COUNT, '0.000000');
+  return 0.000000;
 };
 
 /**
- * Calculates cost for gpt-4o-mini
- * Input: $0.15 / 1M tokens
- * Output: $0.60 / 1M tokens
+ * Calculates cost based on model
  */
-const calculateCost = (usage) => {
+const calculateCost = (usage, model) => {
   if (!usage) return 0;
-  const inputCost = (usage.prompt_tokens / 1_000_000) * 0.15;
-  const outputCost = (usage.completion_tokens / 1_000_000) * 0.60;
+  
+  let inputRate = 0;
+  let outputRate = 0;
+
+  if (model === 'gpt-4o') {
+      // $2.50 / 1M input, $10.00 / 1M output
+      inputRate = 2.50;
+      outputRate = 10.00;
+  } else {
+      // gpt-4o-mini (default)
+      // $0.15 / 1M input, $0.60 / 1M output
+      inputRate = 0.15;
+      outputRate = 0.60;
+  }
+
+  const inputCost = (usage.prompt_tokens / 1_000_000) * inputRate;
+  const outputCost = (usage.completion_tokens / 1_000_000) * outputRate;
   return inputCost + outputCost;
 };
 
@@ -51,7 +64,7 @@ class RequestQueue {
 
 const queue = new RequestQueue(4); // Process 4 sentences in parallel
 
-export const fixTranscriptWithAI = async (imageDataUrl, rawText, apiKey, userInstruction) => {
+export const fixTranscriptWithAI = async (imageDataUrl, rawText, apiKey, userInstruction, model = 'gpt-4o-mini') => {
   return queue.add(async () => {
     if (!apiKey) throw new Error("Missing API Key");
 
@@ -89,7 +102,7 @@ Return valid JSON only.
           "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini", 
+          model: model, 
           messages: [
             {
               role: "user",
@@ -112,23 +125,21 @@ Return valid JSON only.
       const data = await response.json();
       const endTime = performance.now(); // End Timer
       
-      // Update Token Usage
-      if (data.usage) {
-        const current = getStoredTokenUsage();
-        const total = data.usage.total_tokens || 0;
-        localStorage.setItem(LS_TOKEN_COUNT, (current + total).toString());
-      }
+      // Calculate Cost
+      const cost = calculateCost(data.usage, model);
+
+      // Update Stored Total Cost
+      const currentTotal = getStoredCost();
+      localStorage.setItem(LS_COST_COUNT, (currentTotal + cost).toFixed(6));
 
       const content = data.choices[0].message.content;
       const parsed = JSON.parse(content);
       
       // --- METRICS CALCULATION ---
       const durationMs = (endTime - startTime).toFixed(2);
-      const cost = calculateCost(data.usage);
       
       console.log("[Prompt]", rawText);
-      console.log(`[Metrics] Time: ${durationMs}ms | Cost: $${cost.toFixed(6)} | Tokens: ${data.usage?.total_tokens}`);
-      console.log("[JSON]", parsed);
+      console.log(`[Metrics] Model: ${model} | Time: ${durationMs}ms | Cost: $${cost.toFixed(6)} | Tokens: ${data.usage?.total_tokens}`);
       
       return {
         transcript: parsed.transcript || "NO CHANGE",

@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId } from './db';
-import { fixTranscriptWithAI, getStoredTokenUsage, resetTokenUsage } from './aiService';
+import { fixTranscriptWithAI, getStoredCost, resetCostUsage } from './aiService';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -23,6 +23,7 @@ const DEFAULT_GLOBALS = {
   // AI Settings
   aiEnabled: false,
   openaiKey: "",
+  aiModel: "gpt-4o-mini", // Default to mini
   aiInstructions: "Fix formatting and read math formulas naturally."
 };
 
@@ -61,8 +62,9 @@ const App = () => {
   // AI Settings
   const [aiEnabled, setAiEnabled] = useState(globalSettings.aiEnabled || false);
   const [openaiKey, setOpenaiKey] = useState(globalSettings.openaiKey || "");
+  const [aiModel, setAiModel] = useState(globalSettings.aiModel || "gpt-4o-mini");
   const [aiInstructions, setAiInstructions] = useState(globalSettings.aiInstructions || "");
-  const [totalTokens, setTotalTokens] = useState(getStoredTokenUsage());
+  const [totalCost, setTotalCost] = useState(getStoredCost()); // Changed from tokens to cost
   const [aiCache, setAiCache] = useState({}); // { tokenId: "Fixed text" }
   const [aiStatusMsg, setAiStatusMsg] = useState(""); // Notification state
 
@@ -134,10 +136,11 @@ const App = () => {
       autoScroll,
       aiEnabled,
       openaiKey,
+      aiModel,
       aiInstructions
     };
     localStorage.setItem(LS_GLOBALS, JSON.stringify(settings));
-  }, [selectedVoiceURI, readingMode, rate, highlightEnabled, highlightColor, highlightOpacity, autoHide, autoScroll, aiEnabled, openaiKey, aiInstructions]);
+  }, [selectedVoiceURI, readingMode, rate, highlightEnabled, highlightColor, highlightOpacity, autoHide, autoScroll, aiEnabled, openaiKey, aiModel, aiInstructions]);
 
   // 2. Load Recent Files on Mount
   useEffect(() => {
@@ -178,7 +181,7 @@ const App = () => {
 
       try {
            // Execute API Call
-           const result = await fixTranscriptWithAI(item.image, item.text, openaiKey, aiInstructions);
+           const result = await fixTranscriptWithAI(item.image, item.text, openaiKey, aiInstructions, aiModel);
 
            if (result.transcript !== "NO CHANGE") {
                setAiCache(prev => ({
@@ -191,8 +194,8 @@ const App = () => {
                setTimeout(() => setAiStatusMsg(""), 2000);
            }
            
-           // Update tokens UI
-           setTotalTokens(getStoredTokenUsage());
+           // Update cost UI
+           setTotalCost(getStoredCost());
 
       } catch (e) {
            console.error(`[AI Queue] Failed ID: ${item.id}`, e);
@@ -202,7 +205,7 @@ const App = () => {
            // Try to process next item immediately
            processAiQueue();
       }
-  }, [openaiKey, aiInstructions]);
+  }, [openaiKey, aiInstructions, aiModel]);
 
   // Function to add items to queue (called by triggers)
   const addToAiQueue = useCallback(async (pageNum) => {
@@ -873,9 +876,9 @@ const App = () => {
       }
   };
 
-  const handleResetTokens = () => {
-      if(confirm("Reset total token usage count?")) {
-          setTotalTokens(resetTokenUsage());
+  const handleResetCost = () => {
+      if(confirm("Reset total cost?")) {
+          setTotalCost(resetCostUsage());
       }
   };
 
@@ -1188,6 +1191,19 @@ const App = () => {
                                                     className="page-input"
                                                     style={{width: '100%', fontSize: '12px'}}
                                                 />
+                                                
+                                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                    <label style={{fontSize: '12px'}}>Model:</label>
+                                                    <select 
+                                                        value={aiModel} 
+                                                        onChange={(e) => setAiModel(e.target.value)}
+                                                        style={{fontSize: '12px', padding: '2px 5px', borderRadius: '4px', border: '1px solid #ccc'}}
+                                                    >
+                                                        <option value="gpt-4o-mini">GPT-4o Mini (Cheap)</option>
+                                                        <option value="gpt-4o">GPT-4o (Best)</option>
+                                                    </select>
+                                                </div>
+
                                                 <textarea 
                                                     placeholder="Custom Instructions (e.g., 'Read formulas')" 
                                                     value={aiInstructions}
@@ -1195,8 +1211,8 @@ const App = () => {
                                                     style={{width: '100%', height: '50px', fontSize: '12px', borderRadius: '4px', border:'1px solid #ccc', resize:'none', padding: '5px'}}
                                                 />
                                                 <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#666'}}>
-                                                    <span>Used: {totalTokens.toLocaleString()} tokens</span>
-                                                    <span style={{cursor: 'pointer', textDecoration: 'underline'}} onClick={handleResetTokens}>Reset</span>
+                                                    <span>Cost: ${totalCost.toFixed(4)}</span>
+                                                    <span style={{cursor: 'pointer', textDecoration: 'underline'}} onClick={handleResetCost}>Reset</span>
                                                 </div>
                                             </div>
                                         )}
