@@ -136,7 +136,8 @@ const PDFPage = forwardRef(({
   };
 
   // --- Shared Logic for Sentence Image Generation (Masked/White-out) ---
-  const generateSegmentedImages = useCallback(async () => {
+  // MODIFIED: Accepts targetDpr parameter. Defaults to device pixel ratio if null.
+  const generateSegmentedImages = useCallback(async (targetDpr = null) => {
     if (!canvasRef.current || pageTokensRef.current.length === 0 || !pageDimensions) return [];
     
     const tokens = pageTokensRef.current;
@@ -145,7 +146,8 @@ const PDFPage = forwardRef(({
         ? sentenceGroupsRef.current 
         : groupTokensIntoSentences(tokens);
 
-    const dpr = 1;
+    // If targetDpr is passed (e.g. 1 for AI), use it. Otherwise use screen resolution.
+    const dpr = targetDpr !== null ? targetDpr : (window.devicePixelRatio || 1);
     const results = [];
 
     for (const sentenceTokens of sentences) {
@@ -269,7 +271,8 @@ const PDFPage = forwardRef(({
     },
     // NEW: Extract Data specifically for AI Processing (Now uses Shared Logic)
     extractSentenceData: async () => {
-        const data = await generateSegmentedImages();
+        // MODIFIED: Pass 1 to force scale 1 for AI API
+        const data = await generateSegmentedImages(1);
         return data.map(d => ({
             id: d.id,
             text: d.text,
@@ -278,6 +281,7 @@ const PDFPage = forwardRef(({
     },
     // Debug Images (Now uses Shared Logic)
     generateDebugImages: async () => {
+        // MODIFIED: No argument passed, uses default (window.devicePixelRatio)
         const data = await generateSegmentedImages();
         return data.map(d => ({
             id: d.id,
