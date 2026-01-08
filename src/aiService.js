@@ -225,9 +225,9 @@ Return valid JSON only.
       // --- METRICS CALCULATION ---
       const durationMs = (endTime - startTime).toFixed(2);
       
-      console.log("[Prompt]", rawText);
-      console.log(parsed.transcript);
-      console.log(`[Metrics] Model: ${model} | Time: ${durationMs}ms | Cost: $${cost.toFixed(6)}`);
+      console.log("[Prompt]", rawText, 
+        "\n[output]"+parsed.transcript,
+        `\n[Metrics] Model: ${model} | Time: ${durationMs}ms | Cost: $${cost.toFixed(6)}`);
       
       return {
         transcript: parsed.transcript || "NO CHANGE",

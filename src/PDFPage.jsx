@@ -136,8 +136,7 @@ const PDFPage = forwardRef(({
   };
 
   // --- Shared Logic for Sentence Image Generation (Masked/White-out) ---
-  // MODIFIED: Accepts targetDpr parameter. Defaults to device pixel ratio if null.
-  const generateSegmentedImages = useCallback(async (targetDpr = null) => {
+  const generateSegmentedImages = useCallback(async (targetDpr = null, targetTokenId = null) => {
     if (!canvasRef.current || pageTokensRef.current.length === 0 || !pageDimensions) return [];
     
     const tokens = pageTokensRef.current;
@@ -148,12 +147,28 @@ const PDFPage = forwardRef(({
 
     // If targetDpr is passed (e.g. 1 for AI), use it. Otherwise use screen resolution.
     const dpr = targetDpr !== null ? targetDpr : (window.devicePixelRatio || 1);
+    
+    // --- FIX: CALCULATE SOURCE RATIO ---
+    // The canvas backing store (internal pixels) might differ from CSS width due to:
+    // 1. High DPI displays (window.devicePixelRatio)
+    // 2. PDF scaling logic
+    // We calculate the ratio to map CSS coordinates (minX) to internal Source pixels.
+    const sourceWidth = canvasRef.current.width; // Internal pixels
+    const cssWidth = pageDimensions.width;       // CSS pixels
+    const sourceRatio = cssWidth > 0 ? (sourceWidth / cssWidth) : 1;
+
     const results = [];
 
-    for (const sentenceTokens of sentences) {
+    // Filter sentences if targetTokenId is provided
+    let targetSentences = sentences;
+    if (targetTokenId) {
+        targetSentences = sentences.filter(sent => sent.some(t => t.id === targetTokenId));
+    }
+
+    for (const sentenceTokens of targetSentences) {
         if (!sentenceTokens.length) continue;
 
-        // Calculate Union Bounds
+        // Calculate Union Bounds (CSS Pixels)
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         
         sentenceTokens.forEach(t => {
@@ -165,7 +180,7 @@ const PDFPage = forwardRef(({
             });
         });
 
-        // Add padding (using Debug style: 5px)
+        // Add padding
         const pad = 5;
         minX = Math.max(0, minX - pad);
         minY = Math.max(0, minY - pad);
@@ -183,10 +198,12 @@ const PDFPage = forwardRef(({
         const ctx = cropCanvas.getContext('2d');
         ctx.scale(dpr, dpr);
 
-        // Draw full page section
+        // --- FIX: USE SOURCE RATIO FOR CROPPING ---
+        // Source Args: Use Internal Pixels (CSS * sourceRatio)
+        // Dest Args: Use CSS Units (since we scaled ctx by dpr)
         ctx.drawImage(
             canvasRef.current, 
-            minX * dpr, minY * dpr, width * dpr, height * dpr, 
+            minX * sourceRatio, minY * sourceRatio, width * sourceRatio, height * sourceRatio, 
             0, 0, width, height 
         );
 
@@ -213,7 +230,6 @@ const PDFPage = forwardRef(({
         });
 
         // 2. Clear the mask where the target sentence IS
-        // This ensures we don't accidentally cover parts of our sentence if bounding boxes overlap slightly
         mCtx.globalCompositeOperation = 'destination-out';
         sentenceTokens.forEach(t => {
             t.parts.forEach(p => {
@@ -239,54 +255,48 @@ const PDFPage = forwardRef(({
     scrollIntoView: (opts) => {
       if (containerRef.current) containerRef.current.scrollIntoView(opts);
     },
-    // NEW: Allow parent to set exact dimensions immediately to prevent scroll jump bugs
     resizeImmediately: (w, h) => {
         setPageDimensions({ width: w, height: h });
     },
-    // NEW: Get exact bounding rect of a token for smart scrolling
     getTokenRect: (tokenId) => {
         const token = pageTokensRef.current.find(t => t.id === tokenId);
         if (token && token.parts && token.parts.length > 0) {
-            // Return the bounding client rect of the first span part
             return token.parts[0].spanElement.getBoundingClientRect();
         }
         return null;
     },
     getThumbnail: async () => {
         if (!canvasRef.current) return null;
-        // Create a small canvas for the thumbnail
         const thumbCanvas = document.createElement('canvas');
         const aspect = canvasRef.current.height / canvasRef.current.width;
-        const w = 200; // Thumbnail width
+        const w = 200; 
         const h = w * aspect;
         
         thumbCanvas.width = w;
         thumbCanvas.height = h;
         
         const ctx = thumbCanvas.getContext('2d');
-        // Draw the main canvas onto the thumbnail canvas
         ctx.drawImage(canvasRef.current, 0, 0, w, h);
         
         return thumbCanvas.toDataURL('image/jpeg', 0.7);
     },
-    // NEW: Extract Data specifically for AI Processing (Now uses Shared Logic)
-    extractSentenceData: async () => {
-        // MODIFIED: Pass 1 to force scale 1 for AI API
-        const data = await generateSegmentedImages(1);
+    // NEW: Extract Data specifically for AI Processing (Just-In-Time)
+    // Accepts optional targetTokenId to fetch ONE specific sentence
+    extractSentenceData: async (targetTokenId = null) => {
+        const data = await generateSegmentedImages(1, targetTokenId);
         return data.map(d => ({
             id: d.id,
             text: d.text,
-            image: d.dataUrl // Map to 'image' for AI Service
+            image: d.dataUrl
         }));
     },
-    // Debug Images (Now uses Shared Logic)
+    // Debug Images (Returns all sentences)
     generateDebugImages: async () => {
-        // MODIFIED: No argument passed, uses default (window.devicePixelRatio)
         const data = await generateSegmentedImages();
         return data.map(d => ({
             id: d.id,
             text: d.text,
-            img: d.dataUrl // Map to 'img' for Debug Panel
+            img: d.dataUrl
         }));
     }
   }));
@@ -297,7 +307,7 @@ const PDFPage = forwardRef(({
     let isCancelled = false;
 
     const render = async () => {
-      setIsRendering(true); // Start Spinner
+      setIsRendering(true); 
       try {
         const page = await pdfDoc.getPage(pageNum);
         if (isCancelled) return;
@@ -313,7 +323,6 @@ const PDFPage = forwardRef(({
             rotation: (page.rotate + rotation) % 360 
         });
 
-        // Update dimensions logic to handle pre-resizing
         setPageDimensions({ width: viewport.width, height: viewport.height });
         if (containerRef.current) containerRef.current.style.setProperty('--scale-factor', scale);
 
@@ -488,7 +497,7 @@ const PDFPage = forwardRef(({
       } catch (err) {
         console.error(`Error rendering page ${pageNum}`, err);
       } finally {
-        if (!isCancelled) setIsRendering(false); // Stop Spinner
+        if (!isCancelled) setIsRendering(false); 
       }
     };
 
