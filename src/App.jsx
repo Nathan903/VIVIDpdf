@@ -23,7 +23,7 @@ const DEFAULT_GLOBALS = {
   // AI Settings
   aiEnabled: false,
   openaiKey: "",
-  aiModel: "gpt-4o-mini", // Default to mini
+  aiModel: "gemini-2.5-flash-lite", // Updated default to new cheap model
   aiInstructions: "Fix formatting and read math formulas naturally."
 };
 
@@ -62,7 +62,7 @@ const App = () => {
   // AI Settings
   const [aiEnabled, setAiEnabled] = useState(globalSettings.aiEnabled || false);
   const [openaiKey, setOpenaiKey] = useState(globalSettings.openaiKey || "");
-  const [aiModel, setAiModel] = useState(globalSettings.aiModel || "gpt-4o-mini");
+  const [aiModel, setAiModel] = useState(globalSettings.aiModel || "gemini-2.5-flash-lite");
   const [aiInstructions, setAiInstructions] = useState(globalSettings.aiInstructions || "");
   const [totalCost, setTotalCost] = useState(getStoredCost()); // Changed from tokens to cost
   const [aiCache, setAiCache] = useState({}); // { tokenId: "Fixed text" }
@@ -1185,7 +1185,7 @@ const App = () => {
                                             <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
                                                 <input 
                                                     type="text" 
-                                                    placeholder="OpenAI API Key (sk-...)" 
+                                                    placeholder="API Key (OpenAI or Google Gemini)" 
                                                     value={openaiKey}
                                                     onChange={e => setOpenaiKey(e.target.value)}
                                                     className="page-input"
@@ -1199,8 +1199,10 @@ const App = () => {
                                                         onChange={(e) => setAiModel(e.target.value)}
                                                         style={{fontSize: '12px', padding: '2px 5px', borderRadius: '4px', border: '1px solid #ccc'}}
                                                     >
-                                                        <option value="gpt-4o-mini">GPT-4o Mini (Cheap)</option>
-                                                        <option value="gpt-4o">GPT-4o (Best)</option>
+                                                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fastest)</option>
+                                                        <option value="gemini-3-flash-preview">Gemini 3 Flash (High Quality)</option>
+                                                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                                        <option value="gpt-4o">GPT-4o</option>
                                                     </select>
                                                 </div>
 

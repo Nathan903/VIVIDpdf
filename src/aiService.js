@@ -1,6 +1,6 @@
 // aiService.js
 
-const LS_COST_COUNT = 'pdf_reader_total_cost'; // Changed from token count to cost
+const LS_COST_COUNT = 'pdf_reader_total_cost'; 
 
 export const getStoredCost = () => {
   return parseFloat(localStorage.getItem(LS_COST_COUNT) || '0.000000');
@@ -12,7 +12,7 @@ export const resetCostUsage = () => {
 };
 
 /**
- * Calculates cost based on model
+ * Calculates cost based on model (Updated for 2026 Pricing)
  */
 const calculateCost = (usage, model) => {
   if (!usage) return 0;
@@ -20,13 +20,23 @@ const calculateCost = (usage, model) => {
   let inputRate = 0;
   let outputRate = 0;
 
+  // Pricing per 1M tokens
   if (model === 'gpt-4o') {
-      // $2.50 / 1M input, $10.00 / 1M output
       inputRate = 2.50;
       outputRate = 10.00;
+  } else if (model === 'gpt-4o-mini') {
+      inputRate = 0.15;
+      outputRate = 0.60;
+  } else if (model.includes('gemini-2.5-flash-lite')) {
+      // Very cheap tier
+      inputRate = 0.10;
+      outputRate = 0.40;
+  } else if (model.includes('gemini-3-flash-preview')) {
+      // Standard Flash tier
+      inputRate = 0.15;
+      outputRate = 0.60;
   } else {
-      // gpt-4o-mini (default)
-      // $0.15 / 1M input, $0.60 / 1M output
+      // Fallback (assume mini/flash rates)
       inputRate = 0.15;
       outputRate = 0.60;
   }
@@ -62,7 +72,95 @@ class RequestQueue {
   }
 }
 
-const queue = new RequestQueue(4); // Process 4 sentences in parallel
+const queue = new RequestQueue(1); // Process 4 sentences in parallel
+
+// --- HELPER: Gemini API Call ---
+const callGeminiAPI = async (imageDataUrl, promptText, apiKey, model) => {
+  // 1. Strip Data URL Prefix for Gemini (requires raw base64)
+  const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, '');
+  const mimeType = imageDataUrl.match(/data:(.*?);base64/)?.[1] || 'image/jpeg';
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: promptText },
+          { 
+            inline_data: { 
+              mime_type: mimeType, 
+              data: base64Data 
+            } 
+          }
+        ]
+      }],
+      generationConfig: {
+        response_mime_type: "application/json",
+        temperature: 0.3
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error?.message || "Gemini API Failed");
+  }
+
+  const data = await response.json();
+  
+  // Normalize Gemini Response to OpenAI-like structure for the main function
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+  const usage = data.usageMetadata || {};
+
+  return {
+    content,
+    usage: {
+      prompt_tokens: usage.promptTokenCount || 0,
+      completion_tokens: usage.candidatesTokenCount || 0,
+      total_tokens: usage.totalTokenCount || 0
+    }
+  };
+};
+
+// --- HELPER: OpenAI API Call ---
+const callOpenAIAPI = async (imageDataUrl, promptText, apiKey, model) => {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: model, 
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: promptText },
+            { type: "image_url", image_url: { url: imageDataUrl, detail: "low" } }
+          ]
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error?.message || "OpenAI API Failed");
+  }
+
+  const data = await response.json();
+  return {
+    content: data.choices[0].message.content,
+    usage: data.usage
+  };
+};
+
 
 export const fixTranscriptWithAI = async (imageDataUrl, rawText, apiKey, userInstruction, model = 'gpt-4o-mini') => {
   return queue.add(async () => {
@@ -73,8 +171,8 @@ You are an expert TTS (Text-to-Speech) Script Pre-processor.
 Your goal is to convert a raw text string extracted from a PDF into a clean, spoken-word transcript.
 
 INPUT DATA:
-1. IMAGE: Visual ground truth of the text (refer to this for subscripts, superscripts, and formulas).
-2. RAW TEXT: "${rawText}" (Likely contains encoding artifacts like 'x2' for 'x squared' or merged footnote numbers).
+1. IMAGE: Visual ground truth of the text.
+2. RAW TEXT: "${rawText}"
 3. USER CONSTRAINT: "${userInstruction}"
 
 GUIDELINES:
@@ -104,56 +202,36 @@ Return valid JSON only.
     const startTime = performance.now(); // Start Timer
 
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: model, 
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: promptText },
-                { type: "image_url", image_url: { url: imageDataUrl, detail: "low" } }
-              ]
-            }
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.3
-        })
-      });
+      let result;
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || "API Request Failed");
+      // ROUTING LOGIC
+      if (model.startsWith('gemini')) {
+         result = await callGeminiAPI(imageDataUrl, promptText, apiKey, model);
+      } else {
+         result = await callOpenAIAPI(imageDataUrl, promptText, apiKey, model);
       }
 
-      const data = await response.json();
-      const endTime = performance.now(); // End Timer
+      const endTime = performance.now();
       
       // Calculate Cost
-      const cost = calculateCost(data.usage, model);
+      const cost = calculateCost(result.usage, model);
 
       // Update Stored Total Cost
       const currentTotal = getStoredCost();
       localStorage.setItem(LS_COST_COUNT, (currentTotal + cost).toFixed(6));
 
-      const content = data.choices[0].message.content;
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(result.content);
       
       // --- METRICS CALCULATION ---
       const durationMs = (endTime - startTime).toFixed(2);
       
       console.log("[Prompt]", rawText);
       console.log(parsed.transcript);
-      console.log(`[Metrics] Model: ${model} | Time: ${durationMs}ms | Cost: $${cost.toFixed(6)} | Tokens: ${data.usage?.total_tokens}`);
+      console.log(`[Metrics] Model: ${model} | Time: ${durationMs}ms | Cost: $${cost.toFixed(6)}`);
       
       return {
         transcript: parsed.transcript || "NO CHANGE",
-        usage: data.usage?.total_tokens || 0,
+        usage: result.usage?.total_tokens || 0,
         cost: cost,
         duration: durationMs
       };
