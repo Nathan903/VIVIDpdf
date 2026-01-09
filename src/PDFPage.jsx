@@ -135,169 +135,120 @@ const PDFPage = forwardRef(({
     } catch (e) { return 'rgb(255,255,255)'; }
   };
 
-  // --- Shared Logic for Sentence Image Generation (Masked/White-out) ---
-  const generateSegmentedImages = useCallback(async (targetDpr = null, targetTokenId = null) => {
-    if (!canvasRef.current || pageTokensRef.current.length === 0 || !pageDimensions) return [];
-    
-    const tokens = pageTokensRef.current;
-    // Use cached sentences or group them
-    const sentences = sentenceGroupsRef.current.length > 0 
-        ? sentenceGroupsRef.current 
-        : groupTokensIntoSentences(tokens);
-
-    // If targetDpr is passed (e.g. 1 for AI), use it. Otherwise use screen resolution.
-    const dpr = targetDpr !== null ? targetDpr : (window.devicePixelRatio || 1);
-    
-    // --- FIX: CALCULATE SOURCE RATIO ---
-    // The canvas backing store (internal pixels) might differ from CSS width due to:
-    // 1. High DPI displays (window.devicePixelRatio)
-    // 2. PDF scaling logic
-    // We calculate the ratio to map CSS coordinates (minX) to internal Source pixels.
-    const sourceWidth = canvasRef.current.width; // Internal pixels
-    const cssWidth = pageDimensions.width;       // CSS pixels
-    const sourceRatio = cssWidth > 0 ? (sourceWidth / cssWidth) : 1;
-
-    const results = [];
-
-    // Filter sentences if targetTokenId is provided
-    let targetSentences = sentences;
-    if (targetTokenId) {
-        targetSentences = sentences.filter(sent => sent.some(t => t.id === targetTokenId));
-    }
-
-    for (const sentenceTokens of targetSentences) {
-        if (!sentenceTokens.length) continue;
-
-        // Calculate Union Bounds (CSS Pixels)
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        
-        sentenceTokens.forEach(t => {
-            t.parts.forEach(p => {
-                minX = Math.min(minX, p.bounds.left);
-                minY = Math.min(minY, p.bounds.top);
-                maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
-                maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
-            });
-        });
-
-        // Add padding
-        const pad = 5;
-        minX = Math.max(0, minX - pad);
-        minY = Math.max(0, minY - pad);
-        maxX = Math.min(pageDimensions.width, maxX + pad);
-        maxY = Math.min(pageDimensions.height, maxY + pad);
-
-        const width = maxX - minX;
-        const height = maxY - minY;
-
-        if (width <= 0 || height <= 0) continue;
-
-        const cropCanvas = document.createElement('canvas');
-        cropCanvas.width = width * dpr;
-        cropCanvas.height = height * dpr;
-        const ctx = cropCanvas.getContext('2d');
-        ctx.scale(dpr, dpr);
-
-        // --- FIX: USE SOURCE RATIO FOR CROPPING ---
-        // Source Args: Use Internal Pixels (CSS * sourceRatio)
-        // Dest Args: Use CSS Units (since we scaled ctx by dpr)
-        ctx.drawImage(
-            canvasRef.current, 
-            minX * sourceRatio, minY * sourceRatio, width * sourceRatio, height * sourceRatio, 
-            0, 0, width, height 
-        );
-
-        // --- MASKING LOGIC ---
-        const bgColor = getDominantColor(ctx, width * dpr, height * dpr);
-
-        const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = width * dpr;
-        maskCanvas.height = height * dpr;
-        const mCtx = maskCanvas.getContext('2d');
-        mCtx.scale(dpr, dpr);
-
-        const sentenceTokenIds = new Set(sentenceTokens.map(t => t.id));
-
-        // 1. Draw boxes over neighbors (everything NOT in the sentence)
-        mCtx.fillStyle = bgColor;
-        tokens.forEach(t => {
-            if (!sentenceTokenIds.has(t.id)) {
-                t.parts.forEach(p => {
-                    // Draw relative to crop
-                    mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
-                });
-            }
-        });
-
-        // 2. Clear the mask where the target sentence IS
-        mCtx.globalCompositeOperation = 'destination-out';
-        sentenceTokens.forEach(t => {
-            t.parts.forEach(p => {
-                mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
-            });
-        });
-
-        // 3. Apply the mask to the crop
-        ctx.drawImage(maskCanvas, 0, 0, width, height);
-        // ---------------------
-
-        results.push({
-            id: sentenceTokens[0].id, 
-            text: sentenceTokens.map(t => t.spokenText).join(' '),
-            dataUrl: cropCanvas.toDataURL('image/jpeg', 0.8)
-        });
-    }
-    return results;
-  }, [pageDimensions]);
-
-  // --- Imperative Handle ---
+  // --- Debug / Extraction Logic ---
   useImperativeHandle(ref, () => ({
     scrollIntoView: (opts) => {
       if (containerRef.current) containerRef.current.scrollIntoView(opts);
     },
+    // NEW: Allow parent to set exact dimensions immediately to prevent scroll jump bugs
     resizeImmediately: (w, h) => {
         setPageDimensions({ width: w, height: h });
     },
+    // NEW: Get exact bounding rect of a token for smart scrolling
     getTokenRect: (tokenId) => {
         const token = pageTokensRef.current.find(t => t.id === tokenId);
         if (token && token.parts && token.parts.length > 0) {
+            // Return the bounding client rect of the first span part
+            // This is relative to the viewport
             return token.parts[0].spanElement.getBoundingClientRect();
         }
         return null;
     },
     getThumbnail: async () => {
         if (!canvasRef.current) return null;
+        // Create a small canvas for the thumbnail
         const thumbCanvas = document.createElement('canvas');
         const aspect = canvasRef.current.height / canvasRef.current.width;
-        const w = 200; 
+        const w = 200; // Thumbnail width
         const h = w * aspect;
         
         thumbCanvas.width = w;
         thumbCanvas.height = h;
         
         const ctx = thumbCanvas.getContext('2d');
+        // Draw the main canvas onto the thumbnail canvas
         ctx.drawImage(canvasRef.current, 0, 0, w, h);
         
         return thumbCanvas.toDataURL('image/jpeg', 0.7);
     },
-    // NEW: Extract Data specifically for AI Processing (Just-In-Time)
-    // Accepts optional targetTokenId to fetch ONE specific sentence
-    extractSentenceData: async (targetTokenId = null) => {
-        const data = await generateSegmentedImages(1, targetTokenId);
-        return data.map(d => ({
-            id: d.id,
-            text: d.text,
-            image: d.dataUrl
-        }));
-    },
-    // Debug Images (Returns all sentences)
     generateDebugImages: async () => {
-        const data = await generateSegmentedImages();
-        return data.map(d => ({
-            id: d.id,
-            text: d.text,
-            img: d.dataUrl
-        }));
+        if (!canvasRef.current || pageTokensRef.current.length === 0) return [];
+        
+        const tokens = pageTokensRef.current;
+        const sentences = groupTokensIntoSentences(tokens);
+
+        const dpr = window.devicePixelRatio || 1;
+        const results = [];
+
+        for (const sentenceTokens of sentences) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            
+            sentenceTokens.forEach(t => {
+                t.parts.forEach(p => {
+                    minX = Math.min(minX, p.bounds.left);
+                    minY = Math.min(minY, p.bounds.top);
+                    maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
+                    maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
+                });
+            });
+
+            const pad = 5;
+            minX = Math.max(0, minX - pad);
+            minY = Math.max(0, minY - pad);
+            maxX = Math.min(pageDimensions.width, maxX + pad);
+            maxY = Math.min(pageDimensions.height, maxY + pad);
+
+            const width = maxX - minX;
+            const height = maxY - minY;
+
+            if (width <= 0 || height <= 0) continue;
+
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = width * dpr;
+            cropCanvas.height = height * dpr;
+            const ctx = cropCanvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            ctx.drawImage(
+                canvasRef.current, 
+                minX * dpr, minY * dpr, width * dpr, height * dpr, 
+                0, 0, width, height 
+            );
+
+            const bgColor = getDominantColor(ctx, width * dpr, height * dpr);
+
+            const maskCanvas = document.createElement('canvas');
+            maskCanvas.width = width * dpr;
+            maskCanvas.height = height * dpr;
+            const mCtx = maskCanvas.getContext('2d');
+            mCtx.scale(dpr, dpr);
+
+            const sentenceTokenIds = new Set(sentenceTokens.map(t => t.id));
+
+            mCtx.fillStyle = bgColor;
+            tokens.forEach(t => {
+                if (!sentenceTokenIds.has(t.id)) {
+                    t.parts.forEach(p => {
+                        mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
+                    });
+                }
+            });
+
+            mCtx.globalCompositeOperation = 'destination-out';
+            sentenceTokens.forEach(t => {
+                t.parts.forEach(p => {
+                    mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
+                });
+            });
+
+            ctx.drawImage(maskCanvas, 0, 0, width, height);
+
+            results.push({
+                text: sentenceTokens.map(t => t.spokenText).join(' '),
+                img: cropCanvas.toDataURL('image/jpeg', 0.8)
+            });
+        }
+        return results;
     }
   }));
 
@@ -307,7 +258,7 @@ const PDFPage = forwardRef(({
     let isCancelled = false;
 
     const render = async () => {
-      setIsRendering(true); 
+      setIsRendering(true); // Start Spinner
       try {
         const page = await pdfDoc.getPage(pageNum);
         if (isCancelled) return;
@@ -323,6 +274,7 @@ const PDFPage = forwardRef(({
             rotation: (page.rotate + rotation) % 360 
         });
 
+        // Update dimensions logic to handle pre-resizing
         setPageDimensions({ width: viewport.width, height: viewport.height });
         if (containerRef.current) containerRef.current.style.setProperty('--scale-factor', scale);
 
@@ -497,7 +449,7 @@ const PDFPage = forwardRef(({
       } catch (err) {
         console.error(`Error rendering page ${pageNum}`, err);
       } finally {
-        if (!isCancelled) setIsRendering(false); 
+        if (!isCancelled) setIsRendering(false); // Stop Spinner
       }
     };
 

@@ -3,7 +3,6 @@ import * as pdfjsLib from 'pdfjs-dist';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId } from './db';
-import { fixTranscriptWithAI, getStoredCost, resetCostUsage } from './aiService';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
@@ -19,12 +18,7 @@ const DEFAULT_GLOBALS = {
   highlightColor: '#ffeb3b',
   highlightOpacity: 0.4,
   autoHide: false,
-  autoScroll: true,
-  // AI Settings
-  aiEnabled: false,
-  openaiKey: "",
-  aiModel: "gemini-2.5-flash-lite", 
-  aiInstructions: "Fix formatting and read math formulas naturally."
+  autoScroll: true // New Default
 };
 
 const App = () => {
@@ -40,7 +34,7 @@ const App = () => {
 
   // state for auto-hide
   const [autoHide, setAutoHide] = useState(globalSettings.autoHide);
-  const [autoScroll, setAutoScroll] = useState(globalSettings.autoScroll);
+  const [autoScroll, setAutoScroll] = useState(globalSettings.autoScroll); // New State
   const [pdf, setPdf] = useState(null);
   const [fileId, setFileId] = useState(null); // Current DB ID
   const [isPlaying, setIsPlaying] = useState(false);
@@ -56,16 +50,6 @@ const App = () => {
   const [highlightEnabled, setHighlightEnabled] = useState(globalSettings.highlightEnabled);
   const [highlightColor, setHighlightColor] = useState(globalSettings.highlightColor); 
   const [highlightOpacity, setHighlightOpacity] = useState(globalSettings.highlightOpacity);
-
-  // AI Settings
-  const [aiEnabled, setAiEnabled] = useState(globalSettings.aiEnabled || false);
-  const [openaiKey, setOpenaiKey] = useState(globalSettings.openaiKey || "");
-  const [aiModel, setAiModel] = useState(globalSettings.aiModel || "gemini-2.5-flash-lite");
-  const [aiInstructions, setAiInstructions] = useState(globalSettings.aiInstructions || "");
-  const [totalCost, setTotalCost] = useState(getStoredCost()); 
-  
-  // New: AI Loading State
-  const [isAiLoading, setIsAiLoading] = useState(false);
 
   // Navigation
   const [numPages, setNumPages] = useState(0);
@@ -98,12 +82,13 @@ const App = () => {
   // Refs
   const isPlayingRef = useRef(false); 
   const rateRef = useRef(rate);
-  const autoScrollRef = useRef(autoScroll); 
+  const autoScrollRef = useRef(autoScroll); // Ref for closure access
   const synth = window.speechSynthesis;
   const pageRefs = useRef({}); 
   const viewportRef = useRef(null); 
   
   const pageTokensMap = useRef(new Map());
+  const waitingForPageRef = useRef(null);
   
   // Visual
   const [isLoading, setIsLoading] = useState(false);
@@ -125,26 +110,15 @@ const App = () => {
       highlightColor,
       highlightOpacity,
       autoHide,
-      autoScroll,
-      aiEnabled,
-      openaiKey,
-      aiModel,
-      aiInstructions
+      autoScroll
     };
     localStorage.setItem(LS_GLOBALS, JSON.stringify(settings));
-  }, [selectedVoiceURI, readingMode, rate, highlightEnabled, highlightColor, highlightOpacity, autoHide, autoScroll, aiEnabled, openaiKey, aiModel, aiInstructions]);
+  }, [selectedVoiceURI, readingMode, rate, highlightEnabled, highlightColor, highlightOpacity, autoHide, autoScroll]);
 
   // 2. Load Recent Files on Mount
   useEffect(() => {
     loadRecentFilesList();
   }, []);
-
-  // Force Sentence Mode if AI is Enabled
-  useEffect(() => {
-    if (aiEnabled && readingMode !== 'sentence') {
-        setReadingMode('sentence');
-    }
-  }, [aiEnabled, readingMode]);
 
   const loadRecentFilesList = async () => {
     try {
@@ -197,9 +171,10 @@ const App = () => {
     const loadVoices = () => {
       const available = window.speechSynthesis.getVoices();
       setVoices(available);
+      // If we have a saved voiceURI, verify it exists, otherwise default
       if (available.length > 0) {
         if (selectedVoiceURI && available.some(v => v.voiceURI === selectedVoiceURI)) {
-             // Saved voice is valid
+             // Saved voice is valid, keep it
         } else {
              const defaultVoice = available.find(v => v.default) || available[0];
              setSelectedVoiceURI(defaultVoice?.voiceURI || "");
@@ -281,38 +256,58 @@ const App = () => {
         const last = t1[t1.length - 1];
         const first = t2[0];
 
+        // If already linked, skip
         if (first.linkedTo === last.id) return;
 
+        // Check for hyphen at end of previous page
         if (/[-\u2010\u2011\u00AD]$/.test(last.text)) {
+            // Remove hyphen from spoken text and append next word
             const cleanPrefix = last.text.replace(/[-\u2010\u2011\u00AD]$/, '');
             last.spokenText = cleanPrefix + first.text;
+            
+            // Silence the second part so it doesn't trigger a separate read
             first.spokenText = "";
+            
+            // Link them for highlighting
             first.linkedTo = last.id;
         }
     };
 
+    // Check boundary with previous page
     tryMergeNeighbors(pageNum - 1, pageNum);
+    // Check boundary with next page
     tryMergeNeighbors(pageNum, pageNum + 1);
 
+    if (waitingForPageRef.current === pageNum && isPlayingRef.current) {
+        waitingForPageRef.current = null;
+        scheduleNextBatch(pageNum, []);
+    }
   }, []);
 
   // --- Smart Jump Logic ---
   const performJump = async (pageNumber, doc = pdf) => {
     if (!doc || pageNumber < 1 || pageNumber > (doc.numPages || numPages)) return;
 
+    // Optional: show loading if jumping far
     const isFarJump = Math.abs(pageNumber - activePage) > 5;
     if (isFarJump) setIsLoading(true);
 
     try {
+      // 1. Prefetch page to get true dimensions
       const page = await doc.getPage(pageNumber);
       const viewport = page.getViewport({ 
           scale: scale, 
           rotation: (page.rotate + rotation) % 360 
       });
 
+      // 2. Force the placeholder to the correct size IMMEDIATELY
       if (pageRefs.current[pageNumber]) {
+        // We use the new exposed method on PDFPage
         pageRefs.current[pageNumber].resizeImmediately(viewport.width, viewport.height);
+        
+        // Wait a tick for DOM update
         await new Promise(r => setTimeout(r, 20));
+        
         pageRefs.current[pageNumber].scrollIntoView({ behavior: 'auto', block: 'start' });
       }
 
@@ -333,9 +328,11 @@ const App = () => {
         const loadingTask = pdfjsLib.getDocument({ data });
         const pdfDoc = await loadingTask.promise;
         
+        // Generate or Use ID
         const fid = existingMeta ? existingMeta.id : getFileId(blob);
         setFileId(fid);
 
+        // Save new record if it doesn't exist
         if (!existingMeta) {
           await saveFileRecord({
             id: fid,
@@ -353,11 +350,13 @@ const App = () => {
         setPdf(pdfDoc);
         setNumPages(pdfDoc.numPages);
         
+        // Restore Settings or Default
         const meta = existingMeta || { lastPage: 1, scale: 1.5, rotation: 0, darkMode: false, skipZones: [] };
         
         setActivePage(meta.lastPage || 1);
         setJumpInput(String(meta.lastPage || 1));
         
+        // Restore view settings
         setScale(meta.scale || 1.5);
         setRotation(meta.rotation || 0);
         setDarkMode(!!meta.darkMode);
@@ -367,11 +366,13 @@ const App = () => {
         setActiveTokenId(null);
         setIsPlaying(false);
         pageTokensMap.current.clear();
-        
+        waitingForPageRef.current = null;
         setDebugImages([]);
         synth.cancel();
 
+        // Scroll to saved page (delayed to allow render)
         setTimeout(() => {
+           // USE NEW JUMP LOGIC HERE
            performJump(meta.lastPage || 1, pdfDoc);
         }, 300);
 
@@ -414,6 +415,7 @@ const App = () => {
     }
   };
 
+  // Note: Updated to store the Component Ref, not just the DIV
   const registerPageRef = (num, ref) => { pageRefs.current[num] = ref; };
   const notifyPageVisible = useCallback((pageNum) => { setActivePage(pageNum); }, []);
 
@@ -421,6 +423,7 @@ const App = () => {
       if (e.key === 'Enter') {
           const page = parseInt(jumpInput);
           if (page >= 1 && page <= numPages) {
+              // USE NEW JUMP LOGIC HERE
               performJump(page);
               e.target.blur(); 
           }
@@ -431,46 +434,62 @@ const App = () => {
       synth.cancel();
       setIsPlaying(true);
       isPlayingRef.current = true;
+      waitingForPageRef.current = null;
       
       let startIndex = 0;
       if (clickedTokenId) {
           startIndex = pageTokens.findIndex(t => t.id === clickedTokenId);
           if (startIndex === -1) startIndex = 0;
-          setActiveTokenId(clickedTokenId);
       }
-      
       const tokens = pageTokens.slice(startIndex);
-      playSequence(pageNum, tokens);
-  }, [voices, selectedVoiceURI, rate, aiEnabled, openaiKey, aiModel, aiInstructions]);
+      
+      scheduleNextBatch(pageNum, tokens, true);
+  }, [voices, selectedVoiceURI, rate]);
 
   // --- Smart Scrolling Logic (Safe Zone) ---
   const handleSmartScroll = (pageNum, tokenId) => {
+    // If auto-scroll is disabled, do nothing
     if (!autoScrollRef.current) return;
     if (!viewportRef.current) return;
 
     const pageRef = pageRefs.current[pageNum];
     if (!pageRef || !pageRef.getTokenRect) return;
 
+    // Get token coordinates relative to viewport
     const tokenRect = pageRef.getTokenRect(tokenId);
     if (!tokenRect) return;
 
     const viewport = viewportRef.current;
     const containerRect = viewport.getBoundingClientRect();
+
+    // Calculate token's top position relative to the visible area
     const relativeTop = tokenRect.top - containerRect.top;
+    
+    // Viewport height
     const vHeight = containerRect.height;
-    const safeTop = vHeight * 0.1; 
-    const safeBottom = vHeight * 0.8; 
+
+    // Safe Zone Definitions
+    const safeTop = vHeight * 0.1;   // 10%
+    const safeBottom = vHeight * 0.8; // 80%
+
+    // Target Position (Where we want to move the token if it's out of bounds)
+    // We aim for the top 20% mark to show context below
     const targetOffset = vHeight * 0.2; 
 
+    // Calculate Scroll Shift needed
     let shiftAmount = 0;
 
     if (relativeTop < safeTop) {
+        // Token is too high (or above viewport) -> Scroll Up
+        // Current Scroll Top + (Where it is - Where we want it)
         shiftAmount = relativeTop - targetOffset;
     } else if (relativeTop > safeBottom) {
+        // Token is too low (or below viewport) -> Scroll Down
         shiftAmount = relativeTop - targetOffset;
     }
 
-    if (Math.abs(shiftAmount) > 5) { 
+    // Only scroll if outside the Safe Zone
+    if (Math.abs(shiftAmount) > 5) { // Small threshold to prevent micro-jitters
         viewport.scrollTo({
             top: viewport.scrollTop + shiftAmount,
             behavior: 'smooth'
@@ -478,163 +497,131 @@ const App = () => {
     }
   };
 
-  // --- TTS Engine (Async / JIT AI) ---
+  // --- TTS Engine ---
 
-  const playSequence = async (startPageNum, carryOverTokens) => {
+  const scheduleNextBatch = (startPageNum, carryOverTokens, isFirstBatch = false) => {
     if (!isPlayingRef.current) return;
 
     let pool = [...carryOverTokens];
-
-    // Load next page if needed
+    
     if (pool.length === 0) {
         const pageTokens = pageTokensMap.current.get(startPageNum);
         if (!pageTokens) {
+            waitingForPageRef.current = startPageNum;
             // Scroll into view if waiting for page
             if (pageRefs.current[startPageNum]) {
                 pageRefs.current[startPageNum].scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-            // Wait for render? For now, we stop if page isn't loaded. 
-            // In a real app, we might wait on an event.
-            return; 
+            return;
         }
         pool = [...pageTokens];
     }
 
-    const currentToken = pool[0];
-    if (!currentToken) return;
+    const nextPageNum = startPageNum + 1;
+    const nextPageTokens = pageTokensMap.current.get(nextPageNum);
+    let hasNextPage = false;
 
-    const currentPageNum = currentToken.pageNum || startPageNum;
-
-    // --- Identification of current "Sentence" or "Chunk" ---
-    // We need to know where the current sentence ends to process it as a unit.
-    // If we rely on the `audioMap` boundary events, we need the whole script.
-    // But AI requires us to fetch *before* reading.
-    // Solution: Extract the first sentence from `pool`, read it, then recurse.
-    
-    let chunk = [];
-    let endIndex = 0;
-
-    // Look ahead to find sentence end based on heuristic or structure
-    for (let i = 0; i < pool.length; i++) {
-        const t = pool[i];
-        chunk.push(t);
-        // Simple heuristic: punctuation or linked tokens check?
-        // Actually, we can ask PDFPage for the group, but here we just iterate tokens.
-        // Let's use the existing heuristic: punctuation at end of spokenText.
-        if (/[.!?]["']?$/.test(t.spokenText.trim())) {
-            endIndex = i + 1;
-            break;
-        }
-        // Fallback: if we hit end of pool
-        if (i === pool.length - 1) endIndex = pool.length;
+    if (nextPageTokens && nextPageTokens.length > 0) {
+        pool = [...pool, ...nextPageTokens];
+        hasNextPage = true;
     }
 
-    const leftovers = pool.slice(endIndex);
+    let endIndex = pool.length;
+    let nextLeftovers = [];
     
-    // Check if we need to merge with next page (if sentence continues)
-    // (Simplified for this refactor: we process what we have on this page)
+    if (hasNextPage) {
+        let safetyFound = false;
+        for (let i = pool.length - 1; i > 0; i--) {
+             const txt = pool[i].spokenText.trim();
+             if (!txt) continue;
 
-    // --- AI PROCESSING (Just-In-Time) ---
-    let textToRead = "";
-    
-    if (aiEnabled && openaiKey) {
-        const pageRef = pageRefs.current[currentPageNum];
-        
-        // 1. Show Loader
-        setIsAiLoading(true);
-
-        try {
-            // 2. Extract Data for JUST this sentence
-            let aiData = null;
-            if (pageRef && pageRef.extractSentenceData) {
-                // We assume extractSentenceData can now handle a specific ID
-                const extracted = await pageRef.extractSentenceData(currentToken.id); 
-                // extracted returns an array, take the first matching one
-                aiData = extracted && extracted.length > 0 ? extracted[0] : null;
-            }
-
-            // 3. Call AI Service
-            if (aiData) {
-                const result = await fixTranscriptWithAI(aiData.image, aiData.text, openaiKey, aiInstructions, aiModel);
-                textToRead = result.transcript;
-                
-                // Update Total Cost
-                setTotalCost(getStoredCost());
-                
-                // --- UPDATE SENTENCE SEGMENTATION PREVIEW (Debug Panel) ---
-                // If the user has the debug panel open, update the displayed text.
-                if (debugImages.length > 0) {
-                     setDebugImages(prev => prev.map(item => {
-                         if (item.id === aiData.id) {
-                             return { ...item, fixedText: textToRead };
-                         }
-                         return item;
-                     }));
-                }
-            } else {
-                // Fallback
-                textToRead = chunk.map(t => t.spokenText).join(" ");
-            }
-
-        } catch (e) {
-            console.error("AI Fix Failed:", e);
-            textToRead = chunk.map(t => t.spokenText).join(" ");
-        } finally {
-            // 4. Hide Loader
-            setIsAiLoading(false);
+             if (/[.!?]["']?$/.test(txt)) {
+                 endIndex = i + 1;
+                 safetyFound = true;
+                 break;
+             }
         }
-    } else {
-        // AI Disabled
-        textToRead = chunk.map(t => t.spokenText).join(" ");
+        if (safetyFound && endIndex < pool.length) {
+            nextLeftovers = pool.slice(endIndex);
+            pool = pool.slice(0, endIndex);
+        }
     }
 
-    if (!isPlayingRef.current) return; // User might have paused during AI wait
+    let script = "";
+    const map = [];
+    pool.forEach(token => {
+        const text = token.spokenText;
+        if (!text) return; 
 
-    // --- SPEAKING ---
-    const utter = new SpeechSynthesisUtterance(textToRead);
+        const start = script.length;
+        script += text + " ";
+        const end = start + text.length;
+        map.push({ start, end, token });
+    });
+
+    if (!script.trim()) {
+        if (startPageNum < numPages) {
+            scheduleNextBatch(nextPageNum, []);
+        } else {
+            setIsPlaying(false);
+        }
+        return;
+    }
+
+    const utter = new SpeechSynthesisUtterance(script);
     utter.rate = rateRef.current;
     const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
     if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+    
+    utter.audioMap = map;
+    utter.nextBatchInfo = {
+        pageNum: hasNextPage ? nextPageNum : startPageNum + 1,
+        leftovers: nextLeftovers
+    };
+    utter.hasQueuedNext = false; 
 
-    // Map characters to tokens roughly for highlighting
-    // Since AI text might differ significantly, accurate word-level mapping is hard.
-    // We will map the whole chunk to the first token or spread it?
-    // Current strategy: Map the sequence to the tokens linearly.
-    const map = [];
-    let charIndex = 0;
-    
-    // Create a rough mapping for highlighting
-    // Note: If AI changes text completely, mapping is approximate.
-    // We'll just map the whole duration to the sequence of tokens roughly.
-    // Or simpler: Highlight the current sentence blocks.
-    
-    // For simplicity in this AI mode, we highlight the starting token
-    // and rely on `playSequence` loop to update active tokens.
-    // But we want word-level highlight if possible.
-    // If AI is used, we can't easily map words back to original tokens 1:1.
-    // We will highlight the *First Token* of the chunk when it starts, 
-    // or iterate through tokens based on length ratio.
-    
-    // Better approach for AI mode: Highlight the whole sentence group?
-    // The current `PDFPage` uses `activeTokenId` to find the group.
-    // So we just need to set `activeTokenId` to `currentToken.id`.
-    
-    utter.onstart = () => {
-        setActiveTokenId(currentToken.id);
-        handleSmartScroll(currentPageNum, currentToken.id);
-        if (currentPageNum !== activePage) setActivePage(currentPageNum);
+    utter.onboundary = (event) => {
+        if (!isPlayingRef.current) { synth.cancel(); return; }
+        
+        const currentMap = event.target.audioMap;
+        if (!currentMap) return;
+
+        const currentIdx = event.charIndex;
+        const entry = currentMap.find(m => currentIdx >= m.start && currentIdx < m.end);
+        
+        if (entry) {
+            const tokenId = entry.token.id;
+            const pageNum = entry.token.pageNum;
+
+            setActiveTokenId(tokenId);
+            
+            if (pageNum !== activePage) {
+                setActivePage(pageNum);
+            }
+            
+            // Execute Smart Scroll Logic
+            handleSmartScroll(pageNum, tokenId);
+        }
     };
 
-    utter.onend = () => {
+    utter.onstart = (event) => {
         if (!isPlayingRef.current) return;
+        const info = event.target.nextBatchInfo;
         
-        // Advance to next
-        if (leftovers.length > 0) {
-            playSequence(currentPageNum, leftovers);
-        } else {
-            // Next Page
-            if (currentPageNum < numPages) {
-                playSequence(currentPageNum + 1, []);
+        if (info && !event.target.hasQueuedNext && info.pageNum <= numPages) {
+             if (info.leftovers.length > 0 || pageTokensMap.current.has(info.pageNum)) {
+                 event.target.hasQueuedNext = true;
+                 scheduleNextBatch(info.pageNum, info.leftovers);
+             }
+        }
+    };
+
+    utter.onend = (event) => {
+        if (!isPlayingRef.current) return;
+        if (!event.target.hasQueuedNext) {
+            const info = event.target.nextBatchInfo;
+            if (info && info.pageNum <= numPages) {
+                 scheduleNextBatch(info.pageNum, info.leftovers);
             } else {
                 setIsPlaying(false);
                 setActiveTokenId(null);
@@ -643,7 +630,7 @@ const App = () => {
     };
 
     utter.onerror = () => {
-        setIsPlaying(false);
+        if (isPlayingRef.current) setIsPlaying(false);
     };
 
     synth.speak(utter);
@@ -654,6 +641,7 @@ const App = () => {
     if (isPlaying) {
         setIsPlaying(false);
         isPlayingRef.current = false;
+        waitingForPageRef.current = null;
         synth.cancel();
     } else {
         setIsPlaying(true);
@@ -667,7 +655,7 @@ const App = () => {
             startTokens = tokens;
         }
         
-        playSequence(activePage, startTokens); 
+        scheduleNextBatch(activePage, startTokens, true); 
     }
   };
 
@@ -682,39 +670,11 @@ const App = () => {
       }
   };
 
-  const handleResetCost = () => {
-      if(confirm("Reset total cost?")) {
-          setTotalCost(resetCostUsage());
-      }
-  };
-
   return (
     <div className="app-layout" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       {isDragging && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '24px', pointerEvents: 'none' }}>
             <div><Icons.Upload style={{width: 64, height: 64, marginBottom: 20}} /><p>Drop PDF to Open</p></div>
-        </div>
-      )}
-
-      {/* AI Loading Overlay */}
-      {isAiLoading && (
-        <div style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: 'rgba(0,0,0,0.8)',
-            color: 'white',
-            padding: '20px 40px',
-            borderRadius: '10px',
-            zIndex: 10000,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '15px'
-        }}>
-            <div className="spinner" style={{border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid white', width: '24px', height: '24px'}}></div>
-            <span>AI Fixing Transcript...</span>
         </div>
       )}
 
@@ -795,20 +755,15 @@ const App = () => {
                     {debugImages.length > 0 && (
                         <div className="debug-panel" style={{ padding: '20px', background: '#f5f5f5', borderTop: '1px solid #ccc' }}>
                             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 15}}>
-                                <h3>Sentence Segmentation Preview ({debugImages.length})</h3>
+                                <h3>Debug Extraction Output ({debugImages.length})</h3>
                                 <button className="icon-btn" onClick={() => setDebugImages([])}><Icons.Close/> Clear</button>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 {debugImages.map((item, idx) => (
                                     <div key={idx} style={{ background: 'white', padding: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                                         <div style={{ marginBottom: '5px', fontSize: '12px', color: '#555', fontFamily: 'monospace' }}>
-                                            <strong>Original:</strong> {item.text}
+                                            {item.text}
                                         </div>
-                                        {item.fixedText && (
-                                            <div style={{ marginBottom: '5px', fontSize: '12px', color: '#2196F3', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                                                <strong>AI Fix:</strong> {item.fixedText}
-                                            </div>
-                                        )}
                                         <img src={item.img} alt={`Sentence ${idx}`} style={{ maxWidth: '100%', border: '1px solid #ddd' }} />
                                     </div>
                                 ))}
@@ -918,8 +873,6 @@ const App = () => {
                                             <button 
                                                 className={`toggle-btn ${readingMode === 'word' ? 'active' : ''}`}
                                                 onClick={() => setReadingMode('word')}
-                                                disabled={aiEnabled} 
-                                                title={aiEnabled ? "Disabled when AI Fix is ON" : ""}
                                             >
                                                 Word
                                             </button>
@@ -973,59 +926,6 @@ const App = () => {
                                             <span>0.5x</span>
                                             <span>3.0x</span>
                                         </div>
-                                    </div>
-
-                                    <div className="setting-divider"></div>
-
-                                    {/* AI SETTINGS */}
-                                    <div className="setting-item">
-                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
-                                            <label style={{fontWeight: 'bold', color: '#2196F3'}}>AI Transcript Fix (Beta)</label>
-                                            <input 
-                                                type="checkbox" 
-                                                checked={aiEnabled} 
-                                                onChange={e => setAiEnabled(e.target.checked)} 
-                                                style={{ width: 'auto' }}
-                                            />
-                                        </div>
-                                        
-                                        {aiEnabled && (
-                                            <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="API Key (OpenAI or Google Gemini)" 
-                                                    value={openaiKey}
-                                                    onChange={e => setOpenaiKey(e.target.value)}
-                                                    className="page-input"
-                                                    style={{width: '100%', fontSize: '12px'}}
-                                                />
-                                                
-                                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                                                    <label style={{fontSize: '12px'}}>Model:</label>
-                                                    <select 
-                                                        value={aiModel} 
-                                                        onChange={(e) => setAiModel(e.target.value)}
-                                                        style={{fontSize: '12px', padding: '2px 5px', borderRadius: '4px', border: '1px solid #ccc'}}
-                                                    >
-                                                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fastest)</option>
-                                                        <option value="gemini-3-flash-preview">Gemini 3 Flash (High Quality)</option>
-                                                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                                                        <option value="gpt-4o">GPT-4o</option>
-                                                    </select>
-                                                </div>
-
-                                                <textarea 
-                                                    placeholder="Custom Instructions (e.g., 'Read formulas')" 
-                                                    value={aiInstructions}
-                                                    onChange={e => setAiInstructions(e.target.value)}
-                                                    style={{width: '100%', height: '50px', fontSize: '12px', borderRadius: '4px', border:'1px solid #ccc', resize:'none', padding: '5px'}}
-                                                />
-                                                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#666'}}>
-                                                    <span>Cost: ${totalCost.toFixed(4)}</span>
-                                                    <span style={{cursor: 'pointer', textDecoration: 'underline'}} onClick={handleResetCost}>Reset</span>
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
 
                                     <div className="setting-divider"></div>
