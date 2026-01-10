@@ -531,6 +531,39 @@ const PDFPage = forwardRef(({
     setCurrentRect(null);
   };
 
+  // --- Drawing Logic on Tablets ---
+  const handleTouchStart = (e) => {
+      if (!isMarkingMode) return;
+      // Prevent scrolling while drawing
+      if (e.cancelable) e.preventDefault();
+
+      const touch = e.touches[0];
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+
+      setDrawStart({ x, y });
+      setCurrentRect({ x, y, w: 0, h: 0 });
+      setIsDrawing(true);
+  };
+
+  const handleTouchMove = (e) => {
+      if (!isDrawing || !isMarkingMode) return;
+      if (e.cancelable) e.preventDefault();
+
+      const touch = e.touches[0];
+      const rect = containerRef.current.getBoundingClientRect();
+      const curX = Math.max(0, Math.min(touch.clientX - rect.left, rect.width));
+      const curY = Math.max(0, Math.min(touch.clientY - rect.top, rect.height));
+
+      const x = Math.min(drawStart.x, curX);
+      const y = Math.min(drawStart.y, curY);
+      const w = Math.abs(curX - drawStart.x);
+      const h = Math.abs(curY - drawStart.y);
+
+      setCurrentRect({ x, y, w, h });
+  };
+
   // --- Interaction Logic ---
   const getTokenFromEvent = (e) => {
     if (isMarkingMode) return null;
@@ -697,11 +730,16 @@ const PDFPage = forwardRef(({
         display: isVisible ? 'block' : 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#888'
+        color: '#888',
+        // Handle touch screen actions
+        touchAction: isMarkingMode ? 'none' : 'auto'
       }}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleMouseUp}
     >
       {isVisible && (
         <>
