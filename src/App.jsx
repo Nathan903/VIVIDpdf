@@ -82,6 +82,7 @@ const App = () => {
 
   // Refs
   const isPlayingRef = useRef(false); 
+  const isJumpingRef = useRef(false); // NEW: Track manual jumps
   const rateRef = useRef(rate);
   const autoScrollRef = useRef(autoScroll); // Ref for closure access
   const synth = window.speechSynthesis;
@@ -454,6 +455,9 @@ const App = () => {
   };
 
   const handleTokenClick = useCallback((pageTokens, clickedTokenId, pageNum) => {
+      // Flag that we are intentionally jumping so the 'onend'/'onerror' 
+      // of the canceled utterance doesn't stop playback.
+      isJumpingRef.current = true;
       synth.cancel();
       setIsPlaying(true);
       isPlayingRef.current = true;
@@ -467,6 +471,9 @@ const App = () => {
       const tokens = pageTokens.slice(startIndex);
       
       scheduleNextBatch(pageNum, tokens, true);
+
+      // Reset the jump flag after a short delay (enough for async cancel events to fire)
+      setTimeout(() => { isJumpingRef.current = false; }, 50);
   }, [voices, selectedVoiceURI, rate]);
 
   // --- Smart Scrolling Logic (Safe Zone) ---
@@ -640,6 +647,10 @@ const App = () => {
     };
 
     utter.onend = (event) => {
+        // If we are currently jumping (manual click), ignore the 'end' event 
+        // from the canceled utterance so we don't stop playback.
+        if (isJumpingRef.current) return;
+
         if (!isPlayingRef.current) return;
         if (!event.target.hasQueuedNext) {
             const info = event.target.nextBatchInfo;
@@ -652,7 +663,11 @@ const App = () => {
         }
     };
 
-    utter.onerror = () => {
+    utter.onerror = (event) => {
+        // Ignore errors caused by manual cancellation or during a jump
+        if (isJumpingRef.current) return;
+        if (event.error === 'interrupted' || event.error === 'canceled') return;
+        
         if (isPlayingRef.current) setIsPlaying(false);
     };
 
