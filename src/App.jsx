@@ -78,6 +78,7 @@ const App = () => {
 
   // UI State
   const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false); // New: Help Modal State
   const [recentFiles, setRecentFiles] = useState([]);
 
   // Refs
@@ -91,6 +92,11 @@ const App = () => {
   
   const settingsRef = useRef(null);
   const settingsBtnRef = useRef(null);
+  
+  // DOM Refs for Shortcuts
+  const fileInputRef = useRef(null);
+  const jumpInputRef = useRef(null);
+  const voiceSelectRef = useRef(null);
   
   const pageTokensMap = useRef(new Map());
   const waitingForPageRef = useRef(null);
@@ -697,6 +703,174 @@ const App = () => {
     }
   };
 
+  // --- Keyboard Navigation Logic (Word/Sentence aware) ---
+  const handleSmartNavigation = useCallback((direction) => {
+    // direction: -1 (prev) or 1 (next)
+    const tokens = pageTokensMap.current.get(activePage) || [];
+    if (tokens.length === 0) return;
+
+    let currentIndex = -1;
+    if (activeTokenId) {
+        currentIndex = tokens.findIndex(t => t.id === activeTokenId);
+    }
+    
+    // Default to start if not found
+    if (currentIndex === -1) currentIndex = 0;
+
+    let newIndex = currentIndex;
+    
+    if (readingMode === 'word') {
+        newIndex = currentIndex + direction;
+    } else {
+        // Sentence Mode logic: Find previous/next punctuation boundary
+        if (direction === 1) {
+            // Find next sentence start
+            for (let i = currentIndex; i < tokens.length; i++) {
+                 if (/[.!?]["']?$/.test(tokens[i].spokenText)) {
+                     newIndex = i + 1;
+                     break;
+                 }
+                 // If we reach end, newIndex becomes tokens.length (trigger next page)
+                 if (i === tokens.length - 1) newIndex = tokens.length;
+            }
+        } else {
+            // Find previous sentence start
+            // Scan backwards from current index - 2 (to skip immediately preceding punctuation)
+            let found = false;
+            for (let i = currentIndex - 2; i >= 0; i--) {
+                if (/[.!?]["']?$/.test(tokens[i].spokenText)) {
+                    newIndex = i + 1;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) newIndex = -1; // Trigger prev page
+        }
+    }
+
+    // Boundary Checks
+    if (newIndex < 0) {
+        // Go to previous page
+        if (activePage > 1) {
+             const prevPage = activePage - 1;
+             const prevTokens = pageTokensMap.current.get(prevPage);
+             // Start reading from the very beginning of previous page (common behavior) 
+             // or end? "Jump to prev" usually means start of prev item. 
+             // Let's go to start of previous page if standard, but for sentence flow, maybe end?
+             // Prompt says "jump to previous sentence", implies flow.
+             // We will jump to start of previous page to be safe/simple, or the last sentence.
+             // Let's just go to start of Prev Page.
+             setActivePage(prevPage);
+             performJump(prevPage);
+             // Wait for state update is hard in callback. 
+             // We manually call click with new data
+             if (prevTokens && prevTokens.length > 0) {
+                 // For consistency, let's start at the last sentence of prev page? 
+                 // No, usually "Page Up" style logic. Let's just go to the beginning of the prev page.
+                 handleTokenClick(prevTokens, prevTokens[0].id, prevPage);
+             }
+        }
+    } else if (newIndex >= tokens.length) {
+        // Go to next page
+        if (activePage < numPages) {
+            const nextPage = activePage + 1;
+            const nextTokens = pageTokensMap.current.get(nextPage);
+            setActivePage(nextPage);
+            performJump(nextPage);
+            if (nextTokens && nextTokens.length > 0) {
+                handleTokenClick(nextTokens, nextTokens[0].id, nextPage);
+            }
+        }
+    } else {
+        // Same page jump
+        handleTokenClick(tokens, tokens[newIndex].id, activePage);
+    }
+
+  }, [activePage, activeTokenId, readingMode, numPages, handleTokenClick, performJump]);
+
+  // --- Keyboard Shortcuts ---
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+        // Ignore inputs unless it's specific keys that shouldn't matter (like F1)
+        const tag = e.target.tagName.toUpperCase();
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+             if (e.key === 'Escape') e.target.blur();
+             return;
+        }
+
+        const key = e.key.toLowerCase();
+
+        switch (key) {
+            case 'o':
+                e.preventDefault();
+                if (fileInputRef.current) fileInputRef.current.click();
+                break;
+            case 'w':
+                e.preventDefault();
+                performJump(activePage - 1);
+                break;
+            case 's':
+                e.preventDefault();
+                performJump(activePage + 1);
+                break;
+            case 'a':
+                e.preventDefault();
+                handleSmartNavigation(-1);
+                break;
+            case 'd':
+                e.preventDefault();
+                handleSmartNavigation(1);
+                break;
+            case 'f':
+                e.preventDefault();
+                toggleFitMode();
+                break;
+            case 'r': // Reading Mode (Mapped from "M switch reading mode" conflict)
+                e.preventDefault();
+                setReadingMode(prev => prev === 'sentence' ? 'word' : 'sentence');
+                break;
+            case 'n':
+                e.preventDefault();
+                setAutoScroll(prev => !prev);
+                break;
+            case 'z': // Focus Mode (Mapped from "H" conflict)
+                e.preventDefault();
+                setAutoHide(prev => !prev);
+                break;
+            case 'p':
+                e.preventDefault();
+                if (jumpInputRef.current) jumpInputRef.current.focus();
+                break;
+            case ' ':
+                e.preventDefault();
+                togglePlay();
+                break;
+            case 'v':
+                e.preventDefault();
+                if (voiceSelectRef.current) {
+                    voiceSelectRef.current.focus();
+                    setShowSettings(true); // Ensure settings are visible
+                }
+                break;
+            case 'm': // Mark Skip (Mapped from "M Mark Skip")
+                e.preventDefault();
+                // If playing, pause first
+                if (isPlaying) togglePlay();
+                setIsMarkingMode(prev => !prev);
+                break;
+            case 'h': // Help
+                e.preventDefault();
+                setShowHelp(prev => !prev);
+                break;
+            default:
+                break;
+        }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [activePage, activeTokenId, readingMode, isPlaying, numPages, handleSmartNavigation, performJump, toggleFitMode]);
+
   const handleDebugExtract = async () => {
       const pageRef = pageRefs.current[activePage];
       if (pageRef && pageRef.generateDebugImages) {
@@ -710,10 +884,49 @@ const App = () => {
 
   return (
     <div className="app-layout" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+      {/* Hidden File Input with Ref */}
+      <input 
+        type="file" 
+        accept="application/pdf" 
+        onChange={onFileChange} 
+        style={{display:'none'}} 
+        ref={fileInputRef}
+      />
+
       {isDragging && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '24px', pointerEvents: 'none' }}>
             <div><Icons.Upload style={{width: 64, height: 64, marginBottom: 20}} /><p>Drop PDF to Open</p></div>
         </div>
+      )}
+
+      {/* HELP MODAL */}
+      {showHelp && (
+          <div className="modal-overlay" onClick={() => setShowHelp(false)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                  <div className="modal-header">
+                      <h3>Keyboard Shortcuts</h3>
+                      <button className="icon-btn" onClick={() => setShowHelp(false)}><Icons.Close /></button>
+                  </div>
+                  <div className="modal-body">
+                      <table className="shortcuts-table">
+                          <tbody>
+                              <tr><td><kbd>O</kbd></td><td>Open File</td></tr>
+                              <tr><td><kbd>Space</kbd></td><td>Play / Pause</td></tr>
+                              <tr><td><kbd>W</kbd> / <kbd>S</kbd></td><td>Prev / Next Page</td></tr>
+                              <tr><td><kbd>A</kbd> / <kbd>D</kbd></td><td>Prev / Next Sentence (or Word)</td></tr>
+                              <tr><td><kbd>F</kbd></td><td>Toggle Fit Mode</td></tr>
+                              <tr><td><kbd>R</kbd></td><td>Switch Reading Mode (Sentence/Word)</td></tr>
+                              <tr><td><kbd>M</kbd></td><td>Toggle Mark Skip Mode</td></tr>
+                              <tr><td><kbd>N</kbd></td><td>Toggle Auto-Scroll</td></tr>
+                              <tr><td><kbd>Z</kbd></td><td>Toggle Focus Mode (Auto-Hide)</td></tr>
+                              <tr><td><kbd>P</kbd></td><td>Focus Page Input</td></tr>
+                              <tr><td><kbd>V</kbd></td><td>Focus Voice Selection</td></tr>
+                              <tr><td><kbd>H</kbd></td><td>Toggle this Help</td></tr>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
       )}
 
       <main className="main-content">
@@ -727,9 +940,8 @@ const App = () => {
             {!pdf ? (
                 <div className="dashboard-container">
                     <div className="empty-placeholder">
-                        <label className="upload-btn main-upload">
+                        <label className="upload-btn main-upload" onClick={() => fileInputRef.current.click()}>
                             <Icons.Upload /> Open PDF File
-                            <input type="file" accept="application/pdf" onChange={onFileChange} style={{display:'none'}} />
                         </label>
                         <p style={{marginTop: '20px', color: '#666', fontSize: '14px'}}>or drag and drop a file here</p>
                     </div>
@@ -817,19 +1029,21 @@ const App = () => {
                 <div className="player-bar">
                     {/* LEFT: Playback & Navigation */}
                     <div className="section-left">
-                        <button className="icon-btn" onClick={togglePlay} disabled={isMarkingMode} style={{ opacity: isMarkingMode ? 0.5 : 1 }} title={isPlaying ? "Pause" : "Play"}>
+                        <button className="icon-btn" onClick={togglePlay} disabled={isMarkingMode} style={{ opacity: isMarkingMode ? 0.5 : 1 }} title="Play/Pause (Space)">
                             {isPlaying ? <Icons.Pause /> : <Icons.Play />}
                         </button>
                         <div className="divider-vertical"></div>
                         <div className="jump-group">
                             <span className="label">Pg</span>
                             <input 
+                                ref={jumpInputRef}
                                 type="number" min="1" max={numPages} value={jumpInput} 
                                 onChange={(e) => setJumpInput(e.target.value)}
                                 onKeyDown={handleJumpKey}
                                 onFocus={() => setIsInputFocused(true)}
                                 onBlur={() => setIsInputFocused(false)}
                                 className="page-input"
+                                title="Page Number (P)"
                             />
                             <span className="label">/ {numPages}</span>
                         </div>
@@ -853,7 +1067,7 @@ const App = () => {
 
                         <div className="divider-vertical small"></div>
 
-                        <button className="text-btn" onClick={toggleFitMode} title="Toggle Fit">
+                        <button className="text-btn" onClick={toggleFitMode} title="Toggle Fit (F)">
                            {fitMode === 'width' ? 'Fit W' : fitMode === 'height' ? 'Fit H' : 'Fit'}
                         </button>
 
@@ -869,7 +1083,7 @@ const App = () => {
                         <button 
                             className={`icon-btn ${isMarkingMode ? 'active-danger' : ''}`} 
                             onClick={() => { if (!isMarkingMode && isPlaying) togglePlay(); setIsMarkingMode(!isMarkingMode); }} 
-                            title={isMarkingMode ? "Finish Marking" : "Mark Skip Area"}
+                            title="Mark Skip Area (M)"
                         >
                             <Icons.Crop />
                         </button>
@@ -880,6 +1094,14 @@ const App = () => {
                             title="Toggle Dark Mode"
                         >
                             <Icons.Moon /> 
+                        </button>
+
+                        <button
+                            className={`icon-btn ${showHelp ? 'active' : ''}`}
+                            onClick={() => setShowHelp(!showHelp)}
+                            title="Shortcuts (H)"
+                        >
+                            <span style={{fontSize: '18px', fontWeight: 'bold'}}>?</span>
                         </button>
 
                         <div style={{ position: 'relative' }}>
@@ -898,7 +1120,12 @@ const App = () => {
                                     
                                     <div className="setting-item">
                                         <label><Icons.Voice /> Voice</label>
-                                        <select value={selectedVoiceURI} onChange={e => setSelectedVoiceURI(e.target.value)} className="voice-select">
+                                        <select 
+                                            ref={voiceSelectRef}
+                                            value={selectedVoiceURI} 
+                                            onChange={e => setSelectedVoiceURI(e.target.value)} 
+                                            className="voice-select"
+                                        >
                                             {voices.map(v => (
                                                 <option key={v.voiceURI} value={v.voiceURI}>{v.name.slice(0, 24)}...</option>
                                             ))}
@@ -907,7 +1134,7 @@ const App = () => {
 
 
                                     <div className="setting-item">
-                                        <label style={{flex: 1}}>Reading Mode</label>
+                                        <label style={{flex: 1}}>Reading Mode (R)</label>
                                         <div className="toggle-group">
                                             <button 
                                                 className={`toggle-btn ${readingMode === 'word' ? 'active' : ''}`}
@@ -926,7 +1153,7 @@ const App = () => {
 
                                     <div className="setting-item">
                                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
-                                            <label>Focus Mode (Auto-Hide)</label>
+                                            <label>Focus Mode (Auto-Hide) (Z)</label>
                                             <input 
                                                 type="checkbox" 
                                                 checked={autoHide} 
@@ -939,7 +1166,7 @@ const App = () => {
                                     {/* Auto-Scroll Setting */}
                                     <div className="setting-item">
                                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
-                                            <label>Auto-Scroll</label>
+                                            <label>Auto-Scroll (N)</label>
                                             <input 
                                                 type="checkbox" 
                                                 checked={autoScroll} 
@@ -1019,6 +1246,34 @@ const App = () => {
             </div>
         )}
       </main>
+      <style>{`
+          .modal-overlay {
+              position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+              background: rgba(0,0,0,0.5); z-index: 10000;
+              display: flex; align-items: center; justify-content: center;
+          }
+          .modal-content {
+              background: white; width: 500px; max-width: 90%;
+              border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+              overflow: hidden;
+              color: #333;
+          }
+          .modal-header {
+              padding: 15px 20px; border-bottom: 1px solid #eee;
+              display: flex; justify-content: space-between; align-items: center;
+          }
+          .modal-body { padding: 20px; }
+          .shortcuts-table { width: 100%; border-collapse: collapse; }
+          .shortcuts-table td { padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+          .shortcuts-table tr:last-child td { border-bottom: none; }
+          kbd {
+              background-color: #f7f7f7; border: 1px solid #ccc;
+              border-radius: 3px; box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+              color: #333; display: inline-block; font-size: 11px;
+              line-height: 1.4; margin: 0 2px; padding: 0 5px;
+              white-space: nowrap; font-family: monospace;
+          }
+      `}</style>
     </div>
   );
 };
