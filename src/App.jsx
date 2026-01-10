@@ -1080,6 +1080,15 @@ const App = () => {
 
                     {/* RIGHT: Tools & Settings */}
                     <div className="section-right">
+                        {/* NEW: Upload Button in Reader */}
+                        <button 
+                            className="icon-btn"
+                            onClick={() => fileInputRef.current.click()}
+                            title="Open File (O)"
+                        >
+                            <Icons.Upload />
+                        </button>
+
                         <button 
                             className={`icon-btn ${isMarkingMode ? 'active-danger' : ''}`} 
                             onClick={() => { if (!isMarkingMode && isPlaying) togglePlay(); setIsMarkingMode(!isMarkingMode); }} 
