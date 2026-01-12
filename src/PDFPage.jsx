@@ -59,6 +59,126 @@ const PDFPage = forwardRef(({
     return () => observer.disconnect();
   }, [pageNum, notifyPageVisible]);
 
+  // --- Helper: Detect Background Color (Ported from Legacy) ---
+  const getDominantColor = (ctx, w, h) => {
+    try {
+        const frame = ctx.getImageData(0, 0, w, h);
+        const data = frame.data;
+        const counts = {};
+        let max = 0;
+        let dom = 'rgb(255,255,255)';
+        
+        for (let i = 0; i < data.length; i += 40) {
+            const r = data[i];
+            const g = data[i+1];
+            const b = data[i+2];
+            const alpha = data[i+3];
+            if (alpha < 10) continue;
+            const k = `${r},${g},${b}`;
+            counts[k] = (counts[k] || 0) + 1;
+            if (counts[k] > max) { max = counts[k]; dom = `rgb(${r},${g},${b})`; }
+        }
+        return dom;
+    } catch (e) { return 'rgb(255,255,255)'; }
+  };
+
+  // --- Core Image Extraction Logic (Ported from Legacy) ---
+  const extractTokensImage = useCallback((targetTokens) => {
+      if (!canvasRef.current || !targetTokens || targetTokens.length === 0 || !pageDimensions) return null;
+
+      const dpr = window.devicePixelRatio || 1;
+      const maskPad = 2;
+      const pad = 5;
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      // 1. Calculate the bounding box of the target tokens
+      targetTokens.forEach(t => {
+          t.parts.forEach(p => {
+              minX = Math.min(minX, p.bounds.left);
+              minY = Math.min(minY, p.bounds.top);
+              maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
+              maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
+          });
+      });
+
+      // Add breathing room
+      minX = Math.max(0, minX - pad);
+      minY = Math.max(0, minY - pad);
+      maxX = Math.min(pageDimensions.width, maxX + pad);
+      maxY = Math.min(pageDimensions.height, maxY + pad);
+
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      if (width <= 0 || height <= 0) return null;
+
+      // 2. Create the crop canvas
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = width * dpr;
+      cropCanvas.height = height * dpr;
+      const ctx = cropCanvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      // Draw raw content
+      ctx.drawImage(
+          canvasRef.current,
+          minX * dpr, minY * dpr, width * dpr, height * dpr,
+          0, 0, width, height
+      );
+
+      const bgColor = getDominantColor(ctx, width * dpr, height * dpr);
+
+      // 3. Create Mask to hide neighbors
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = width * dpr;
+      maskCanvas.height = height * dpr;
+      const mCtx = maskCanvas.getContext('2d');
+      mCtx.scale(dpr, dpr);
+
+      const targetIds = new Set(targetTokens.map(t => t.id));
+
+      mCtx.fillStyle = bgColor;
+
+      // Paint "White Out" over ALL tokens that are NOT in our target set
+      // within the cropped area. Note: We use pageTokensRef (current visible tokens)
+      pageTokensRef.current.forEach(t => {
+          if (!targetIds.has(t.id)) {
+              t.parts.forEach(p => {
+                  // Only draw if it intersects our crop area
+                  if (p.bounds.right > minX && p.bounds.left < maxX &&
+                      p.bounds.bottom > minY && p.bounds.top < maxY) {
+
+                      mCtx.fillRect(
+                          (p.bounds.left - minX) - maskPad,
+                          (p.bounds.top - minY) - maskPad,
+                          p.bounds.width + (maskPad * 2),
+                          p.bounds.height + (maskPad * 2)
+                      );
+                  }
+              });
+          }
+      });
+
+      // "Cut out" the target tokens from the mask so they remain visible
+      mCtx.globalCompositeOperation = 'destination-out';
+      targetTokens.forEach(t => {
+          t.parts.forEach(p => {
+              mCtx.fillRect(
+                  p.bounds.left - minX,
+                  p.bounds.top - minY,
+                  p.bounds.width,
+                  p.bounds.height
+              );
+          });
+      });
+
+      // 4. Apply mask
+      ctx.drawImage(maskCanvas, 0, 0, width, height);
+
+      return cropCanvas.toDataURL('image/jpeg', 0.8);
+  }, [pageDimensions]);
+
   // --- Debug / Extraction Logic ---
   useImperativeHandle(ref, () => ({
     scrollIntoView: (opts) => {
@@ -94,6 +214,12 @@ const PDFPage = forwardRef(({
         ctx.drawImage(canvasRef.current, 0, 0, w, h);
         
         return thumbCanvas.toDataURL('image/jpeg', 0.7);
+    },
+    // NEW: Get clean image of specific tokens for OCR (AI Fix)
+    getWrappedImageForTokens: (tokenIds) => {
+        if (!tokenIds || tokenIds.length === 0) return null;
+        const tokens = pageTokensRef.current.filter(t => tokenIds.includes(t.id));
+        return extractTokensImage(tokens);
     },
     generateDebugImages: async () => {
         // Logic moved to textUtils.js

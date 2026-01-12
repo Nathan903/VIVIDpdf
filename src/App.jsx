@@ -4,12 +4,14 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId } from './db';
+import { fixTranscriptWithAI, getStoredCost, resetCostUsage } from './aiService'; // IMPORT AI SERVICE
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 // --- Local Storage Keys ---
 const LS_GLOBALS = 'pdf_reader_globals';
+const LS_AI_CONFIG = 'pdf_reader_ai_config'; // New Key
 
 const DEFAULT_GLOBALS = {
   voiceURI: "",
@@ -19,7 +21,14 @@ const DEFAULT_GLOBALS = {
   highlightColor: '#ffeb3b',
   highlightOpacity: 0.4,
   autoHide: false,
-  autoScroll: true // New Default
+  autoScroll: true 
+};
+
+const DEFAULT_AI_CONFIG = {
+  apiKey: "",
+  model: "gemini-2.5-flash-lite", // Default to cheap model
+  instructions: "Skip equations unless they are simple variables. Read naturally.",
+  enabled: false
 };
 
 const App = () => {
@@ -33,11 +42,30 @@ const App = () => {
     }
   });
 
+  // --- AI Config State ---
+  const [aiConfig, setAiConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_AI_CONFIG);
+      return saved ? { ...DEFAULT_AI_CONFIG, ...JSON.parse(saved) } : DEFAULT_AI_CONFIG;
+    } catch (e) {
+      return DEFAULT_AI_CONFIG;
+    }
+  });
+
+  const [totalCost, setTotalCost] = useState(getStoredCost());
+  const [ocrLoading, setOcrLoading] = useState(false); // Spinner for AI processing
+
+  // Save AI Config on change
+  useEffect(() => {
+    localStorage.setItem(LS_AI_CONFIG, JSON.stringify(aiConfig));
+  }, [aiConfig]);
+
+
   // state for auto-hide
   const [autoHide, setAutoHide] = useState(globalSettings.autoHide);
-  const [autoScroll, setAutoScroll] = useState(globalSettings.autoScroll); // New State
+  const [autoScroll, setAutoScroll] = useState(globalSettings.autoScroll); 
   const [pdf, setPdf] = useState(null);
-  const [fileId, setFileId] = useState(null); // Current DB ID
+  const [fileId, setFileId] = useState(null); 
   const [isPlaying, setIsPlaying] = useState(false);
   
   // Mapped from Global Settings or UI
@@ -78,14 +106,14 @@ const App = () => {
 
   // UI State
   const [showSettings, setShowSettings] = useState(false);
-  const [showHelp, setShowHelp] = useState(false); // New: Help Modal State
+  const [showHelp, setShowHelp] = useState(false); 
   const [recentFiles, setRecentFiles] = useState([]);
 
   // Refs
   const isPlayingRef = useRef(false); 
-  const isJumpingRef = useRef(false); // NEW: Track manual jumps
+  const isJumpingRef = useRef(false); 
   const rateRef = useRef(rate);
-  const autoScrollRef = useRef(autoScroll); // Ref for closure access
+  const autoScrollRef = useRef(autoScroll); 
   const synth = window.speechSynthesis;
   const pageRefs = useRef({}); 
   const viewportRef = useRef(null); 
@@ -310,9 +338,17 @@ const App = () => {
 
     if (waitingForPageRef.current === pageNum && isPlayingRef.current) {
         waitingForPageRef.current = null;
-        scheduleNextBatch(pageNum, []);
+        // Check if AI Mode is enabled to route correctly
+        if (aiConfig.enabled) {
+            const tokens = pageTokensMap.current.get(pageNum);
+            if(tokens && tokens.length > 0) {
+                 playNextSentenceAI(pageNum, tokens[0].id);
+            }
+        } else {
+            scheduleNextBatch(pageNum, []);
+        }
     }
-  }, []);
+  }, [aiConfig.enabled]); // Added dependency
 
   // --- Smart Jump Logic ---
   const performJump = async (pageNumber, doc = pdf) => {
@@ -469,18 +505,22 @@ const App = () => {
       isPlayingRef.current = true;
       waitingForPageRef.current = null;
       
-      let startIndex = 0;
-      if (clickedTokenId) {
-          startIndex = pageTokens.findIndex(t => t.id === clickedTokenId);
-          if (startIndex === -1) startIndex = 0;
+      // Determine Start logic
+      if (aiConfig.enabled) {
+          playNextSentenceAI(pageNum, clickedTokenId);
+      } else {
+          let startIndex = 0;
+          if (clickedTokenId) {
+              startIndex = pageTokens.findIndex(t => t.id === clickedTokenId);
+              if (startIndex === -1) startIndex = 0;
+          }
+          const tokens = pageTokens.slice(startIndex);
+          scheduleNextBatch(pageNum, tokens, true);
       }
-      const tokens = pageTokens.slice(startIndex);
-      
-      scheduleNextBatch(pageNum, tokens, true);
 
       // Reset the jump flag after a short delay (enough for async cancel events to fire)
       setTimeout(() => { isJumpingRef.current = false; }, 50);
-  }, [voices, selectedVoiceURI, rate]);
+  }, [voices, selectedVoiceURI, rate, aiConfig.enabled]);
 
   // --- Smart Scrolling Logic (Safe Zone) ---
   const handleSmartScroll = (pageNum, tokenId) => {
@@ -533,7 +573,134 @@ const App = () => {
     }
   };
 
-  // --- TTS Engine ---
+  // --- Helper for AI Flow: Sentence Parsing (From Legacy) ---
+  const getNextSentenceInfo = (startPageNum, startTokenId) => {
+      let tokens = pageTokensMap.current.get(startPageNum) || [];
+      if (tokens.length === 0) return { nextPage: true, pageNum: startPageNum };
+
+      let startIndex = 0;
+      if (startTokenId) {
+          startIndex = tokens.findIndex(t => t.id === startTokenId);
+          if (startIndex === -1) startIndex = 0;
+      }
+
+      if (startIndex >= tokens.length) return { nextPage: true, pageNum: startPageNum };
+
+      const sentenceTokens = [];
+      let nextIndex = startIndex;
+
+      for (let i = startIndex; i < tokens.length; i++) {
+          const t = tokens[i];
+          sentenceTokens.push(t);
+          nextIndex = i + 1;
+          // Basic Sentence Boundary Check
+          if (/[.!?]["']?$/.test(t.spokenText.trim())) {
+              break;
+          }
+      }
+
+      return {
+          tokens: sentenceTokens,
+          pageNum: startPageNum,
+          nextTokenId: nextIndex < tokens.length ? tokens[nextIndex].id : null,
+          nextPageNum: nextIndex >= tokens.length ? startPageNum + 1 : startPageNum
+      };
+  };
+
+  // --- NEW: AI-Enhanced Playback Loop ---
+  const playNextSentenceAI = async (pageNum, tokenId) => {
+      if (!isPlayingRef.current) return;
+
+      const info = getNextSentenceInfo(pageNum, tokenId);
+
+      // Handle Page Transitions
+      if (info.nextPage && !info.tokens) {
+          if (info.pageNum < numPages) {
+              const nextPage = info.pageNum + 1;
+              if (pageTokensMap.current.has(nextPage)) {
+                  const nextTokens = pageTokensMap.current.get(nextPage);
+                  playNextSentenceAI(nextPage, nextTokens[0]?.id);
+              } else {
+                  waitingForPageRef.current = nextPage;
+                  if (pageRefs.current[nextPage]) {
+                      pageRefs.current[nextPage].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+              }
+          } else {
+              setIsPlaying(false);
+          }
+          return;
+      }
+
+      const sentenceTokens = info.tokens;
+      if (!sentenceTokens || sentenceTokens.length === 0) return;
+
+      const firstTokenId = sentenceTokens[0].id;
+      setActiveTokenId(firstTokenId);
+      if (pageNum !== activePage) setActivePage(pageNum);
+
+      // Scroll to current sentence
+      handleSmartScroll(pageNum, firstTokenId);
+
+      let textToSpeak = sentenceTokens.map(t => t.spokenText).join(' ');
+
+      // --- AI VISUAL FIX STEP ---
+      if (pageRefs.current[pageNum]) {
+          const ids = sentenceTokens.map(t => t.id);
+          // Get clean image of JUST this sentence
+          const imgBase64 = pageRefs.current[pageNum].getWrappedImageForTokens(ids);
+
+          if (imgBase64) {
+              setOcrLoading(true); // Show Spinner
+              
+              const aiResult = await fixTranscriptWithAI(
+                  imgBase64, 
+                  textToSpeak, 
+                  aiConfig.apiKey, 
+                  aiConfig.instructions,
+                  aiConfig.model
+              );
+
+              setOcrLoading(false); // Hide Spinner
+              setTotalCost(getStoredCost()); // Update Cost UI
+
+              if (!isPlayingRef.current) return; // Check if paused during fetch
+
+              if (aiResult.transcript && !aiResult.error) {
+                  textToSpeak = aiResult.transcript;
+              }
+          }
+      }
+      // ---------------------------
+
+      const utter = new SpeechSynthesisUtterance(textToSpeak);
+      utter.rate = rateRef.current;
+      const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+      if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+
+      utter.onend = () => {
+          if (isJumpingRef.current) return;
+          if (isPlayingRef.current) {
+              if (info.nextTokenId) {
+                  playNextSentenceAI(info.pageNum, info.nextTokenId);
+              } else {
+                  playNextSentenceAI(info.nextPageNum, null);
+              }
+          }
+      };
+
+      utter.onerror = (e) => {
+          if (isJumpingRef.current) return;
+          if (e.error !== 'interrupted' && e.error !== 'canceled') {
+              console.error("Speech Error", e);
+              setIsPlaying(false);
+          }
+      };
+
+      synth.speak(utter);
+  };
+
+  // --- TTS Engine (Standard Batch Mode) ---
 
   const scheduleNextBatch = (startPageNum, carryOverTokens, isFirstBatch = false) => {
     if (!isPlayingRef.current) return;
@@ -691,15 +858,24 @@ const App = () => {
         setIsPlaying(true);
         isPlayingRef.current = true;
         const tokens = pageTokensMap.current.get(activePage) || [];
-        let startTokens = [];
-        if (activeTokenId && tokens.length > 0) {
-            const idx = tokens.findIndex(t => t.id === activeTokenId);
-            startTokens = idx >= 0 ? tokens.slice(idx) : tokens;
-        } else {
-            startTokens = tokens;
-        }
         
-        scheduleNextBatch(activePage, startTokens, true); 
+        // Determine Start Token
+        let startTokenId = activeTokenId;
+        if (!startTokenId && tokens.length > 0) startTokenId = tokens[0].id;
+
+        // Route based on AI Config
+        if (aiConfig.enabled) {
+            playNextSentenceAI(activePage, startTokenId);
+        } else {
+            let startTokens = [];
+            if (startTokenId && tokens.length > 0) {
+                const idx = tokens.findIndex(t => t.id === startTokenId);
+                startTokens = idx >= 0 ? tokens.slice(idx) : tokens;
+            } else {
+                startTokens = tokens;
+            }
+            scheduleNextBatch(activePage, startTokens, true); 
+        }
     }
   };
 
@@ -755,18 +931,11 @@ const App = () => {
              const prevPage = activePage - 1;
              const prevTokens = pageTokensMap.current.get(prevPage);
              // Start reading from the very beginning of previous page (common behavior) 
-             // or end? "Jump to prev" usually means start of prev item. 
-             // Let's go to start of previous page if standard, but for sentence flow, maybe end?
-             // Prompt says "jump to previous sentence", implies flow.
-             // We will jump to start of previous page to be safe/simple, or the last sentence.
-             // Let's just go to start of Prev Page.
              setActivePage(prevPage);
              performJump(prevPage);
              // Wait for state update is hard in callback. 
              // We manually call click with new data
              if (prevTokens && prevTokens.length > 0) {
-                 // For consistency, let's start at the last sentence of prev page? 
-                 // No, usually "Page Up" style logic. Let's just go to the beginning of the prev page.
                  handleTokenClick(prevTokens, prevTokens[0].id, prevPage);
              }
         }
@@ -883,6 +1052,12 @@ const App = () => {
       } else {
           alert("Debug: Page not ready or loaded.");
       }
+  };
+
+  const handleResetCost = () => {
+    if(confirm("Reset accumulated cost tracker to $0.00?")) {
+        setTotalCost(resetCostUsage());
+    }
   };
 
   return (
@@ -1026,6 +1201,13 @@ const App = () => {
                 </>
             )}
         </div>
+        
+        {/* OCR LOADING INDICATOR */}
+        {ocrLoading && (
+            <div style={{position: 'absolute', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: '#333', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', zIndex: 2000}}>
+                <div className="spinner" style={{width: 14, height: 14, borderWidth: 2, marginBottom: 0}}></div> AI Improving Text...
+            </div>
+        )}
 
         {pdf && (
             <div className={`player-bar-container ${autoHide ? 'auto-hide-active' : ''}`}>
@@ -1131,6 +1313,46 @@ const App = () => {
                                 <div className="settings-popup" ref={settingsRef}>
                                     <div className="settings-header">Reading Settings</div>
                                     
+                                    {/* AI CONFIGURATION SECTION */}
+                                    <div className="setting-item" style={{flexDirection: 'column', alignItems: 'stretch', gap: 5, paddingBottom: 10, borderBottom: '1px solid #eee'}}>
+                                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                                            <label style={{fontWeight:'bold', color: '#6200ea'}}>AI Fix Mode</label>
+                                            <input type="checkbox" checked={aiConfig.enabled} onChange={e => setAiConfig({...aiConfig, enabled: e.target.checked})} />
+                                        </div>
+                                        {aiConfig.enabled && (
+                                            <>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="API Key (OpenAI / Gemini)" 
+                                                    value={aiConfig.apiKey} 
+                                                    onChange={e => setAiConfig({...aiConfig, apiKey: e.target.value})}
+                                                    style={{ fontSize: '12px', fontFamily: 'monospace', width: '100%', padding: 4 }}
+                                                />
+                                                <select 
+                                                    value={aiConfig.model} 
+                                                    onChange={e => setAiConfig({...aiConfig, model: e.target.value})}
+                                                    style={{ width: '100%', padding: 4, fontSize: '12px' }}
+                                                >
+                                                    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fastest)</option>
+                                                    <option value="gemini-3-flash-preview">Gemini 3 Flash (High Quality)</option>
+                                                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                                    <option value="gpt-4o">GPT-4o</option>
+                                                </select>
+                                                <textarea
+                                                    placeholder="Custom instructions (e.g. Skip equations...)"
+                                                    value={aiConfig.instructions}
+                                                    onChange={e => setAiConfig({...aiConfig, instructions: e.target.value})}
+                                                    rows={2}
+                                                    style={{ width: '100%', fontSize: '11px', resize:'none' }}
+                                                />
+                                                <div style={{display:'flex', justifyContent:'space-between', fontSize:'11px', color:'#666', marginTop: 5}}>
+                                                    <span>Cost: ${totalCost.toFixed(6)}</span>
+                                                    <button onClick={handleResetCost} style={{background:'none', border:'none', color:'#d32f2f', cursor:'pointer', padding:0}}>Reset</button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
                                     <div className="setting-item">
                                         <label><Icons.Voice /> Voice</label>
                                         <select 
