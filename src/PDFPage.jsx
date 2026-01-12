@@ -136,118 +136,149 @@ const PDFPage = forwardRef(({
     } catch (e) { return 'rgb(255,255,255)'; }
   };
 
+  // --- Core Image Extraction Logic ---
+  const extractTokensImage = useCallback((targetTokens) => {
+      if (!canvasRef.current || !targetTokens || targetTokens.length === 0 || !pageDimensions) return null;
+
+      const dpr = window.devicePixelRatio || 1;
+      const maskPad = 2;
+      const pad = 5;
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      // 1. Calculate the bounding box of the target tokens
+      targetTokens.forEach(t => {
+          t.parts.forEach(p => {
+              minX = Math.min(minX, p.bounds.left);
+              minY = Math.min(minY, p.bounds.top);
+              maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
+              maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
+          });
+      });
+
+      // Add breathing room
+      minX = Math.max(0, minX - pad);
+      minY = Math.max(0, minY - pad);
+      maxX = Math.min(pageDimensions.width, maxX + pad);
+      maxY = Math.min(pageDimensions.height, maxY + pad);
+
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      if (width <= 0 || height <= 0) return null;
+
+      // 2. Create the crop canvas
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = width * dpr;
+      cropCanvas.height = height * dpr;
+      const ctx = cropCanvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      // Draw raw content
+      ctx.drawImage(
+          canvasRef.current,
+          minX * dpr, minY * dpr, width * dpr, height * dpr,
+          0, 0, width, height
+      );
+
+      const bgColor = getDominantColor(ctx, width * dpr, height * dpr);
+
+      // 3. Create Mask to hide neighbors
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = width * dpr;
+      maskCanvas.height = height * dpr;
+      const mCtx = maskCanvas.getContext('2d');
+      mCtx.scale(dpr, dpr);
+
+      const targetIds = new Set(targetTokens.map(t => t.id));
+
+      mCtx.fillStyle = bgColor;
+
+      // Paint "White Out" over ALL tokens that are NOT in our target set
+      // within the cropped area
+      pageTokensRef.current.forEach(t => {
+          if (!targetIds.has(t.id)) {
+              t.parts.forEach(p => {
+                  // Only draw if it intersects our crop area
+                  if (p.bounds.right > minX && p.bounds.left < maxX &&
+                      p.bounds.bottom > minY && p.bounds.top < maxY) {
+
+                      mCtx.fillRect(
+                          (p.bounds.left - minX) - maskPad,
+                          (p.bounds.top - minY) - maskPad,
+                          p.bounds.width + (maskPad * 2),
+                          p.bounds.height + (maskPad * 2)
+                      );
+                  }
+              });
+          }
+      });
+
+      // "Cut out" the target tokens from the mask so they remain visible
+      mCtx.globalCompositeOperation = 'destination-out';
+      targetTokens.forEach(t => {
+          t.parts.forEach(p => {
+              mCtx.fillRect(
+                  p.bounds.left - minX,
+                  p.bounds.top - minY,
+                  p.bounds.width,
+                  p.bounds.height
+              );
+          });
+      });
+
+      // 4. Apply mask
+      ctx.drawImage(maskCanvas, 0, 0, width, height);
+
+      return cropCanvas.toDataURL('image/jpeg', 0.8);
+  }, [pageDimensions]);
+
   // --- Debug / Extraction Logic ---
   useImperativeHandle(ref, () => ({
     scrollIntoView: (opts) => {
       if (containerRef.current) containerRef.current.scrollIntoView(opts);
     },
-    // NEW: Allow parent to set exact dimensions immediately to prevent scroll jump bugs
     resizeImmediately: (w, h) => {
         setPageDimensions({ width: w, height: h });
     },
-    // NEW: Get exact bounding rect of a token for smart scrolling
     getTokenRect: (tokenId) => {
         const token = pageTokensRef.current.find(t => t.id === tokenId);
         if (token && token.parts && token.parts.length > 0) {
-            // Return the bounding client rect of the first span part
-            // This is relative to the viewport
             return token.parts[0].spanElement.getBoundingClientRect();
         }
         return null;
     },
     getThumbnail: async () => {
         if (!canvasRef.current) return null;
-        // Create a small canvas for the thumbnail
         const thumbCanvas = document.createElement('canvas');
         const aspect = canvasRef.current.height / canvasRef.current.width;
-        const w = 200; // Thumbnail width
+        const w = 200;
         const h = w * aspect;
-        
         thumbCanvas.width = w;
         thumbCanvas.height = h;
-        
         const ctx = thumbCanvas.getContext('2d');
-        // Draw the main canvas onto the thumbnail canvas
         ctx.drawImage(canvasRef.current, 0, 0, w, h);
-        
         return thumbCanvas.toDataURL('image/jpeg', 0.7);
+    },
+    // NEW: Get clean image of specific tokens for OCR
+    getWrappedImageForTokens: (tokenIds) => {
+        if (!tokenIds || tokenIds.length === 0) return null;
+        const tokens = pageTokensRef.current.filter(t => tokenIds.includes(t.id));
+        return extractTokensImage(tokens);
     },
     generateDebugImages: async () => {
         if (!canvasRef.current || pageTokensRef.current.length === 0) return [];
-        
-        const tokens = pageTokensRef.current;
-        const sentences = groupTokensIntoSentences(tokens);
-
-        const dpr = window.devicePixelRatio || 1;
+        const sentences = groupTokensIntoSentences(pageTokensRef.current);
         const results = [];
 
         for (const sentenceTokens of sentences) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            
-            sentenceTokens.forEach(t => {
-                t.parts.forEach(p => {
-                    minX = Math.min(minX, p.bounds.left);
-                    minY = Math.min(minY, p.bounds.top);
-                    maxX = Math.max(maxX, p.bounds.left + p.bounds.width);
-                    maxY = Math.max(maxY, p.bounds.top + p.bounds.height);
-                });
-            });
-
-            const pad = 5;
-            minX = Math.max(0, minX - pad);
-            minY = Math.max(0, minY - pad);
-            maxX = Math.min(pageDimensions.width, maxX + pad);
-            maxY = Math.min(pageDimensions.height, maxY + pad);
-
-            const width = maxX - minX;
-            const height = maxY - minY;
-
-            if (width <= 0 || height <= 0) continue;
-
-            const cropCanvas = document.createElement('canvas');
-            cropCanvas.width = width * dpr;
-            cropCanvas.height = height * dpr;
-            const ctx = cropCanvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-
-            ctx.drawImage(
-                canvasRef.current, 
-                minX * dpr, minY * dpr, width * dpr, height * dpr, 
-                0, 0, width, height 
-            );
-
-            const bgColor = getDominantColor(ctx, width * dpr, height * dpr);
-
-            const maskCanvas = document.createElement('canvas');
-            maskCanvas.width = width * dpr;
-            maskCanvas.height = height * dpr;
-            const mCtx = maskCanvas.getContext('2d');
-            mCtx.scale(dpr, dpr);
-
-            const sentenceTokenIds = new Set(sentenceTokens.map(t => t.id));
-
-            mCtx.fillStyle = bgColor;
-            tokens.forEach(t => {
-                if (!sentenceTokenIds.has(t.id)) {
-                    t.parts.forEach(p => {
-                        mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
-                    });
-                }
-            });
-
-            mCtx.globalCompositeOperation = 'destination-out';
-            sentenceTokens.forEach(t => {
-                t.parts.forEach(p => {
-                    mCtx.fillRect(p.bounds.left - minX, p.bounds.top - minY, p.bounds.width, p.bounds.height);
-                });
-            });
-
-            ctx.drawImage(maskCanvas, 0, 0, width, height);
-
-            results.push({
-                text: sentenceTokens.map(t => t.spokenText).join(' '),
-                img: cropCanvas.toDataURL('image/jpeg', 0.8)
-            });
+             const img = extractTokensImage(sentenceTokens);
+             if (img) {
+                 results.push({
+                    text: sentenceTokens.map(t => t.spokenText).join(' '),
+                    img: img
+                 });
+             }
         }
         return results;
     }
@@ -256,15 +287,11 @@ const PDFPage = forwardRef(({
   // --- NEW: Apply Skip Zones Logic ---
   const applySkipZones = useCallback(() => {
     if (allTokensRef.current.length === 0 || !pageDimensions) return;
-    
-    // If we are currently rendering, skip this update as the render will call it at the end
-    // (Optimization to avoid double work, though isRendering might toggle too fast)
 
     const validTokens = [];
-    spanMapRef.current.clear(); 
+    spanMapRef.current.clear();
 
     allTokensRef.current.forEach(t => {
-        // Calculate intersection with skip zones
         const isSkipped = skipZones.some(zone => {
              const zonePx = {
                 left: zone.x * pageDimensions.width,
@@ -275,7 +302,6 @@ const PDFPage = forwardRef(({
             return isTokenInZone(t.bounds, zonePx);
         });
 
-        // Apply visual styles directly
         t.parts.forEach(p => {
             if (isSkipped) {
                 p.spanElement.style.opacity = '0.2';
@@ -287,7 +313,6 @@ const PDFPage = forwardRef(({
         });
 
         if (!isSkipped) {
-            // Add to map for interaction
             t.parts.forEach(part => {
                 const existing = spanMapRef.current.get(part.spanElement) || [];
                 existing.push(t);
@@ -298,16 +323,11 @@ const PDFPage = forwardRef(({
     });
 
     pageTokensRef.current = validTokens;
-    if (readingMode === 'sentence') { 
-        sentenceGroupsRef.current = groupTokensIntoSentences(validTokens);
-    } else {
-        sentenceGroupsRef.current = groupTokensIntoSentences(validTokens); 
-    }
+    sentenceGroupsRef.current = groupTokensIntoSentences(validTokens);
     registerPageTokens(pageNum, validTokens);
 
-  }, [skipZones, pageDimensions, pageNum, registerPageTokens, readingMode]);
+  }, [skipZones, pageDimensions, pageNum, registerPageTokens]);
 
-  // --- NEW: Effect to trigger skip zone updates without full re-render ---
   useEffect(() => {
     applySkipZones();
   }, [applySkipZones]);
@@ -319,23 +339,22 @@ const PDFPage = forwardRef(({
     let isCancelled = false;
 
     const render = async () => {
-      setIsRendering(true); // Start Spinner
+      setIsRendering(true);
       try {
         const page = await pdfDoc.getPage(pageNum);
         if (isCancelled) return;
 
         const pixelRatio = window.devicePixelRatio || 1;
-        
-        const viewport = page.getViewport({ 
-            scale: scale, 
-            rotation: (page.rotate + rotation) % 360 
+
+        const viewport = page.getViewport({
+            scale: scale,
+            rotation: (page.rotate + rotation) % 360
         });
-        const renderViewport = page.getViewport({ 
-            scale: scale * pixelRatio, 
-            rotation: (page.rotate + rotation) % 360 
+        const renderViewport = page.getViewport({
+            scale: scale * pixelRatio,
+            rotation: (page.rotate + rotation) % 360
         });
 
-        // Update dimensions logic to handle pre-resizing
         setPageDimensions({ width: viewport.width, height: viewport.height });
         if (containerRef.current) containerRef.current.style.setProperty('--scale-factor', scale);
 
@@ -356,7 +375,7 @@ const PDFPage = forwardRef(({
             textLayerRef.current.style.height = `${viewport.height}px`;
 
             const textContent = await page.getTextContent();
-            
+
             await pdfjsLib.renderTextLayer({
                 textContent,
                 container: textLayerRef.current,
@@ -366,16 +385,16 @@ const PDFPage = forwardRef(({
 
             const spans = Array.from(textLayerRef.current.querySelectorAll('span'));
             let rawTokens = [];
-            
+
             spans.forEach((span, i) => {
                 const text = span.textContent;
-                if (!text.trim()) return; 
+                if (!text.trim()) return;
 
                 const item = textContent.items[i];
                 const computed = window.getComputedStyle(span);
-                
+
                 const fontInfo = {
-                    name: item?.fontName || computed.fontFamily, 
+                    name: item?.fontName || computed.fontFamily,
                     family: computed.fontFamily,
                     size: parseFloat(computed.fontSize) || 12
                 };
@@ -392,7 +411,7 @@ const PDFPage = forwardRef(({
                     rawTokens.push({
                         text: match[0],
                         spanElement: span,
-                        fontInfo, 
+                        fontInfo,
                         startOffset: match.index,
                         endOffset: regex.lastIndex,
                         bounds: {
@@ -417,14 +436,14 @@ const PDFPage = forwardRef(({
                     const prevBounds = currentToken.bounds;
                     const nextBounds = nextToken.bounds;
 
-                    const isSameLine = Math.abs(prevBounds.top - nextBounds.top) < 
+                    const isSameLine = Math.abs(prevBounds.top - nextBounds.top) <
                                      (prevBounds.height * MERGE_CONFIG.MAX_VERTICAL_MISALIGNMENT);
-                    
+
                     const gap = nextBounds.left - prevBounds.right;
-                    const isTouching = gap < (prevBounds.height * MERGE_CONFIG.MAX_INTRA_WORD_GAP) && 
+                    const isTouching = gap < (prevBounds.height * MERGE_CONFIG.MAX_INTRA_WORD_GAP) &&
                                        gap > -(prevBounds.height * MERGE_CONFIG.MAX_ALLOWED_OVERLAP);
 
-                    const isHyphenated = /[—\-\u00AD]$/.test(currentToken.text); 
+                    const isHyphenated = /[—\-\u00AD]$/.test(currentToken.text);
                     const isLineBreakSplit = isHyphenated && !isSameLine;
 
                     if ((isSameLine && isTouching) || isLineBreakSplit) {
@@ -439,7 +458,7 @@ const PDFPage = forwardRef(({
                         const newTop = Math.min(prevBounds.top, nextBounds.top);
                         const newRight = Math.max(prevBounds.right, nextBounds.right);
                         const newBottom = Math.max(prevBounds.bottom, nextBounds.bottom);
-                        
+
                         currentToken.bounds = {
                             left: newLeft,
                             top: newTop,
@@ -459,36 +478,32 @@ const PDFPage = forwardRef(({
 
             // Finalize
             let allCandidates = [];
-            // We do NOT clear spanMapRef here; applySkipZones will handle it.
-
             mergedTokens.forEach((t, index) => {
                 const finalToken = {
                     id: `p${pageNum}_t${index}`,
                     pageNum,
                     text: t.text,
                     spokenText: t.text,
-                    bounds: t.bounds, 
+                    bounds: t.bounds,
                     parts: t.parts,
                     fontInfo: t.parts[0].fontInfo
                 };
-                
-                // Store all tokens, regardless of skip zones
                 allCandidates.push(finalToken);
             });
 
             allTokensRef.current = allCandidates;
-            applySkipZones(); // Trigger initial zone application
+            applySkipZones();
         }
       } catch (err) {
         console.error(`Error rendering page ${pageNum}`, err);
       } finally {
-        if (!isCancelled) setIsRendering(false); // Stop Spinner
+        if (!isCancelled) setIsRendering(false);
       }
     };
 
     render();
     return () => { isCancelled = true; };
-  }, [isVisible, pdfDoc, pageNum, scale, rotation, registerPageTokens]); // Removed skipZones
+  }, [isVisible, pdfDoc, pageNum, scale, rotation, registerPageTokens]);
 
   // --- Drawing Logic ---
   const handleMouseDown = (e) => {
@@ -553,10 +568,10 @@ const PDFPage = forwardRef(({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    return candidates.find(t => 
-        mouseX >= t.bounds.left && 
-        mouseX <= t.bounds.right && 
-        mouseY >= t.bounds.top && 
+    return candidates.find(t =>
+        mouseX >= t.bounds.left &&
+        mouseX <= t.bounds.right &&
+        mouseY >= t.bounds.top &&
         mouseY <= t.bounds.bottom
     );
   };
@@ -588,7 +603,7 @@ const PDFPage = forwardRef(({
                 onTokensParsed(pageTokensRef.current, clickedToken.id, pageNum);
             }
         } else {
-            onTokensParsed(pageTokensRef.current, clickedToken.id, pageNum); 
+            onTokensParsed(pageTokensRef.current, clickedToken.id, pageNum);
         }
     }
   };
@@ -641,16 +656,16 @@ const PDFPage = forwardRef(({
 
     for (let i = 1; i < allRects.length; i++) {
         const nextBounds = allRects[i];
-        
-        const isSameLine = Math.abs(currentRect.top - nextBounds.top) < 
+
+        const isSameLine = Math.abs(currentRect.top - nextBounds.top) <
                            (currentRect.height * MERGE_CONFIG.MAX_VERTICAL_MISALIGNMENT);
-        
+
         if (isSameLine) {
              const newLeft = Math.min(currentRect.left, nextBounds.left);
              const newTop = Math.min(currentRect.top, nextBounds.top);
              const newRight = Math.max(currentRect.left + currentRect.width, nextBounds.left + nextBounds.width);
              const newBottom = Math.max(currentRect.top + currentRect.height, nextBounds.top + nextBounds.height);
-             
+
              currentRect = {
                  left: newLeft,
                  top: newTop,
@@ -678,14 +693,13 @@ const PDFPage = forwardRef(({
   }, [hoveredTokenId, getHighlightRects]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="pdf-page-container" 
-      style={{ 
+      className="pdf-page-container"
+      style={{
         width: pageDimensions ? pageDimensions.width : '100%',
         maxWidth: pageDimensions ? pageDimensions.width : '800px',
-        // If dimensions are known, use them. If not, minHeight prevents collapse to 0
-        height: pageDimensions ? pageDimensions.height : 'auto', 
+        height: pageDimensions ? pageDimensions.height : 'auto',
         minHeight: pageDimensions ? pageDimensions.height : '200px',
         marginBottom: '20px',
         position: 'relative',
@@ -693,7 +707,6 @@ const PDFPage = forwardRef(({
         boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
         cursor: isMarkingMode ? 'crosshair' : 'default',
         userSelect: isMarkingMode ? 'none' : 'auto',
-        // Center placeholder content
         display: isVisible ? 'block' : 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -706,55 +719,52 @@ const PDFPage = forwardRef(({
       {isVisible && (
         <>
             <canvas ref={canvasRef} style={{ display: 'block', pointerEvents: 'none' }} />
-            <div 
-                ref={textLayerRef} 
-                className="textLayer" 
+            <div
+                ref={textLayerRef}
+                className="textLayer"
                 onClick={handlePageClick}
                 onMouseLeave={() => setHoveredTokenId(null)}
                 style={{ pointerEvents: isMarkingMode ? 'none' : 'auto' }}
             />
-            
+
             {/* ACTIVE HIGHLIGHT */}
             {activeRects.map((style, i) => (
                 !isMarkingMode && highlightEnabled && (
-                    <div 
-                        key={`active-${i}`} 
-                        className="highlight-box" 
+                    <div
+                        key={`active-${i}`}
+                        className="highlight-box"
                         style={{
-                            ...style, 
+                            ...style,
                             backgroundColor: highlightColor,
                             opacity: highlightOpacity,
-                            // Soft edge style
                             border: 'none',
                             borderRadius: '4px',
                             boxShadow: `0 0 6px ${highlightColor}`
-                        }} 
+                        }}
                     />
                 )
             ))}
-            
+
             {/* HOVER HIGHLIGHT */}
             {hoverRects.map((style, i) => (
                 !isMarkingMode && (
-                    <div 
-                        key={`hover-${i}`} 
-                        className="hover-box" 
+                    <div
+                        key={`hover-${i}`}
+                        className="hover-box"
                         style={{
                             ...style,
-                            // Derived from active color settings
-                            backgroundColor: highlightColor, 
-                            opacity: 0.25, 
-                            // Soft edge style
+                            backgroundColor: highlightColor,
+                            opacity: 0.25,
                             border: 'none',
                             borderRadius: '4px',
                             boxShadow: `0 0 6px ${highlightColor}`
-                        }} 
+                        }}
                     />
                 )
             ))}
 
             {pageDimensions && skipZones.map(zone => (
-                <div 
+                <div
                     key={zone.id}
                     className="skip-zone-overlay"
                     style={{
@@ -765,7 +775,7 @@ const PDFPage = forwardRef(({
                     }}
                 >
                   {isMarkingMode && (
-                      <button 
+                      <button
                           className="delete-zone-btn"
                           onClick={(e) => { e.stopPropagation(); onRemoveSkipZone(zone.id); }}
                           title="Remove Skip Zone"
@@ -777,7 +787,7 @@ const PDFPage = forwardRef(({
             ))}
 
             {isDrawing && currentRect && (
-                <div 
+                <div
                     className="skip-zone-drawing"
                     style={{
                         left: currentRect.x,
@@ -788,7 +798,6 @@ const PDFPage = forwardRef(({
                 />
             )}
 
-            {/* Loading Overlay (When page is visible but still rendering) */}
             {isRendering && (
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.7)', zIndex: 5 }}>
                     <div className="spinner" style={{width: '30px', height: '30px', border: '3px solid #ccc', borderTop: '3px solid #333', borderRadius: '50%', animation: 'spin 1s linear infinite'}}></div>
