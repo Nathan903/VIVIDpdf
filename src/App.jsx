@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
-import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId } from './db';
+import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord } from './db';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -158,6 +158,15 @@ const App = () => {
       const files = await getRecentFiles();
       setRecentFiles(files);
     } catch (e) { console.error("Failed to load recents", e); }
+  };
+
+  // Reading history record deletion
+  const handleDeleteRecord = async (e, id) => {
+    e.stopPropagation(); // Prevent opening the PDF when clicking the button
+    if (window.confirm("Are you sure you want to remove this from your history?")) {
+      await deleteFileRecord(id);
+      await loadRecentFilesList(); // Refresh the UI list
+    }
   };
 
   // 3. Save PDF-Specific State (Debounced)
@@ -983,6 +992,15 @@ const App = () => {
                             <div className={layoutMode === 'grid' ? 'recent-grid' : 'recent-list'}>
                                 {recentFiles.map(file => (
                                     <div key={file.id} className="recent-card" onClick={() => handleRecentClick(file)}>
+                                        {/* Added: Delete Button */}
+                                        <button 
+                                            className="delete-recent-btn" 
+                                            onClick={(e) => handleDeleteRecord(e, file.id)}
+                                            title="Remove from history"
+                                        >
+                                            <Icons.Close />
+                                        </button>
+
                                         <div className="recent-thumb">
                                             {file.thumbnail ? <img src={file.thumbnail} alt="preview" /> : <div className="no-thumb">PDF</div>}
                                             <div className="page-badge">Pg {file.lastPage}</div>

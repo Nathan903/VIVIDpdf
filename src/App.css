@@ -847,3 +847,59 @@ canvas {
     border-top: none;
     padding: 0 20px;
 }
+
+.recent-card {
+    position: relative; /* Ensure button anchors to the card */
+}
+
+.delete-recent-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 50;
+    width: 50px;
+    height: 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    
+    /* Colors */
+    background: #ffffff;
+    color: #ef4444; /* This controls the cross color */
+    border: 1px solid #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #ef4444; 
+    border: 1px solid #ef4444;
+}
+
+/* Change this from .delete-recent-btn svg to handle the span */
+.delete-recent-btn span {
+    pointer-events: none;
+}
+
+.delete-recent-btn:hover {
+    background: #ef4444; 
+    color: #ffffff; 
+}
+
+/* List mode specific positioning */
+.recent-list .delete-recent-btn {
+    top: 50%;
+    width: 30px;
+    height: 50px;
+    bottom: auto; 
+    right: 20px;
+    transform: translateY(-50%);
+}
+
+/* Show button on card hover */
+.recent-card:hover .delete-recent-btn {
+    opacity: 1;
+}
