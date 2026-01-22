@@ -23,6 +23,9 @@ const DEFAULT_GLOBALS = {
 };
 
 const App = () => {
+  // Reading history layout mode
+  const [layoutMode, setLayoutMode] = useState('grid'); // 'grid' or 'list'
+
   // --- Global Settings (Init from LocalStorage) ---
   const [globalSettings, setGlobalSettings] = useState(() => {
     try {
@@ -964,24 +967,30 @@ const App = () => {
                     {/* RECENT FILES SECTION */}
                     {recentFiles.length > 0 && (
                         <div className="recent-files-section">
-                            <h3>Recently Opened</h3>
-                            <div className="recent-grid">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #3f3f46', marginBottom: '20px', paddingBottom: '10px' }}>
+                                <h3 style={{ margin: 0, border: 'none', padding: 0 }}>Recently Opened</h3>
+                                
+                                {/* Toggle Button in the yellow box location */}
+                                <button 
+                                    className="icon-btn" 
+                                    onClick={() => setLayoutMode(layoutMode === 'grid' ? 'list' : 'grid')}
+                                    title={`Switch to ${layoutMode === 'grid' ? 'List' : 'Grid'} Layout`}
+                                >
+                                    {layoutMode === 'grid' ? <Icons.List /> : <Icons.Grid />}
+                                </button>
+                            </div>
+
+                            <div className={layoutMode === 'grid' ? 'recent-grid' : 'recent-list'}>
                                 {recentFiles.map(file => (
                                     <div key={file.id} className="recent-card" onClick={() => handleRecentClick(file)}>
                                         <div className="recent-thumb">
-                                            {file.thumbnail ? (
-                                                <img src={file.thumbnail} alt="preview" />
-                                            ) : (
-                                                <div className="no-thumb">PDF</div>
-                                            )}
+                                            {file.thumbnail ? <img src={file.thumbnail} alt="preview" /> : <div className="no-thumb">PDF</div>}
                                             <div className="page-badge">Pg {file.lastPage}</div>
                                         </div>
                                         <div className="recent-info">
                                             <div className="recent-name" title={file.name}>{file.name}</div>
                                             <div className="recent-date">
-                                                {new Date(file.lastOpened).toLocaleDateString(undefined, {
-                                                    month: 'short', day: 'numeric' 
-                                                })}
+                                                {new Date(file.lastOpened).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                             </div>
                                         </div>
                                     </div>
