@@ -949,7 +949,16 @@ const App = () => {
                         <label className="upload-btn main-upload" onClick={() => fileInputRef.current.click()}>
                             <Icons.Upload /> Open PDF File
                         </label>
-                        <p style={{marginTop: '20px', color: '#666', fontSize: '14px'}}>or drag and drop a file here</p>
+                        <p style={{marginTop: '20px', color: '#9e9e9e', fontSize: '14px'}}>or drag and drop a file here</p>
+                        <button 
+                            className="upload-btn" 
+                            onClick={() => setShowHelp(true)} 
+                            style={{ marginTop: '12px', border: '1px solid #3f3f46' }}
+                        >
+                            <span style={{ fontSize: '16px', fontWeight: 'bold' }}>?</span>
+                            Help (Press H)
+                        </button>
+                        
                     </div>
 
                     {/* RECENT FILES SECTION */}
