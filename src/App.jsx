@@ -953,10 +953,10 @@ const App = () => {
                         <button 
                             className="upload-btn" 
                             onClick={() => setShowHelp(true)} 
-                            style={{ marginTop: '12px', border: '1px solid #3f3f46' }}
+                            style={{ border: '1px solid #3f3f46' }}
                         >
                             <span style={{ fontSize: '16px', fontWeight: 'bold' }}>?</span>
-                            Help (Press H)
+                            (Press H for Help Menu)
                         </button>
                         
                     </div>
