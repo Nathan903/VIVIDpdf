@@ -53,7 +53,7 @@ const PDFPage = forwardRef(({
         if (entry.isIntersecting) setIsVisible(true);
         if (entry.isIntersecting && entry.intersectionRatio >= 0.5) notifyPageVisible(pageNum);
       },
-      { rootMargin: '200px', threshold: 0.5 } 
+      { rootMargin: '200px', threshold: [0, 0.1, 0.5] } 
     );
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
@@ -283,8 +283,10 @@ const PDFPage = forwardRef(({
 
   // --- NEW: Effect to trigger skip zone updates without full re-render ---
   useEffect(() => {
-    applySkipZones();
-  }, [applySkipZones]);
+    if (!isRendering) {
+        applySkipZones();
+    }
+  }, [applySkipZones, isRendering]);
 
 
   // --- Rendering Logic ---
@@ -404,7 +406,6 @@ const PDFPage = forwardRef(({
             });
 
             allTokensRef.current = allCandidates;
-            applySkipZones(); // Trigger initial zone application
         }
       } catch (err) {
         console.error(`Error rendering page ${pageNum}`, err);

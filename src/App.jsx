@@ -21,7 +21,8 @@ const DEFAULT_GLOBALS = {
   highlightColor: '#ffeb3b',
   highlightOpacity: 0.4,
   autoHide: false,
-  autoScroll: true 
+  autoScroll: true,
+  layoutMode: 'grid'
 };
 
 const DEFAULT_AI_CONFIG = {
@@ -149,10 +150,14 @@ const App = () => {
       highlightColor,
       highlightOpacity,
       autoHide,
-      autoScroll
+      autoScroll,
+      layoutMode: globalSettings.layoutMode
     };
     localStorage.setItem(LS_GLOBALS, JSON.stringify(settings));
-  }, [selectedVoiceURI, readingMode, rate, highlightEnabled, highlightColor, highlightOpacity, autoHide, autoScroll]);
+  }, [selectedVoiceURI, readingMode, rate, highlightEnabled, 
+      highlightColor, highlightOpacity, autoHide, autoScroll, 
+      globalSettings.layoutMode
+  ]);
 
   // 2. Load Recent Files on Mount
   useEffect(() => {
@@ -702,20 +707,22 @@ const App = () => {
 
   // --- TTS Engine (Standard Batch Mode) ---
 
-  const scheduleNextBatch = (startPageNum, carryOverTokens, isFirstBatch = false) => {
-    if (!isPlayingRef.current) return;
+  const scheduleNextBatch = (startPageNum, carryOverTokens, isFirstBatch = false, allowWait = true) => {
+    if (!isPlayingRef.current) return false;
 
     let pool = [...carryOverTokens];
     
     if (pool.length === 0) {
         const pageTokens = pageTokensMap.current.get(startPageNum);
         if (!pageTokens) {
-            waitingForPageRef.current = startPageNum;
-            // Scroll into view if waiting for page
-            if (pageRefs.current[startPageNum]) {
-                pageRefs.current[startPageNum].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (allowWait) {
+                waitingForPageRef.current = startPageNum;
+                // Scroll into view if waiting for page
+                if (pageRefs.current[startPageNum]) {
+                    pageRefs.current[startPageNum].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
-            return;
+            return false;
         }
         pool = [...pageTokens];
     }
@@ -764,11 +771,11 @@ const App = () => {
 
     if (!script.trim()) {
         if (startPageNum < numPages) {
-            scheduleNextBatch(nextPageNum, []);
+            return scheduleNextBatch(nextPageNum, [], false, allowWait);
         } else {
             setIsPlaying(false);
+            return false;
         }
-        return;
     }
 
     const utter = new SpeechSynthesisUtterance(script);
@@ -812,9 +819,9 @@ const App = () => {
         const info = event.target.nextBatchInfo;
         
         if (info && !event.target.hasQueuedNext && info.pageNum <= numPages) {
-             if (info.leftovers.length > 0 || pageTokensMap.current.has(info.pageNum)) {
+             const queued = scheduleNextBatch(info.pageNum, info.leftovers, false, false);
+             if (queued) {
                  event.target.hasQueuedNext = true;
-                 scheduleNextBatch(info.pageNum, info.leftovers);
              }
         }
     };
@@ -828,7 +835,7 @@ const App = () => {
         if (!event.target.hasQueuedNext) {
             const info = event.target.nextBatchInfo;
             if (info && info.pageNum <= numPages) {
-                 scheduleNextBatch(info.pageNum, info.leftovers);
+                 scheduleNextBatch(info.pageNum, info.leftovers, false, true);
             } else {
                 setIsPlaying(false);
                 setActiveTokenId(null);
@@ -845,6 +852,7 @@ const App = () => {
     };
 
     synth.speak(utter);
+    return true;
   };
 
   const togglePlay = () => {
@@ -1121,30 +1129,48 @@ const App = () => {
                         <label className="upload-btn main-upload" onClick={() => fileInputRef.current.click()}>
                             <Icons.Upload /> Open PDF File
                         </label>
-                        <p style={{marginTop: '20px', color: '#666', fontSize: '14px'}}>or drag and drop a file here</p>
+                        <p style={{marginTop: '20px', color: '#9e9e9e', fontSize: '14px'}}>or drag and drop a file here</p>
+                        <button 
+                            className="upload-btn" 
+                            onClick={() => setShowHelp(true)} 
+                            style={{ border: '1px solid #3f3f46' }}
+                        >
+                            <span style={{ fontSize: '16px', fontWeight: 'bold' }}>?</span>
+                            (Press H for Help Menu)
+                        </button>
+                        
                     </div>
 
                     {/* RECENT FILES SECTION */}
                     {recentFiles.length > 0 && (
                         <div className="recent-files-section">
-                            <h3>Recently Opened</h3>
-                            <div className="recent-grid">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #3f3f46', marginBottom: '20px', paddingBottom: '10px' }}>
+                                <h3 style={{ margin: 0, border: 'none', padding: 0 }}>Recently Opened</h3>
+                                
+                                {/* Toggle Button for layout view */}
+                                <button 
+                                    className="icon-btn" 
+                                    onClick={() => setGlobalSettings(prev => ({
+                                        ...prev, 
+                                        layoutMode: prev.layoutMode === 'grid' ? 'list' : 'grid' 
+                                    }))}
+                                    title={`Switch to ${globalSettings.layoutMode === 'grid' ? 'List' : 'Grid'} Layout`}
+                                >
+                                    {globalSettings.layoutMode === 'grid' ? <Icons.List /> : <Icons.Grid />}
+                                </button>
+                            </div>
+
+                            <div className={globalSettings.layoutMode === 'grid' ? 'recent-grid' : 'recent-list'}>
                                 {recentFiles.map(file => (
                                     <div key={file.id} className="recent-card" onClick={() => handleRecentClick(file)}>
                                         <div className="recent-thumb">
-                                            {file.thumbnail ? (
-                                                <img src={file.thumbnail} alt="preview" />
-                                            ) : (
-                                                <div className="no-thumb">PDF</div>
-                                            )}
+                                            {file.thumbnail ? <img src={file.thumbnail} alt="preview" /> : <div className="no-thumb">PDF</div>}
                                             <div className="page-badge">Pg {file.lastPage}</div>
                                         </div>
                                         <div className="recent-info">
                                             <div className="recent-name" title={file.name}>{file.name}</div>
                                             <div className="recent-date">
-                                                {new Date(file.lastOpened).toLocaleDateString(undefined, {
-                                                    month: 'short', day: 'numeric' 
-                                                })}
+                                                {new Date(file.lastOpened).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                             </div>
                                         </div>
                                     </div>

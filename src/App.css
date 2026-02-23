@@ -621,6 +621,9 @@ canvas {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 20px;
+    overflow-y: auto; /* enable vertical scroll */
+    padding: 5px; /* slight padding for outline/shadow */
+    padding-bottom: 20px; /* Added extra bottom padding */
 }
 
 .recent-card {
@@ -814,4 +817,33 @@ canvas {
 .recent-date {
     font-size: 11px;
     color: #71717a;
+}
+
+.recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    overflow-y: auto; /* enable vertical scroll */
+    padding: 5px;
+    padding-bottom: 20px; /* Added extra bottom padding */
+}
+
+.recent-list .recent-card {
+    flex-direction: row;
+    aspect-ratio: auto;
+    height: 80px;
+    align-items: center;
+}
+
+.recent-list .recent-thumb {
+    width: 100px;
+    height: 100%;
+    flex: none;
+}
+
+.recent-list .recent-info {
+    flex: 1;
+    border-top: none;
+    padding: 0 20px;
 }
