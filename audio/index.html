@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sherpa-ONNX TTS (Debug Mode)</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #222; color: #eee; }
+        .container { max-width: 800px; margin: 0 auto; }
+        textarea { width: 100%; height: 100px; background: #333; color: #fff; border: 1px solid #555; padding: 10px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; margin-top: 10px; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        #status { margin-top: 10px; color: #ffeb3b; white-space: pre-wrap; border: 1px solid #444; padding: 10px; }
+        audio { margin-top: 20px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sherpa-ONNX Local TTS (Robust Fix)</h2>
+    <div>Model: en_US-amy-low.onnx</div>
+    <br/>
+    <textarea id="textInput">Hello, testing the filesystem fix.</textarea>
+    
+    <div>
+        <button id="initBtn" onclick="initializeEngine()" disabled>1. Load Model</button>
+        <button id="genBtn" onclick="generateAudio()" disabled>2. Generate</button>
+    </div>
+
+    <div id="status">Status: Waiting for WebAssembly...</div>
+    <audio id="audioPlayer" controls></audio>
+</div>
+
+<script>
+    var Module = {
+        onRuntimeInitialized: function() {
+            const statusDiv = document.getElementById('status');
+            const initBtn = document.getElementById('initBtn');
+            
+            console.log("--- DEBUG START ---");
+            console.log("Module keys:", Object.keys(Module));
+            
+            // CHECK FOR FILESYSTEM (FS) availability
+            if (Module.FS) {
+                console.log("FS found at Module.FS");
+            } else if (window.FS) {
+                console.log("FS found at window.FS");
+                Module.FS = window.FS; // Map it back
+            } else {
+                console.error("CRITICAL: FS object not found in Module or Window.");
+                statusDiv.innerText = "Error: Virtual Filesystem (FS) missing. Check Console (F12).";
+                return;
+            }
+
+            statusDiv.innerText = "Status: WASM Ready. FS detected. Click 'Load Model'.";
+            initBtn.disabled = false;
+        },
+        print: function(text) { console.log("[WASM]", text); },
+        printErr: function(text) { console.error("[WASM Err]", text); }
+    };
+</script>
+
+<script src="sherpa-onnx-wasm-main-tts.js"></script>
+
+<script>
+    let tts = null;
+    let audioCtx = null;
+    const statusDiv = document.getElementById('status');
+    const initBtn = document.getElementById('initBtn');
+    const genBtn = document.getElementById('genBtn');
+
+    const files = [
+        { url: "en_US-amy-low.onnx", name: "en_US-amy-low.onnx" },
+        { url: "tokens.txt", name: "tokens.txt" }
+    ];
+
+    function log(msg) {
+        statusDiv.innerText += "\n" + msg;
+        console.log(msg);
+    }
+
+    async function initializeEngine() {
+        initBtn.disabled = true;
+        
+        try {
+            // DOUBLE CHECK FS
+            if (!Module.FS) {
+                if (window.FS) Module.FS = window.FS;
+                else throw new Error("FS (File System) is undefined. Cannot save files.");
+            }
+
+            // Load files
+            for (let file of files) {
+                log(`Fetching ${file.name}...`);
+                const response = await fetch(file.url);
+                if (!response.ok) throw new Error(`HTTP Error ${response.status} loading ${file.name}`);
+                
+                const buffer = await response.arrayBuffer();
+                const data = new Uint8Array(buffer);
+                
+                // Write to WASM
+                Module.FS.writeFile(file.name, data);
+                log(`Saved ${file.name} (Size: ${data.length})`);
+            }
+
+            log("Initializing OfflineTts...");
+
+            const config = {
+                model: {
+                    vits: {
+                        model: "en_US-amy-low.onnx",
+                        tokens: "tokens.txt",
+                        dataDir: "espeak-ng-data" // Relies on .data file
+                    },
+                    numThreads: 2,
+                    debug: 1,
+                    provider: "cpu",
+                },
+                ruleFsts: "",
+                maxNumSentences: 1,
+            };
+
+            // Ensure OfflineTts is available
+            if (!Module.OfflineTts) {
+                throw new Error("Module.OfflineTts is missing. WASM load failed.");
+            }
+
+            tts = new Module.OfflineTts(config);
+            
+            log("Initialization Success! Ready to generate.");
+            genBtn.disabled = false;
+
+        } catch (e) {
+            log(`ERROR: ${e.message}`);
+            initBtn.disabled = false;
+        }
+    }
+
+    function generateAudio() {
+        if (!tts) return;
+        const text = document.getElementById('textInput').value.trim();
+        try {
+            log("Synthesizing...");
+            const audio = tts.generate(text, 0, 1.0); 
+            if (audio.samples.length === 0) throw new Error("Empty audio generated.");
+            
+            playAudio(audio.samples, audio.sampleRate);
+            log(`Done. ${audio.samples.length} samples.`);
+        } catch(e) {
+            log("Gen Error: " + e);
+        }
+    }
+
+    function playAudio(samples, sampleRate) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = audioCtx.createBuffer(1, samples.length, sampleRate);
+        const ptr = buffer.getChannelData(0);
+        for (let i = 0; i < samples.length; i++) ptr[i] = samples[i];
+        
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start();
+    }
+</script>
+</body>
+</html>

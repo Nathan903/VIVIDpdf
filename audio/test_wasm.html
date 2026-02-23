@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Piper TTS Demo (Final)</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); display: flex; justify-content: center; padding-top: 50px; }
+        .container { background: var(--surface); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 400px; }
+        select, textarea, button { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: var(--primary); color: white; font-weight: bold; cursor: pointer; border: none; }
+        button:disabled { background: #94a3b8; cursor: wait; }
+        .status { margin-top: 10px; font-size: 0.85rem; color: #334155; background: #e2e8f0; padding: 10px; border-radius: 4px; display: none; white-space: pre-wrap; word-break: break-all; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Piper TTS Demo</h2>
+    
+    <label>Select Voice:</label>
+    <select id="voiceSelect" disabled>
+        <option>Loading...</option>
+    </select>
+
+    <label>Text:</label>
+    <textarea id="textInput">The quick brown fox jumps over the lazy dog.</textarea>
+
+    <button id="speakBtn" disabled>Speak</button>
+
+    <div id="status" class="status"></div>
+</div>
+
+<script type="module">
+    import * as tts from 'https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.4/+esm';
+
+    const voiceSelect = document.getElementById('voiceSelect');
+    const speakBtn = document.getElementById('speakBtn');
+    const statusDiv = document.getElementById('status');
+    let audioCtx;
+
+    function log(msg, type = 'info') {
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = msg;
+        console.log(`[App] ${msg}`);
+        if (type === 'error') statusDiv.style.color = '#dc2626';
+        else statusDiv.style.color = '#334155';
+    }
+
+    async function playAudio(data) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+        let arrayBuffer;
+        
+        // Handle Blob vs Buffer
+        if (data instanceof Blob) {
+            arrayBuffer = await data.arrayBuffer();
+        } else if (data.buffer) {
+            arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+        } else {
+            arrayBuffer = data;
+        }
+
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+        log("Playing audio via AudioContext.");
+    }
+
+    async function init() {
+        try {
+            log("Fetching voice list...");
+            const voices = await tts.voices();
+            
+            const voiceList = Object.entries(voices).map(([key, value]) => ({
+                id: value.key || key,
+                name: value.name,
+                lang: value.language.code,
+                quality: value.quality
+            })).sort((a, b) => a.name.localeCompare(b.name));
+
+            voiceSelect.innerHTML = '';
+            voiceList.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id; 
+                opt.text = `${v.name} (${v.lang}) - ${v.quality}`;
+                voiceSelect.appendChild(opt);
+            });
+
+            const defaultVoice = voiceList.find(v => v.id.includes('amy-medium')) || voiceList[0];
+            voiceSelect.value = defaultVoice.id;
+
+            voiceSelect.disabled = false;
+            speakBtn.disabled = false;
+            log(`Ready. Selected: ${defaultVoice.id}`);
+        } catch (err) {
+            log(`Init Error: ${err.message}`, 'error');
+        }
+    }
+
+    speakBtn.addEventListener('click', async () => {
+        const text = document.getElementById('textInput').value.trim();
+        const voiceId = voiceSelect.value;
+        if (!text || !voiceId) return;
+
+        speakBtn.disabled = true;
+        log(`Generating...`);
+
+        try {
+            const result = await tts.predict({
+                text: text,
+                voiceId: voiceId,
+            }, (p) => {
+                if (p.total) log(`Downloading: ${Math.round((p.loaded / p.total) * 100)}%`);
+            });
+
+            // FIXED: Direct Blob check based on your logs
+            let audioData;
+            if (result instanceof Blob) {
+                audioData = result;
+            } else if (result.data) {
+                audioData = result.data;
+            } else {
+                // Fallback for raw buffer
+                audioData = result; 
+            }
+
+            await playAudio(audioData);
+            
+        } catch (err) {
+            console.error(err);
+            log(`Error: ${err.message}`, 'error');
+        } finally {
+            speakBtn.disabled = false;
+        }
+    });
+
+    init();
+</script>
+</body>
+</html>

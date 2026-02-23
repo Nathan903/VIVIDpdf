@@ -1152,7 +1152,7 @@ const App = () => {
                                             className="voice-select"
                                         >
                                             {voices.map(v => (
-                                                <option key={v.voiceURI} value={v.voiceURI}>{v.name.slice(0, 24)}...</option>
+                                                <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>
                                             ))}
                                         </select>
                                     </div>
