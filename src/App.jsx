@@ -5,6 +5,8 @@ import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage } from './aiService'; // IMPORT AI SERVICE
+import { applySkippingRules, applyCustomPronunciations } from './speechUtils';
+import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -22,7 +24,14 @@ const DEFAULT_GLOBALS = {
   highlightOpacity: 0.4,
   autoHide: false,
   autoScroll: true,
-  layoutMode: 'grid'
+  layoutMode: 'grid',
+  speechCustomization: {
+    skipUrls: false,
+    skipSquare: false,
+    skipParens: false,
+    skipCurly: false
+  },
+  customPronunciations: []
 };
 
 const DEFAULT_AI_CONFIG = {
@@ -80,6 +89,11 @@ const App = () => {
   const [highlightEnabled, setHighlightEnabled] = useState(globalSettings.highlightEnabled);
   const [highlightColor, setHighlightColor] = useState(globalSettings.highlightColor); 
   const [highlightOpacity, setHighlightOpacity] = useState(globalSettings.highlightOpacity);
+
+  // New: Speech Customization
+  const [speechCustomization, setSpeechCustomization] = useState(globalSettings.speechCustomization || DEFAULT_GLOBALS.speechCustomization);
+  const [customPronunciations, setCustomPronunciations] = useState(globalSettings.customPronunciations || DEFAULT_GLOBALS.customPronunciations);
+  const [showCustomSpeech, setShowCustomSpeech] = useState(false);
 
   // Navigation
   const [numPages, setNumPages] = useState(0);
@@ -151,13 +165,24 @@ const App = () => {
       highlightOpacity,
       autoHide,
       autoScroll,
-      layoutMode: globalSettings.layoutMode
+      layoutMode: globalSettings.layoutMode,
+      speechCustomization,
+      customPronunciations
     };
     localStorage.setItem(LS_GLOBALS, JSON.stringify(settings));
   }, [selectedVoiceURI, readingMode, rate, highlightEnabled, 
       highlightColor, highlightOpacity, autoHide, autoScroll, 
-      globalSettings.layoutMode
+      globalSettings.layoutMode, speechCustomization, customPronunciations
   ]);
+
+  // Sync speech customization state with global settings when it changes
+  useEffect(() => {
+    setGlobalSettings(prev => ({
+      ...prev,
+      speechCustomization,
+      customPronunciations
+    }));
+  }, [speechCustomization, customPronunciations]);
 
   // 2. Load Recent Files on Mount
   useEffect(() => {
@@ -648,9 +673,10 @@ const App = () => {
       handleSmartScroll(pageNum, firstTokenId);
 
       let textToSpeak = sentenceTokens.map(t => t.spokenText).join(' ');
+      textToSpeak = applySkippingRules(textToSpeak, speechCustomization);
 
       // --- AI VISUAL FIX STEP ---
-      if (pageRefs.current[pageNum]) {
+      if (textToSpeak.trim() && pageRefs.current[pageNum]) {
           const ids = sentenceTokens.map(t => t.id);
           // Get clean image of JUST this sentence
           const imgBase64 = pageRefs.current[pageNum].getWrappedImageForTokens(ids);
@@ -677,6 +703,17 @@ const App = () => {
           }
       }
       // ---------------------------
+
+      textToSpeak = applyCustomPronunciations(textToSpeak, customPronunciations);
+
+      if (!textToSpeak.trim()) {
+          if (info.nextTokenId) {
+              playNextSentenceAI(info.pageNum, info.nextTokenId);
+          } else {
+              playNextSentenceAI(info.nextPageNum, null);
+          }
+          return;
+      }
 
       const utter = new SpeechSynthesisUtterance(textToSpeak);
       utter.rate = rateRef.current;
@@ -760,8 +797,13 @@ const App = () => {
     let script = "";
     const map = [];
     pool.forEach(token => {
-        const text = token.spokenText;
+        let text = token.spokenText;
         if (!text) return; 
+
+        text = applySkippingRules(text, speechCustomization);
+        text = applyCustomPronunciations(text, customPronunciations);
+        
+        if (!text.trim()) return;
 
         const start = script.length;
         script += text + " ";
@@ -771,7 +813,7 @@ const App = () => {
 
     if (!script.trim()) {
         if (startPageNum < numPages) {
-            return scheduleNextBatch(nextPageNum, [], false, allowWait);
+            return scheduleNextBatch(nextPageNum, nextLeftovers, false, allowWait);
         } else {
             setIsPlaying(false);
             return false;
@@ -1292,6 +1334,14 @@ const App = () => {
                     {/* RIGHT: Tools & Settings */}
                     <div className="section-right">
                         <button 
+                            className={`icon-btn ${showCustomSpeech ? 'active' : ''}`} 
+                            onClick={() => setShowCustomSpeech(!showCustomSpeech)} 
+                            title="Customize Speech"
+                        >
+                            <Icons.Speech />
+                        </button>
+
+                        <button 
                             className={`icon-btn ${isMarkingMode ? 'active-danger' : ''}`} 
                             onClick={() => { if (!isMarkingMode && isPlaying) togglePlay(); setIsMarkingMode(!isMarkingMode); }} 
                             title="Mark Skip Area (M)"
@@ -1500,6 +1550,16 @@ const App = () => {
                                         Sentence Segmentation Preview
                                     </button>
                                 </div>
+                            )}
+
+                            {showCustomSpeech && (
+                                <SpeechCustomizationPanel 
+                                    speechCustomization={speechCustomization}
+                                    setSpeechCustomization={setSpeechCustomization}
+                                    customPronunciations={customPronunciations}
+                                    setCustomPronunciations={setCustomPronunciations}
+                                    onClose={() => setShowCustomSpeech(false)}
+                                />
                             )}
                         </div>
                     </div>
