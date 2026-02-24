@@ -5,7 +5,6 @@ import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage } from './aiService'; // IMPORT AI SERVICE
-import { applyCustomPronunciation } from './pronunciationUtils';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -23,8 +22,7 @@ const DEFAULT_GLOBALS = {
   highlightOpacity: 0.4,
   autoHide: false,
   autoScroll: true,
-  layoutMode: 'grid',
-  pronunciations: [] // Array of { id, original, target, caseSensitive }
+  layoutMode: 'grid'
 };
 
 const DEFAULT_AI_CONFIG = {
@@ -153,8 +151,7 @@ const App = () => {
       highlightOpacity,
       autoHide,
       autoScroll,
-      layoutMode: globalSettings.layoutMode,
-      pronunciations: globalSettings.pronunciations
+      layoutMode: globalSettings.layoutMode
     };
     localStorage.setItem(LS_GLOBALS, JSON.stringify(settings));
   }, [selectedVoiceURI, readingMode, rate, highlightEnabled, 
@@ -204,7 +201,6 @@ const App = () => {
         rotation,
         darkMode,
         skipZones,
-        pronunciations: globalSettings.pronunciations,
         lastOpened: Date.now()
       });
       // Try to capture thumbnail of current page
@@ -212,7 +208,7 @@ const App = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [fileId, activePage, scale, rotation, darkMode, skipZones, globalSettings.pronunciations]);
+  }, [fileId, activePage, scale, rotation, darkMode, skipZones]);
 
   // --- Thumbnail Logic ---
   const captureThumbnail = async () => {
@@ -224,40 +220,6 @@ const App = () => {
       }
     } catch (e) { /* page might not be fully rendered yet */ }
   };
-
-  // Use a debounced effect to prevent speech stuttering while typing rules
-    useEffect(() => {
-    if (!isPlayingRef.current) return;
-
-    // We only want to restart if the rules actually changed
-    // The 500ms debounce ensures that if you are typing a rule, 
-    // the speech doesn't restart on every single keystroke.
-    const handler = setTimeout(() => {
-        console.log("Pronunciation rules updated. Restarting speech to apply...");
-        
-        isJumpingRef.current = true;
-        synth.cancel();
-
-        // Small timeout to let the synth engine clear its buffer
-        setTimeout(() => {
-        isJumpingRef.current = false;
-        
-        const tokens = pageTokensMap.current.get(activePage) || [];
-        let startTokenId = activeTokenId;
-        
-        // Re-trigger the appropriate playback loop
-        if (aiConfig.enabled) {
-            playNextSentenceAI(activePage, startTokenId);
-        } else {
-            const idx = tokens.findIndex(t => t.id === startTokenId);
-            const remainingTokens = idx >= 0 ? tokens.slice(idx) : tokens;
-            scheduleNextBatch(activePage, remainingTokens, true);
-        }
-        }, 100);
-    }, 300); // 500ms debounce
-
-    return () => clearTimeout(handler);
-    }, [globalSettings.pronunciations]);
 
   // Sync Zoom Input
   useEffect(() => {
@@ -460,7 +422,7 @@ const App = () => {
         setNumPages(pdfDoc.numPages);
         
         // Restore Settings or Default
-        const meta = existingMeta || { lastPage: 1, scale: 1.5, rotation: 0, darkMode: false, skipZones: [], pronunciations: [] };
+        const meta = existingMeta || { lastPage: 1, scale: 1.5, rotation: 0, darkMode: false, skipZones: [] };
         
         setActivePage(meta.lastPage || 1);
         setJumpInput(String(meta.lastPage || 1));
@@ -470,12 +432,6 @@ const App = () => {
         setRotation(meta.rotation || 0);
         setDarkMode(!!meta.darkMode);
         setSkipZones(meta.skipZones || []);
-
-        // Update globalSettings with the pronunciations from this specific document
-        setGlobalSettings(prev => ({
-            ...prev,
-            pronunciations: meta.pronunciations || []
-        }));
 
         setFitMode('custom');
         setActiveTokenId(null);
@@ -722,9 +678,6 @@ const App = () => {
       }
       // ---------------------------
 
-      // Apply custom pronunciations to the final text
-      textToSpeak = applyCustomPronunciation(textToSpeak, globalSettings.pronunciations);
-
       const utter = new SpeechSynthesisUtterance(textToSpeak);
       utter.rate = rateRef.current;
       const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
@@ -807,11 +760,8 @@ const App = () => {
     let script = "";
     const map = [];
     pool.forEach(token => {
-        const rawText = token.spokenText;
-        if (!rawText) return; 
-
-        // Apply replacement to each token's spoken text
-        const text = applyCustomPronunciation(rawText, globalSettings.pronunciations);
+        const text = token.spokenText;
+        if (!text) return; 
 
         const start = script.length;
         script += text + " ";
@@ -1545,65 +1495,6 @@ const App = () => {
                                     </div>
                                     
                                     <div className="setting-divider"></div>
-
-                                    {/* Custom Pronunciation */}
-                                    <div className="setting-divider"></div>
-                                    <div className="setting-item">
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                            <label style={{ fontWeight: 'bold' }}>Custom Pronunciation</label>
-                                            <button 
-                                                className="icon-btn-ghost" 
-                                                onClick={() => setGlobalSettings(prev => ({
-                                                    ...prev, 
-                                                    pronunciations: [...prev.pronunciations, { id: Date.now(), original: "", target: "", caseSensitive: false }]
-                                                }))}
-                                            >
-                                                <Icons.Plus />
-                                            </button>
-                                        </div>
-
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '160px', overflowY: 'auto' }}>
-                                            {globalSettings.pronunciations.map((rule) => (
-                                                <div key={rule.id} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                                    <input 
-                                                        type="text" placeholder="Original" 
-                                                        value={rule.original}
-                                                        onChange={e => {
-                                                            const next = globalSettings.pronunciations.map(r => r.id === rule.id ? { ...r, original: e.target.value } : r);
-                                                            setGlobalSettings({ ...globalSettings, pronunciations: next });
-                                                        }}
-                                                        style={{ flex: 1, fontSize: '11px', padding: '4px' }}
-                                                    />
-                                                    <span style={{ color: '#71717a' }}>→</span>
-                                                    <input 
-                                                        type="text" placeholder="Spoken" 
-                                                        value={rule.target}
-                                                        onChange={e => {
-                                                            const next = globalSettings.pronunciations.map(r => r.id === rule.id ? { ...r, target: e.target.value } : r);
-                                                            setGlobalSettings({ ...globalSettings, pronunciations: next });
-                                                        }}
-                                                        style={{ flex: 1, fontSize: '11px', padding: '4px' }}
-                                                    />
-                                                    <input 
-                                                        type="checkbox" checked={rule.caseSensitive} title="Case Sensitive"
-                                                        onChange={e => {
-                                                            const next = globalSettings.pronunciations.map(r => r.id === rule.id ? { ...r, caseSensitive: e.target.checked } : r);
-                                                            setGlobalSettings({ ...globalSettings, pronunciations: next });
-                                                        }}
-                                                    />
-                                                    <button 
-                                                        className="icon-btn-ghost" 
-                                                        onClick={() => setGlobalSettings(prev => ({
-                                                            ...prev, 
-                                                            pronunciations: prev.pronunciations.filter(r => r.id !== rule.id)
-                                                        }))}
-                                                    >
-                                                        <Icons.Close style={{ width: '12px' }} />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
                                     
                                     <button onClick={handleDebugExtract} className="menu-btn" title="Generate Sentence Images">
                                         Sentence Segmentation Preview
