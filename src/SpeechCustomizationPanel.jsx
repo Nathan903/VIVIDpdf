@@ -28,15 +28,16 @@ const SpeechCustomizationPanel = ({
     };
 
     return (
-        <div className="settings-popup" style={{ width: '350px', right: '40px', bottom: '60px' }}>
-            <div className="settings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Speech Customization</span>
-                <button className="icon-btn" onClick={onClose} style={{ padding: 0, width: 24, height: 24 }}><Icons.Close /></button>
-            </div>
-            
-            <div style={{ padding: '15px', maxHeight: '400px', overflowY: 'auto' }}>
-                <div style={{ marginBottom: '20px' }}>
-                    <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#e4e4e7' }}>Custom Pronunciation</h4>
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ width: '500px', background: '#27272a', color: '#e4e4e7' }}>
+                <div className="modal-header" style={{ borderBottom: '1px solid #3f3f46' }}>
+                    <h3 style={{ margin: 0 }}>Speech Customization</h3>
+                    <button className="icon-btn" onClick={onClose}><Icons.Close /></button>
+                </div>
+                
+                <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                    <div style={{ marginBottom: '20px' }}>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#e4e4e7' }}>Custom Pronunciation</h4>
                     
                     {customPronunciations.length === 0 ? (
                         <div style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '10px' }}>No custom pronunciations yet.</div>
@@ -133,6 +134,7 @@ const SpeechCustomizationPanel = ({
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 };

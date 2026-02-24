@@ -1074,6 +1074,10 @@ const App = () => {
                     setShowSettings(true); // Ensure settings are visible
                 }
                 break;
+            case 'c': // Customize Speech
+                e.preventDefault();
+                setShowCustomSpeech(prev => !prev);
+                break;
             case 'm': // Mark Skip (Mapped from "M Mark Skip")
                 e.preventDefault();
                 // If playing, pause first
@@ -1144,6 +1148,7 @@ const App = () => {
                               <tr><td><kbd>A</kbd> / <kbd>D</kbd></td><td>Prev / Next Sentence (or Word)</td></tr>
                               <tr><td><kbd>F</kbd></td><td>Toggle Fit Mode</td></tr>
                               <tr><td><kbd>R</kbd></td><td>Switch Reading Mode (Sentence/Word)</td></tr>
+                              <tr><td><kbd>C</kbd></td><td>Toggle Customize Speech</td></tr>
                               <tr><td><kbd>M</kbd></td><td>Toggle Mark Skip Mode</td></tr>
                               <tr><td><kbd>N</kbd></td><td>Toggle Auto-Scroll</td></tr>
                               <tr><td><kbd>Z</kbd></td><td>Toggle Focus Mode (Auto-Hide)</td></tr>
@@ -1155,6 +1160,17 @@ const App = () => {
                   </div>
               </div>
           </div>
+      )}
+
+      {/* CUSTOMIZE SPEECH MODAL */}
+      {showCustomSpeech && (
+          <SpeechCustomizationPanel 
+              speechCustomization={speechCustomization}
+              setSpeechCustomization={setSpeechCustomization}
+              customPronunciations={customPronunciations}
+              setCustomPronunciations={setCustomPronunciations}
+              onClose={() => setShowCustomSpeech(false)}
+          />
       )}
 
       <main className="main-content">
@@ -1333,13 +1349,15 @@ const App = () => {
 
                     {/* RIGHT: Tools & Settings */}
                     <div className="section-right">
-                        <button 
-                            className={`icon-btn ${showCustomSpeech ? 'active' : ''}`} 
-                            onClick={() => setShowCustomSpeech(!showCustomSpeech)} 
-                            title="Customize Speech"
-                        >
-                            <Icons.Speech />
-                        </button>
+                        <div style={{ position: 'relative' }}>
+                            <button 
+                                className={`icon-btn ${showCustomSpeech ? 'active' : ''}`} 
+                                onClick={() => setShowCustomSpeech(!showCustomSpeech)} 
+                                title="Customize Speech (C)"
+                            >
+                                <Icons.Pencil />
+                            </button>
+                        </div>
 
                         <button 
                             className={`icon-btn ${isMarkingMode ? 'active-danger' : ''}`} 
@@ -1550,16 +1568,6 @@ const App = () => {
                                         Sentence Segmentation Preview
                                     </button>
                                 </div>
-                            )}
-
-                            {showCustomSpeech && (
-                                <SpeechCustomizationPanel 
-                                    speechCustomization={speechCustomization}
-                                    setSpeechCustomization={setSpeechCustomization}
-                                    customPronunciations={customPronunciations}
-                                    setCustomPronunciations={setCustomPronunciations}
-                                    onClose={() => setShowCustomSpeech(false)}
-                                />
                             )}
                         </div>
                     </div>
