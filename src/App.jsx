@@ -128,7 +128,9 @@ const App = () => {
   const isPlayingRef = useRef(false); 
   const isJumpingRef = useRef(false); 
   const rateRef = useRef(rate);
-  const autoScrollRef = useRef(autoScroll); 
+  const autoScrollRef = useRef(autoScroll);
+  const customPronunciationsRef = useRef(customPronunciations);
+  const speechCustomizationRef = useRef(speechCustomization);
   const synth = window.speechSynthesis;
   const pageRefs = useRef({}); 
   const viewportRef = useRef(null); 
@@ -151,6 +153,8 @@ const App = () => {
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { rateRef.current = rate; }, [rate]);
   useEffect(() => { autoScrollRef.current = autoScroll; }, [autoScroll]);
+  useEffect(() => { customPronunciationsRef.current = customPronunciations; }, [customPronunciations]);
+  useEffect(() => { speechCustomizationRef.current = speechCustomization; }, [speechCustomization]);
 
   // --- Persistence Effects ---
 
@@ -673,7 +677,7 @@ const App = () => {
       handleSmartScroll(pageNum, firstTokenId);
 
       let textToSpeak = sentenceTokens.map(t => t.spokenText).join(' ');
-      textToSpeak = applySkippingRules(textToSpeak, speechCustomization);
+      textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
 
       // --- AI VISUAL FIX STEP ---
       if (textToSpeak.trim() && pageRefs.current[pageNum]) {
@@ -704,7 +708,7 @@ const App = () => {
       }
       // ---------------------------
 
-      textToSpeak = applyCustomPronunciations(textToSpeak, customPronunciations);
+      textToSpeak = applyCustomPronunciations(textToSpeak, customPronunciationsRef.current);
 
       if (!textToSpeak.trim()) {
           if (info.nextTokenId) {
@@ -800,8 +804,8 @@ const App = () => {
         let text = token.spokenText;
         if (!text) return; 
 
-        text = applySkippingRules(text, speechCustomization);
-        text = applyCustomPronunciations(text, customPronunciations);
+        text = applySkippingRules(text, speechCustomizationRef.current);
+        text = applyCustomPronunciations(text, customPronunciationsRef.current);
         
         if (!text.trim()) return;
 
