@@ -1117,10 +1117,19 @@ const App = () => {
                 break;
             case 'v':
                 e.preventDefault();
-                if (voiceSelectRef.current) {
-                    voiceSelectRef.current.focus();
-                    setShowSettings(true); // Ensure settings are visible
-                }
+                setShowSettings(true); // Ensure settings are visible first
+                setTimeout(() => {
+                    if (voiceSelectRef.current) {
+                        voiceSelectRef.current.focus();
+                        try {
+                            if (typeof voiceSelectRef.current.showPicker === 'function') {
+                                voiceSelectRef.current.showPicker();
+                            }
+                        } catch (err) {
+                            console.warn('Could not open voice picker programmatically', err);
+                        }
+                    }
+                }, 10);
                 break;
             case 'c': // Customize Speech
                 e.preventDefault();
