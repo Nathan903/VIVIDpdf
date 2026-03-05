@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Icons } from './Icons';
 
 const SpeechCustomizationPanel = ({ 
@@ -8,6 +8,30 @@ const SpeechCustomizationPanel = ({
     setCustomPronunciations,
     onClose
 }) => {
+    // Track which indices have duplicate patterns
+    // If both rules are case-sensitive, exact match only.
+    // If either is case-insensitive, compare case-insensitively (they'd overlap at runtime).
+    const duplicateIndices = useMemo(() => {
+        const dupes = new Set();
+        for (let i = 0; i < customPronunciations.length; i++) {
+            const pi = customPronunciations[i].pattern.trim();
+            if (!pi) continue;
+            for (let j = i + 1; j < customPronunciations.length; j++) {
+                const pj = customPronunciations[j].pattern.trim();
+                if (!pj) continue;
+                const bothCaseSensitive = customPronunciations[i].caseSensitive && customPronunciations[j].caseSensitive;
+                const match = bothCaseSensitive
+                    ? pi === pj
+                    : pi.toLowerCase() === pj.toLowerCase();
+                if (match) {
+                    dupes.add(i);
+                    dupes.add(j);
+                }
+            }
+        }
+        return dupes;
+    }, [customPronunciations]);
+
     const handleAddPronunciation = () => {
         setCustomPronunciations([
             ...customPronunciations, 
@@ -50,7 +74,7 @@ const SpeechCustomizationPanel = ({
                                         placeholder="Original text" 
                                         value={rule.pattern} 
                                         onChange={(e) => handleUpdatePronunciation(index, 'pattern', e.target.value)}
-                                        style={{ flex: 1, minWidth: '80px', padding: '4px', fontSize: '12px', border: '1px solid #3f3f46', borderRadius: '4px', background: '#18181b', color: '#e4e4e7' }}
+                                        style={{ flex: 1, minWidth: '80px', padding: '4px', fontSize: '12px', border: `1px solid ${duplicateIndices.has(index) ? '#ef4444' : '#3f3f46'}`, borderRadius: '4px', background: '#18181b', color: '#e4e4e7' }}
                                     />
                                     <span style={{ color: '#a1a1aa' }}>→</span>
                                     <input 
@@ -60,6 +84,9 @@ const SpeechCustomizationPanel = ({
                                         onChange={(e) => handleUpdatePronunciation(index, 'replacement', e.target.value)}
                                         style={{ flex: 1, minWidth: '80px', padding: '4px', fontSize: '12px', border: '1px solid #3f3f46', borderRadius: '4px', background: '#18181b', color: '#e4e4e7' }}
                                     />
+                                    {duplicateIndices.has(index) && (
+                                        <div style={{ width: '100%', fontSize: '11px', color: '#ef4444', marginTop: '2px' }}>Duplicate word — only the first entry will be used</div>
+                                    )}
                                     <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', marginTop: '4px' }}>
                                         <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#a1a1aa' }}>
                                             <input 
