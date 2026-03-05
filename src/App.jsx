@@ -29,7 +29,8 @@ const DEFAULT_GLOBALS = {
     skipUrls: false,
     skipSquare: false,
     skipParens: false,
-    skipCurly: false
+    skipCurly: false,
+    visualIndicator: false
   },
   customPronunciations: []
 };
@@ -840,7 +841,7 @@ const App = () => {
             const tStart = rawPos;
             const tEnd = rawPos + rawTok.length;
             rawPos = tEnd + 1;
-            const isSkipped = removedRanges.some(([rStart, rEnd]) => tStart >= rStart && tEnd <= rEnd);
+            const isSkipped = removedRanges.some(([rStart, rEnd]) => tStart >= rStart && tStart < rEnd);
             tokenSkipped.push(isSkipped);
         }
     }
@@ -1308,6 +1309,8 @@ const App = () => {
                                 highlightEnabled={highlightEnabled}
                                 highlightColor={highlightColor}
                                 highlightOpacity={highlightOpacity}
+                                speechCustomization={speechCustomization}
+                                customPronunciations={customPronunciations}
                             />
                         ))}
                     </div>

@@ -160,6 +160,21 @@ const SpeechCustomizationPanel = ({
                         These rules apply to all spoken speech.
                     </div>
                 </div>
+
+                <div>
+                    <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#e4e4e7' }}>Visual Indicator</h4>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: '#e4e4e7' }}>
+                        <input 
+                            type="checkbox" 
+                            checked={speechCustomization.visualIndicator} 
+                            onChange={(e) => setSpeechCustomization({...speechCustomization, visualIndicator: e.target.checked})}
+                        />
+                        Dim affected words in viewer
+                    </label>
+                    <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '8px' }}>
+                        Deemphasizes words that will be skipped or replaced during speech.
+                    </div>
+                </div>
             </div>
         </div>
         </div>

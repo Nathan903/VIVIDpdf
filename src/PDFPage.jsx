@@ -25,7 +25,9 @@ const PDFPage = forwardRef(({
   onRemoveSkipZone,
   highlightEnabled = true,
   highlightColor = '#ffeb3b',
-  highlightOpacity = 0.4
+  highlightOpacity = 0.4,
+  speechCustomization = {},
+  customPronunciations = []
 }, ref) => {
   const [isVisible, setIsVisible] = useState(false);
   const [pageDimensions, setPageDimensions] = useState(null); 
@@ -45,6 +47,7 @@ const PDFPage = forwardRef(({
   const allTokensRef = useRef([]); // NEW: Store all tokens before filtering
   const spanMapRef = useRef(new Map());
   const sentenceGroupsRef = useRef([]);
+  const blackoutOverlaysRef = useRef([]);
 
   // --- Scroll Visibility Observer ---
   useEffect(() => {
@@ -235,7 +238,49 @@ const PDFPage = forwardRef(({
     // (Optimization to avoid double work, though isRendering might toggle too fast)
 
     const validTokens = [];
-    spanMapRef.current.clear(); 
+    spanMapRef.current.clear();
+
+    // Clean up previous blackout overlays
+    blackoutOverlaysRef.current.forEach(el => el.remove());
+    blackoutOverlaysRef.current = [];
+    const affectedTokens = [];
+
+    // Pre-compute which tokens are inside bracket-skipped regions
+    // by scanning the full joined text for bracket matches
+    const bracketAffected = new Set();
+    if (speechCustomization.visualIndicator) {
+        const allTexts = allTokensRef.current.map(t => t.text || '');
+        const joined = allTexts.join(' ');
+        const patterns = [];
+        if (speechCustomization.skipSquare) patterns.push(/\[[^\]]*\]/g);
+        if (speechCustomization.skipParens) patterns.push(/\([^)]*\)/g);
+        if (speechCustomization.skipCurly) patterns.push(/\{[^}]*\}/g);
+
+        if (patterns.length > 0) {
+            // Build token position map in joined string
+            const tokenRanges = [];
+            let pos = 0;
+            for (let i = 0; i < allTexts.length; i++) {
+                const start = pos;
+                const end = pos + allTexts[i].length;
+                tokenRanges.push([start, end]);
+                pos = end + 1; // +1 for space
+            }
+
+            for (const pat of patterns) {
+                let m;
+                while ((m = pat.exec(joined)) !== null) {
+                    const mStart = m.index;
+                    const mEnd = m.index + m[0].length;
+                    for (let i = 0; i < tokenRanges.length; i++) {
+                        if (tokenRanges[i][0] >= mStart && tokenRanges[i][0] < mEnd) {
+                            bracketAffected.add(allTokensRef.current[i].id);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     allTokensRef.current.forEach(t => {
         // Calculate intersection with skip zones
@@ -249,6 +294,29 @@ const PDFPage = forwardRef(({
             return isTokenInZone(t.bounds, zonePx);
         });
 
+        // Check if token is affected by speech rules (for visual indicator)
+        let isSpeechAffected = false;
+        if (!isSkipped && speechCustomization.visualIndicator) {
+            const word = t.text || '';
+            // Check skip rules (URL per-token, brackets via pre-computed set)
+            if (speechCustomization.skipUrls && /^(https?:\/\/|www\.)/i.test(word)) {
+                isSpeechAffected = true;
+            }
+            if (!isSpeechAffected && bracketAffected.has(t.id)) {
+                isSpeechAffected = true;
+            }
+            // Check pronunciation replacements
+            if (!isSpeechAffected && customPronunciations.length > 0) {
+                isSpeechAffected = customPronunciations.some(rule => {
+                    const pat = (rule.pattern || '').trim();
+                    if (!pat) return false;
+                    const escaped = pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const re = new RegExp(escaped, rule.caseSensitive ? '' : 'i');
+                    return re.test(word);
+                });
+            }
+        }
+
         // Apply visual styles directly
         t.parts.forEach(p => {
             if (isSkipped) {
@@ -259,6 +327,11 @@ const PDFPage = forwardRef(({
                 p.spanElement.style.textDecoration = 'none';
             }
         });
+
+        // Track affected tokens for blackout overlays
+        if (isSpeechAffected) {
+            affectedTokens.push(t);
+        }
 
         if (!isSkipped) {
             // Add to map for interaction
@@ -279,7 +352,27 @@ const PDFPage = forwardRef(({
     }
     registerPageTokens(pageNum, validTokens);
 
-  }, [skipZones, pageDimensions, pageNum, registerPageTokens, readingMode]);
+    // Create deemphasize overlays for speech-affected tokens
+    if (affectedTokens.length > 0 && containerRef.current) {
+        affectedTokens.forEach(t => {
+            t.parts.forEach(p => {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'absolute';
+                overlay.style.left = `${p.bounds.left}px`;
+                overlay.style.top = `${p.bounds.top}px`;
+                overlay.style.width = `${p.bounds.width}px`;
+                overlay.style.height = `${p.bounds.height}px`;
+                overlay.style.backgroundColor = 'rgba(255,255,255,0.7)';
+                overlay.style.pointerEvents = 'none';
+                overlay.style.zIndex = '3';
+                overlay.style.borderRadius = '2px';
+                containerRef.current.appendChild(overlay);
+                blackoutOverlaysRef.current.push(overlay);
+            });
+        });
+    }
+
+  }, [skipZones, pageDimensions, pageNum, registerPageTokens, readingMode, speechCustomization, customPronunciations]);
 
   // --- NEW: Effect to trigger skip zone updates without full re-render ---
   useEffect(() => {
