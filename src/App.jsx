@@ -798,16 +798,59 @@ const App = () => {
         }
     }
 
+    // Apply skipping rules on the full joined text so bracket pairs that span
+    // multiple tokens (e.g. "(hello world)") are matched correctly, then split
+    // back to per-token pieces for the character map.
+    const rawTokenTexts = pool.map(t => t.spokenText || '');
+    const joinedRaw = rawTokenTexts.join(' ');
+
+    // Build per-token pronunciation-corrected texts (skipping is handled separately below)
+    const cleanedTokenTexts = [];
+    {
+        for (let ti = 0; ti < rawTokenTexts.length; ti++) {
+            let tokText = rawTokenTexts[ti];
+            tokText = applyCustomPronunciations(tokText, customPronunciationsRef.current);
+            cleanedTokenTexts.push(tokText);
+        }
+    }
+
+    // Now figure out which tokens were removed by skipping rules.
+    // Re-apply skipping rules to identify removed regions in the raw joined text,
+    // then mark tokens that overlap with those regions.
+    const removedRanges = [];
+    const skippingPatterns = [];
+    if (speechCustomizationRef.current.skipUrls) skippingPatterns.push(/https?:\/\/\S+|www\.\S+/gi);
+    if (speechCustomizationRef.current.skipSquare) skippingPatterns.push(/\[[^\]]*\]/g);
+    if (speechCustomizationRef.current.skipParens) skippingPatterns.push(/\([^)]*\)/g);
+    if (speechCustomizationRef.current.skipCurly) skippingPatterns.push(/\{[^}]*\}/g);
+
+    for (const pat of skippingPatterns) {
+        let m;
+        while ((m = pat.exec(joinedRaw)) !== null) {
+            removedRanges.push([m.index, m.index + m[0].length]);
+        }
+    }
+
+    // For each token, check if it's fully inside a removed range
+    const tokenSkipped = [];
+    {
+        let rawPos = 0;
+        for (let ti = 0; ti < rawTokenTexts.length; ti++) {
+            const rawTok = rawTokenTexts[ti];
+            const tStart = rawPos;
+            const tEnd = rawPos + rawTok.length;
+            rawPos = tEnd + 1;
+            const isSkipped = removedRanges.some(([rStart, rEnd]) => tStart >= rStart && tEnd <= rEnd);
+            tokenSkipped.push(isSkipped);
+        }
+    }
+
     let script = "";
     const map = [];
-    pool.forEach(token => {
-        let text = token.spokenText;
-        if (!text) return; 
-
-        text = applySkippingRules(text, speechCustomizationRef.current);
-        text = applyCustomPronunciations(text, customPronunciationsRef.current);
-        
-        if (!text.trim()) return;
+    pool.forEach((token, ti) => {
+        if (tokenSkipped[ti]) return;
+        let text = cleanedTokenTexts[ti];
+        if (!text || !text.trim()) return;
 
         const start = script.length;
         script += text + " ";
