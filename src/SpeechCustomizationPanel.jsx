@@ -35,7 +35,7 @@ const SpeechCustomizationPanel = ({
     const handleAddPronunciation = () => {
         setCustomPronunciations([
             ...customPronunciations, 
-            { pattern: '', replacement: '', caseSensitive: false }
+            { pattern: '', replacement: '', caseSensitive: false, matchType: 'exact' }
         ]);
     };
 
@@ -87,7 +87,17 @@ const SpeechCustomizationPanel = ({
                                     {duplicateIndices.has(index) && (
                                         <div style={{ width: '100%', fontSize: '11px', color: '#ef4444', marginTop: '2px' }}>Duplicate word — only the first entry will be used</div>
                                     )}
-                                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', marginTop: '4px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', marginTop: '4px', gap: '6px' }}>
+                                        <select
+                                            value={rule.matchType || 'exact'}
+                                            onChange={(e) => handleUpdatePronunciation(index, 'matchType', e.target.value)}
+                                            style={{ padding: '2px 4px', fontSize: '11px', border: '1px solid #3f3f46', borderRadius: '4px', background: '#18181b', color: '#e4e4e7', cursor: 'pointer' }}
+                                        >
+                                            <option value="exact">Exact word</option>
+                                            <option value="contains">Contains</option>
+                                            <option value="startsWith">Starts with</option>
+                                            <option value="endsWith">Ends with</option>
+                                        </select>
                                         <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#a1a1aa' }}>
                                             <input 
                                                 type="checkbox" 

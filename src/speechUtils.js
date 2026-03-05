@@ -17,16 +17,32 @@ export const applySkippingRules = (text, speechCustomization) => {
   return result;
 };
 
+export const buildPronunciationRegex = (rule, globalFlag = true) => {
+  const pattern = (rule.pattern || '').trim();
+  if (!pattern) return null;
+  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const matchType = rule.matchType || 'exact';
+  let expr;
+  if (matchType === 'exact') {
+    expr = `\\b${escaped}\\b`;
+  } else if (matchType === 'startsWith') {
+    expr = `\\b${escaped}`;
+  } else if (matchType === 'endsWith') {
+    expr = `${escaped}\\b`;
+  } else {
+    expr = escaped;
+  }
+  const flags = (rule.caseSensitive ? '' : 'i') + (globalFlag ? 'g' : '');
+  return new RegExp(expr, flags);
+};
+
 export const applyCustomPronunciations = (text, customPronunciations) => {
   if (!text || !customPronunciations.length) return text;
   let result = text;
   customPronunciations.forEach(rule => {
-    const pattern = (rule.pattern || '').trim();
-    if (!pattern) return;
+    const re = buildPronunciationRegex(rule, true);
+    if (!re) return;
     const replacement = rule.replacement || '';
-    const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const flags = rule.caseSensitive ? 'g' : 'gi';
-    const re = new RegExp(escaped, flags);
     result = result.replace(re, replacement);
   });
   return result;

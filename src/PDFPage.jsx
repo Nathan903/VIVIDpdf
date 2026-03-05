@@ -8,6 +8,7 @@ import {
   mergeRawTokens, 
   generateDebugImagesFromCanvas 
 } from './parsing';
+import { buildPronunciationRegex } from './speechUtils';
 
 const PDFPage = forwardRef(({ 
   pdfDoc, 
@@ -308,10 +309,8 @@ const PDFPage = forwardRef(({
             // Check pronunciation replacements
             if (!isSpeechAffected && customPronunciations.length > 0) {
                 isSpeechAffected = customPronunciations.some(rule => {
-                    const pat = (rule.pattern || '').trim();
-                    if (!pat) return false;
-                    const escaped = pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const re = new RegExp(escaped, rule.caseSensitive ? '' : 'i');
+                    const re = buildPronunciationRegex(rule, false);
+                    if (!re) return false;
                     return re.test(word);
                 });
             }
