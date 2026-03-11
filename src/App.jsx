@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
-import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord } from './db';
+import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord, getFileRecord, getStorageInfo, deleteBlobs } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage } from './aiService'; // IMPORT AI SERVICE
 import { applySkippingRules, applyCustomPronunciations } from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
@@ -15,6 +15,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // --- Local Storage Keys ---
 const LS_GLOBALS = 'pdf_reader_globals';
 const LS_AI_CONFIG = 'pdf_reader_ai_config'; // New Key
+const LS_STORAGE_SETTINGS = 'pdf_reader_storage_config';
 
 const DEFAULT_GLOBALS = {
   voiceURI: "",
@@ -43,6 +44,12 @@ const DEFAULT_AI_CONFIG = {
   enabled: false
 };
 
+const DEFAULT_STORAGE_SETTINGS = {
+  limitGB: 2,
+  retentionDays: -1, // -1 means indefinitely
+  autoMetadataOnly: false
+};
+
 const App = () => {
   // --- Global Settings (Init from LocalStorage) ---
   const [globalSettings, setGlobalSettings] = useState(() => {
@@ -64,6 +71,24 @@ const App = () => {
     }
   });
 
+  const [storageSettings, setStorageSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_STORAGE_SETTINGS);
+      if (saved) {
+        let parsed = JSON.parse(saved);
+        if (parsed.limitGB < 0 || parsed.limitGB > 500) parsed.limitGB = 2; // validate limits
+        return { ...DEFAULT_STORAGE_SETTINGS, ...parsed };
+      }
+      return DEFAULT_STORAGE_SETTINGS;
+    } catch (e) {
+      return DEFAULT_STORAGE_SETTINGS;
+    }
+  });
+
+  const [storageUsed, setStorageUsed] = useState({ usedBytes: 0, records: [] });
+  const [showHomeSettings, setShowHomeSettings] = useState(false);
+  const [rememberMetadataOnly, setRememberMetadataOnly] = useState(false);
+
   const [totalCost, setTotalCost] = useState(getStoredCost());
   const [ocrLoading, setOcrLoading] = useState(false); // Spinner for AI processing
 
@@ -71,6 +96,11 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem(LS_AI_CONFIG, JSON.stringify(aiConfig));
   }, [aiConfig]);
+
+  // Save Storage Settings on change
+  useEffect(() => {
+    localStorage.setItem(LS_STORAGE_SETTINGS, JSON.stringify(storageSettings));
+  }, [storageSettings]);
 
 
   // state for auto-hide
@@ -102,6 +132,10 @@ const App = () => {
   const [activePage, setActivePage] = useState(1);
   const [jumpInput, setJumpInput] = useState("1");
   const [isInputFocused, setIsInputFocused] = useState(false);
+
+  // Storage states
+  const [limitPrompt, setLimitPrompt] = useState(null);
+  const [expectingReupload, setExpectingReupload] = useState(null);
 
   // Zoom / View
   const [scale, setScale] = useState(1.5);
@@ -218,8 +252,33 @@ const App = () => {
     try {
       const files = await getRecentFiles();
       setRecentFiles(files);
+      const info = await getStorageInfo();
+      setStorageUsed(info);
+
+      // Handle retention auto-delete
+      if (storageSettings.retentionDays > 0) {
+        const now = Date.now();
+        const cutoff = now - (storageSettings.retentionDays * 24 * 60 * 60 * 1000);
+        const toDeleteIds = info.records
+            .filter(r => r.hasBlob && r.lastOpened < cutoff)
+            .map(r => r.id);
+        
+        if (toDeleteIds.length > 0) {
+           await deleteBlobs(toDeleteIds);
+           // Refresh storage info after deletion
+           const updatedInfo = await getStorageInfo();
+           setStorageUsed(updatedInfo);
+        }
+      }
     } catch (e) { console.error("Failed to load recents", e); }
   };
+
+  // Run auto-delete checks when settings change
+  useEffect(() => {
+    if (recentFiles.length > 0) {
+      loadRecentFilesList();
+    }
+  }, [storageSettings.retentionDays]);
 
   // 3. Save PDF-Specific State (Debounced)
   useEffect(() => {
@@ -424,6 +483,8 @@ const App = () => {
 
   const loadFromBlob = async (blob, existingMeta = null) => {
     setIsLoading(true); 
+    // Yield to let React render the spinner before heavy synchronous ArrayBuffer operations
+    await new Promise(r => setTimeout(r, 10));
     try {
         if (blob.name) { document.title = blob.name;}
         const data = await blob.arrayBuffer();
@@ -434,20 +495,22 @@ const App = () => {
         const fid = existingMeta ? existingMeta.id : getFileId(blob);
         setFileId(fid);
 
-        // Save new record if it doesn't exist
-        if (!existingMeta) {
-          await saveFileRecord({
-            id: fid,
-            name: blob.name,
-            blob: blob,
-            lastOpened: Date.now(),
-            lastPage: 1,
-            scale: 1.5,
-            rotation: 0,
-            darkMode: false,
-            skipZones: []
-          });
-        }
+        // Always update the full record with blob because we might be upgrading from metadata-only
+        await saveFileRecord({
+          id: fid,
+          name: blob.name,
+          blob: blob,
+          lastOpened: Date.now(),
+          lastPage: existingMeta ? existingMeta.lastPage : 1,
+          scale: existingMeta ? existingMeta.scale : 1.5,
+          rotation: existingMeta ? existingMeta.rotation : 0,
+          darkMode: existingMeta ? !!existingMeta.darkMode : false,
+          skipZones: existingMeta ? existingMeta.skipZones : [],
+          ...(existingMeta || {})
+        });
+        
+        // Refresh recent files + storage info
+        loadRecentFilesList();
 
         setPdf(pdfDoc);
         setNumPages(pdfDoc.numPages);
@@ -486,8 +549,105 @@ const App = () => {
     }
   };
 
-  const handleRecentClick = (fileRecord) => {
-    loadFromBlob(fileRecord.blob, fileRecord);
+  const loadMetadataOnly = (file, existingMeta = null) => {
+      setLimitPrompt(null);
+      const fid = existingMeta ? existingMeta.id : getFileId(file);
+
+      saveFileRecord({
+        id: fid,
+        name: file.name,
+        lastOpened: Date.now(),
+        lastPage: 1, scale: 1.5, rotation: 0, darkMode: false, skipZones: [],
+        ...(existingMeta || {})
+      }).then(() => {
+          const noBlobLoader = async () => {
+             setFileId(fid);
+             setIsLoading(true);
+             // Yield to let React render the spinner before heavy synchronous ArrayBuffer operations
+             await new Promise(r => setTimeout(r, 10));
+             try {
+                const data = await file.arrayBuffer();
+                const loadingTask = pdfjsLib.getDocument({ data });
+                const pdfDoc = await loadingTask.promise;
+                setPdf(pdfDoc);
+                setNumPages(pdfDoc.numPages);
+                
+                const meta = existingMeta || { lastPage: 1, scale: 1.5, rotation: 0, darkMode: false, skipZones: [] };
+                setActivePage(meta.lastPage || 1);
+                setJumpInput(String(meta.lastPage || 1));
+                setScale(meta.scale || 1.5);
+                setRotation(meta.rotation || 0);
+                setDarkMode(!!meta.darkMode);
+                setSkipZones(meta.skipZones || []);
+                setFitMode('custom');
+                setActiveTokenId(null);
+                setIsPlaying(false);
+                pageTokensMap.current.clear();
+                waitingForPageRef.current = null;
+                setDebugImages([]);
+                synth.cancel();
+                setTimeout(() => performJump(meta.lastPage || 1, pdfDoc), 300);
+             } finally {
+                 setIsLoading(false);
+             }
+          };
+          noBlobLoader();
+      });
+  };
+
+  const handleUploadAttempt = async (file, existingMeta = null) => {
+       const info = await getStorageInfo();
+       const limitBytes = storageSettings.limitGB * 1024 * 1024 * 1024;
+       
+       const fid = existingMeta ? existingMeta.id : getFileId(file);
+       const isReplacing = info.records.find(r => r.id === fid)?.hasBlob;
+
+       const alreadySavedBytes = isReplacing ? file.size : 0; // approximation since file.size is same for same id
+       
+       if (info.usedBytes + file.size - alreadySavedBytes > limitBytes) {
+            if (storageSettings.autoMetadataOnly) {
+                loadMetadataOnly(file, existingMeta);
+                return;
+            }
+
+            const requiredSpace = (info.usedBytes + file.size - alreadySavedBytes) - limitBytes;
+            let availableToClear = 0;
+            for (let i = info.records.length - 1; i >= 0; i--) {
+                let r = info.records[i];
+                if (r.hasBlob && r.id !== fid) {
+                    availableToClear += r.blobSize || 0;
+                }
+            }
+            
+            setLimitPrompt({
+                file: file,
+                existingMeta: existingMeta,
+                requiredSpace: requiredSpace,
+                info: info,
+                canAutoDelete: availableToClear >= requiredSpace
+            });
+            return;
+       }
+       
+       loadFromBlob(file, existingMeta);
+  };
+
+  const handleRecentClick = async (fileRecord) => {
+    // Check if we have the blob
+    setIsLoading(true);
+    let fullRecord;
+    try {
+      fullRecord = await getFileRecord(fileRecord.id);
+    } catch (e) { console.error("Failed to read full record", e); }
+    setIsLoading(false);
+
+    if (fullRecord && fullRecord.blob) {
+      loadFromBlob(fullRecord.blob, fileRecord);
+    } else {
+      // Prompt to reupload directly
+      setExpectingReupload(fileRecord);
+      if (fileInputRef.current) fileInputRef.current.click();
+    }
   };
 
   const handleDeleteRecent = async (e, fileId) => {
@@ -495,6 +655,8 @@ const App = () => {
     try {
       await deleteFileRecord(fileId);
       setRecentFiles(prev => prev.filter(f => f.id !== fileId));
+      const updatedInfo = await getStorageInfo();
+      setStorageUsed(updatedInfo);
     } catch (err) {
       console.error("Failed to delete record", err);
     }
@@ -502,7 +664,24 @@ const App = () => {
 
   const onFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) loadFromBlob(file);
+    if (!file) return;
+
+    if (expectingReupload) {
+        if (file.name !== expectingReupload.name) {
+             alert(`Warning: Expected to re-upload "${expectingReupload.name}", but selected "${file.name}".`);
+             setExpectingReupload(null);
+             // proceed as new file
+             handleUploadAttempt(file, null);
+             return;
+        } else {
+             // Match! Load it with old meta.
+             const meta = expectingReupload;
+             setExpectingReupload(null);
+             handleUploadAttempt(file, meta);
+             return;
+        }
+    }
+    handleUploadAttempt(file, null);
   };
 
   const handleDragOver = (e) => {
@@ -521,7 +700,8 @@ const App = () => {
     setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files && files.length > 0 && files[0].type === "application/pdf") {
-        loadFromBlob(files[0]);
+        handleUploadAttempt(files[0], expectingReupload ? expectingReupload : null);
+        setExpectingReupload(null);
     } else {
         alert("Please drop a valid PDF file.");
     }
@@ -1232,6 +1412,206 @@ const App = () => {
           />
       )}
 
+      {/* STORAGE SETTINGS MODAL */}
+      {showHomeSettings && (
+          <div className="modal-overlay" onClick={() => setShowHomeSettings(false)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                  <div className="modal-header">
+                      <h3>Storage Settings</h3>
+                      <button className="icon-btn" onClick={() => setShowHomeSettings(false)}><Icons.Close /></button>
+                  </div>
+                  <div className="modal-body">
+                      <div className="setting-item" style={{display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px'}}>
+                          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                              <label>Storage Limit (GB)</label>
+                              <span className="value-badge">{(storageUsed.usedBytes / (1024*1024*1024)).toFixed(2)} GB / {storageSettings.limitGB} GB used</span>
+                          </div>
+                          <div style={{ width: '100%', height: '8px', background: '#3f3f46', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ 
+                                  height: '100%', 
+                                  background: (storageUsed.usedBytes / (storageSettings.limitGB * 1024 * 1024 * 1024)) > 0.9 ? '#ef4444' : '#3b82f6', 
+                                  width: `${Math.min(100, (storageUsed.usedBytes / (storageSettings.limitGB * 1024 * 1024 * 1024)) * 100)}%`,
+                                  transition: 'width 0.3s ease'
+                              }} />
+                          </div>
+                          <input 
+                              type="number"  
+                              min="0" max="500" step="0.5" 
+                              value={storageSettings.limitGB} 
+                              onChange={e => {
+                                  let valStr = e.target.value;
+                                  if (valStr === '') {
+                                      setStorageSettings({...storageSettings, limitGB: ''});
+                                      return;
+                                  }
+                                  let val = parseFloat(valStr);
+                                  if (isNaN(val)) return;
+                                  if (val < 0) val = 0;
+                                  if (val > 500) { alert("Max limit is 500 GB"); val = 500; }
+                                  setStorageSettings({...storageSettings, limitGB: val});
+                              }}
+                              style={{padding: '8px', borderRadius: '4px', border: '1px solid #3f3f46', background: '#27272a', color: '#e4e4e7', fontSize: '14px', width: '100px'}}
+                          />
+                      </div>
+                      <div className="setting-item" style={{display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px', marginTop: '15px'}}>
+                          <label>Auto-delete PDF files after:</label>
+                          <select 
+                              value={storageSettings.retentionDays}
+                              onChange={e => setStorageSettings({...storageSettings, retentionDays: parseInt(e.target.value)})}
+                              style={{padding: '8px', borderRadius: '4px', border: '1px solid #3f3f46', background: '#27272a', color: '#e4e4e7', fontSize: '14px'}}
+                          >
+                              <option value="-1">Keep indefinitely</option>
+                              <option value="7">7 Days</option>
+                              <option value="30">30 Days</option>
+                              <option value="90">90 Days</option>
+                              <option value="365">1 Year</option>
+                          </select>
+                      </div>
+                      
+                      <div className="setting-item" style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: '15px'}}>
+                          <label>Auto-Proceed with Metadata-Only when full</label>
+                          <input 
+                              type="checkbox" 
+                              checked={storageSettings.autoMetadataOnly} 
+                              onChange={e => setStorageSettings({...storageSettings, autoMetadataOnly: e.target.checked})} 
+                          />
+                      </div>
+
+                      {storageSettings.limitGB * 1024 * 1024 * 1024 < storageUsed.usedBytes && (
+                          <div style={{marginTop: '20px', padding: '15px', background: 'rgba(234, 179, 8, 0.1)', color: '#fcd34d', borderRadius: '6px', border: '1px solid rgba(234, 179, 8, 0.2)'}}>
+                              <strong>Warning:</strong> Current limit ({storageSettings.limitGB} GB) is lower than used storage.
+                              <div style={{marginTop: '10px'}}>
+                                  <button onClick={async () => {
+                                      let requiredSpace = storageUsed.usedBytes - (storageSettings.limitGB * 1024 * 1024 * 1024);
+                                      let toDeleteIds = [];
+                                      let clearedSpace = 0;
+                                      for (let i = storageUsed.records.length - 1; i >= 0; i--) {
+                                          let r = storageUsed.records[i];
+                                          if (r.hasBlob) {
+                                              let rFull = await getFileRecord(r.id);
+                                              if (rFull && rFull.blob) {
+                                                  clearedSpace += rFull.blob.size;
+                                                  toDeleteIds.push(r.id);
+                                              }
+                                          }
+                                          if (clearedSpace >= requiredSpace) break;
+                                      }
+                                      if (toDeleteIds.length > 0) {
+                                          await deleteBlobs(toDeleteIds);
+                                          const info = await getStorageInfo();
+                                          setStorageUsed(info);
+                                          alert(`Deleted blobs for ${toDeleteIds.length} oldest PDFs. History retained.`);
+                                      } else {
+                                          alert("No blobs left to delete.");
+                                      }
+                                  }} className="menu-btn" style={{background: '#f59e0b', color: '#111', fontWeight: 'bold', border: 'none', marginTop: '10px'}}>
+                                      Clear Oldest Blobs Now
+                                  </button>
+                              </div>
+                          </div>
+                      )}
+
+                      <div className="setting-item" style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #3f3f46'}}>
+                          <button onClick={async () => {
+                              if (window.confirm("Are you sure you want to clear ALL PDF file contents? This will leave your history metadata intact, but you will need to re-upload PDFs to read them again.")) {
+                                  const allIds = storageUsed.records.filter(r => r.hasBlob).map(r => r.id);
+                                  if (allIds.length > 0) {
+                                      await deleteBlobs(allIds);
+                                      const info = await getStorageInfo();
+                                      setStorageUsed(info);
+                                      alert(`Cleared ${allIds.length} PDF contents successfully.`);
+                                  } else {
+                                      alert("No PDF contents to clear.");
+                                  }
+                              }
+                          }} className="menu-btn" style={{background: '#ef4444', color: '#fff', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                              <Icons.Trash style={{marginRight: '8px', width: '16px', height: '16px'}}/>
+                              Clear All PDF Contents
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* LIMIT EXCEEDED PROMPT */}
+      {limitPrompt && (
+          <div className="modal-overlay" style={{zIndex: 10001}}>
+              <div className="modal-content">
+                  <div className="modal-header">
+                      <h3 style={{color: '#ef4444', margin: 0}}>Storage Limit Exceeded</h3>
+                      <button className="icon-btn" onClick={() => setLimitPrompt(null)}><Icons.Close /></button>
+                  </div>
+                  <div className="modal-body" style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                      <p>Your PDF storage exceeds the local {storageSettings.limitGB} GB limit.</p>
+                      
+                      <button onClick={() => {
+                          setShowHomeSettings(true);
+                          setLimitPrompt(null);
+                      }} className="menu-btn">
+                          a) Increase Storage Limit
+                      </button>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                          <button onClick={() => {
+                              if (rememberMetadataOnly) {
+                                  setStorageSettings({ ...storageSettings, autoMetadataOnly: true });
+                              }
+                              loadMetadataOnly(limitPrompt.file, limitPrompt.existingMeta);
+                          }} className="menu-btn" style={{ flex: 1, margin: 0 }}>
+                              b) Proceed (Metadata Only)
+                          </button>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                              <input 
+                                  type="checkbox" 
+                                  id="rememberChoice" 
+                                  checked={rememberMetadataOnly} 
+                                  onChange={e => setRememberMetadataOnly(e.target.checked)} 
+                              />
+                              <label htmlFor="rememberChoice" style={{ fontSize: '13px', color: '#e4e4e7', cursor: 'pointer', userSelect: 'none' }}>Remember my choice</label>
+                          </div>
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: '#a1a1aa', textAlign: 'center', marginTop: '-5px', padding: '0 10px' }}>
+                          File will only be available this session. You will have to re-upload when reading in the future.
+                      </div>
+
+                      {limitPrompt.canAutoDelete && (
+                          <button onClick={async () => {
+                              let requiredSpace = limitPrompt.requiredSpace;
+                              let toDeleteIds = [];
+                              let clearedSpace = 0;
+                              for (let i = limitPrompt.info.records.length - 1; i >= 0; i--) {
+                                  let r = limitPrompt.info.records[i];
+                                  if (r.hasBlob) {
+                                      let rFull = await getFileRecord(r.id);
+                                      if (rFull && rFull.blob) {
+                                          clearedSpace += rFull.blob.size;
+                                          toDeleteIds.push(r.id);
+                                      }
+                                  }
+                                  if (clearedSpace >= requiredSpace) break;
+                              }
+                              
+                              if (clearedSpace >= requiredSpace) {
+                                  await deleteBlobs(toDeleteIds);
+                                  alert(`Deleted blobs for ${toDeleteIds.length} oldest PDFs to clear ${Math.ceil(clearedSpace/1024/1024)} MB. History retained.`);
+                                  setLimitPrompt(null);
+                                  // Now we have space, proceed with upload
+                                  loadFromBlob(limitPrompt.file, limitPrompt.existingMeta);
+                              } else {
+                                  alert("Even after deleting all eligible older blobs, there is still not enough space. Please increase the limit or choose 'Metadata Only'.");
+                              }
+                          }} className="menu-btn" style={{background: '#f59e0b', color: '#111', fontWeight: 'bold', border: 'none'}}>
+                              c) Auto-Delete Oldest Blobs & Proceed
+                          </button>
+                      )}
+                  </div>
+              </div>
+          </div>
+      )}
+
       <main className="main-content">
         <div className="scroll-viewport" ref={viewportRef}>
             {isLoading && (
@@ -1241,7 +1621,14 @@ const App = () => {
                 </div>
             )}
             {!pdf ? (
-                <div className="dashboard-container">
+                <div className="dashboard-container" style={{position: 'relative'}}>
+                    {/* Settings Icon in Dashboard */}
+                    <div style={{position: 'absolute', top: 20, right: 20}}>
+                        <button className="icon-btn" onClick={() => setShowHomeSettings(true)} title="Storage Settings">
+                            <Icons.Settings />
+                        </button>
+                    </div>
+
                     <div className="empty-placeholder">
                         <label className="upload-btn main-upload" onClick={() => fileInputRef.current.click()}>
                             <Icons.Upload /> Open PDF File
@@ -1282,6 +1669,11 @@ const App = () => {
                                     <div key={file.id} className="recent-card" onClick={() => handleRecentClick(file)}>
                                         <div className="recent-thumb">
                                             {file.thumbnail ? <img src={file.thumbnail} alt="preview" /> : <div className="no-thumb">PDF</div>}
+                                            {!file.hasBlob && (
+                                                <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(0,0,0,0.7)', padding: '6px', borderRadius: '50%', color: '#f87171', display: 'flex' }} title="Content cleared to save space. Click to re-upload.">
+                                                     <Icons.CloudOff style={{width: '18px', height: '18px'}} />
+                                                </div>
+                                            )}
                                             <div className="page-badge">Pg {file.lastPage}</div>
                                         </div>
                                         <div className="recent-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1649,28 +2041,31 @@ const App = () => {
       <style>{`
           .modal-overlay {
               position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-              background: rgba(0,0,0,0.5); z-index: 10000;
+              background: rgba(0,0,0,0.6); z-index: 10000;
               display: flex; align-items: center; justify-content: center;
+              backdrop-filter: blur(2px);
           }
           .modal-content {
-              background: white; width: 500px; max-width: 90%;
-              border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+              background: #18181b; width: 500px; max-width: 90%;
+              border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
               overflow: hidden;
-              color: #333;
+              color: #e4e4e7;
+              border: 1px solid #3f3f46;
           }
           .modal-header {
-              padding: 15px 20px; border-bottom: 1px solid #eee;
+              padding: 15px 20px; border-bottom: 1px solid #3f3f46;
               display: flex; justify-content: space-between; align-items: center;
           }
+          .modal-header h3 { margin: 0; font-size: 18px; }
           .modal-body { padding: 20px; }
           .shortcuts-table { width: 100%; border-collapse: collapse; }
-          .shortcuts-table td { padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+          .shortcuts-table td { padding: 8px 0; border-bottom: 1px solid #3f3f46; font-size: 14px; }
           .shortcuts-table tr:last-child td { border-bottom: none; }
           kbd {
-              background-color: #f7f7f7; border: 1px solid #ccc;
-              border-radius: 3px; box-shadow: 0 1px 0 rgba(0,0,0,0.2);
-              color: #333; display: inline-block; font-size: 11px;
-              line-height: 1.4; margin: 0 2px; padding: 0 5px;
+              background-color: #27272a; border: 1px solid #3f3f46;
+              border-radius: 4px; box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+              color: #e4e4e7; display: inline-block; font-size: 11px;
+              line-height: 1.4; margin: 0 2px; padding: 2px 6px;
               white-space: nowrap; font-family: monospace;
           }
       `}</style>
