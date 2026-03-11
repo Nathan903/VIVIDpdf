@@ -67,3 +67,14 @@ export const updateFileMeta = async (id, meta) => {
     getReq.onerror = (e) => reject(e.target.error);
   });
 };
+
+export const deleteFileRecord = async (id) => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_FILES, 'readwrite');
+    const store = tx.objectStore(STORE_FILES);
+    const req = store.delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = (e) => reject(e.target.error);
+  });
+};

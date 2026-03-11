@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
-import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId } from './db';
+import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage } from './aiService'; // IMPORT AI SERVICE
 import { applySkippingRules, applyCustomPronunciations } from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
@@ -488,6 +488,16 @@ const App = () => {
 
   const handleRecentClick = (fileRecord) => {
     loadFromBlob(fileRecord.blob, fileRecord);
+  };
+
+  const handleDeleteRecent = async (e, fileId) => {
+    e.stopPropagation();
+    try {
+      await deleteFileRecord(fileId);
+      setRecentFiles(prev => prev.filter(f => f.id !== fileId));
+    } catch (err) {
+      console.error("Failed to delete record", err);
+    }
   };
 
   const onFileChange = (e) => {
@@ -1274,11 +1284,21 @@ const App = () => {
                                             {file.thumbnail ? <img src={file.thumbnail} alt="preview" /> : <div className="no-thumb">PDF</div>}
                                             <div className="page-badge">Pg {file.lastPage}</div>
                                         </div>
-                                        <div className="recent-info">
-                                            <div className="recent-name" title={file.name}>{file.name}</div>
-                                            <div className="recent-date">
-                                                {new Date(file.lastOpened).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                        <div className="recent-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div className="recent-name" title={file.name}>{file.name}</div>
+                                                <div className="recent-date">
+                                                    {new Date(file.lastOpened).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                </div>
                                             </div>
+                                            <button 
+                                                className="icon-btn delete-recent-btn" 
+                                                onClick={(e) => handleDeleteRecent(e, file.id)}
+                                                title="Remove Record"
+                                                style={{ flexShrink: 0, padding: '4px', width: 'auto', height: 'auto', marginLeft: '8px' }}
+                                            >
+                                                <Icons.Trash style={{ width: '16px', height: '16px' }} />
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
