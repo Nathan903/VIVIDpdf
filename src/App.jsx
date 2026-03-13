@@ -2097,7 +2097,7 @@ const App = () => {
 
                                             <div className="setting-divider"></div>
                                             {/* AI CONFIGURATION SECTION */}
-                                            <div className="setting-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 5, paddingBottom: 10, borderBottom: '1px solid #eee' }}>
+                                            <div className="setting-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 5, paddingBottom: 10 }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <label><Icons.Sparkles /> AI Fix Mode</label>
                                                     <input type="checkbox" checked={aiConfig.enabled} onChange={e => {
