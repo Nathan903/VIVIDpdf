@@ -96,6 +96,7 @@ const App = () => {
 
     const [totalCost, setTotalCost] = useState(getStoredCost());
     const [ocrLoading, setOcrLoading] = useState(false); // Spinner for AI processing
+    const [aiWarning, setAiWarning] = useState(null); // Warning for AI failure
 
     // Save AI Config on change
     useEffect(() => {
@@ -937,6 +938,9 @@ const App = () => {
 
                     if (aiResult.transcript && !aiResult.error) {
                         textToSpeak = aiResult.transcript;
+                    } else if (aiResult.error) {
+                        setAiWarning("AI Failed - using original text");
+                        setTimeout(() => setAiWarning(null), 3000);
                     }
                 }
             }
@@ -1844,6 +1848,13 @@ const App = () => {
                 {ocrLoading && (
                     <div style={{ position: 'absolute', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: '#333', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', zIndex: 2000 }}>
                         <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2, marginBottom: 0 }}></div> AI Improving Text...
+                    </div>
+                )}
+
+                {/* AI WARNING INDICATOR */}
+                {aiWarning && (
+                    <div style={{ position: 'absolute', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(50, 50, 50, 0.95)', color: '#e4e4e7', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)', zIndex: 2000 }}>
+                        <span style={{ fontSize: '14px' }}>⚠️</span> {aiWarning}
                     </div>
                 )}
 
