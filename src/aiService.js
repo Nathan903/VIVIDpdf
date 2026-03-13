@@ -162,6 +162,28 @@ const callOpenAIAPI = async (imageDataUrl, promptText, apiKey, model) => {
 };
 
 
+export const verifyGeminiAPIKey = async (apiKey) => {
+  if (!apiKey) return false;
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+};
+
+export const verifyOpenAIApiKey = async (apiKey) => {
+  if (!apiKey) return false;
+  try {
+    const res = await fetch("https://api.openai.com/v1/models", {
+      headers: { "Authorization": `Bearer ${apiKey}` }
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+};
+
 export const fixTranscriptWithAI = async (imageDataUrl, rawText, apiKey, userInstruction, model = 'gpt-4o-mini') => {
   return queue.add(async () => {
     if (!apiKey) throw new Error("Missing API Key");

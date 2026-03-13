@@ -4,7 +4,7 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord, getFileRecord, getStorageInfo, deleteBlobs } from './db';
-import { fixTranscriptWithAI, getStoredCost, resetCostUsage } from './aiService'; // IMPORT AI SERVICE
+import { fixTranscriptWithAI, getStoredCost, resetCostUsage, verifyGeminiAPIKey, verifyOpenAIApiKey } from './aiService'; // IMPORT AI SERVICE
 import { applySkippingRules, applyCustomPronunciations } from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
@@ -39,7 +39,8 @@ const DEFAULT_GLOBALS = {
 };
 
 const DEFAULT_AI_CONFIG = {
-    apiKey: "",
+    geminiApiKey: "",
+    openAIApiKey: "",
     model: "gemini-2.5-flash-lite", // Default to cheap model
     instructions: "Skip equations unless they are simple variables. Read naturally.",
     enabled: false
@@ -72,6 +73,9 @@ const App = () => {
         }
     });
 
+    const [geminiKeyStatus, setGeminiKeyStatus] = useState('idle'); // idle | loading | valid | invalid
+    const [openAIKeyStatus, setOpenAIKeyStatus] = useState('idle');
+
     const [storageSettings, setStorageSettings] = useState(() => {
         try {
             const saved = localStorage.getItem(LS_STORAGE_SETTINGS);
@@ -97,6 +101,36 @@ const App = () => {
     useEffect(() => {
         localStorage.setItem(LS_AI_CONFIG, JSON.stringify(aiConfig));
     }, [aiConfig]);
+
+    // Live Validation for Gemini Key
+    useEffect(() => {
+        const key = aiConfig.geminiApiKey;
+        if (!key || !key.trim()) {
+            setGeminiKeyStatus('idle');
+            return;
+        }
+        setGeminiKeyStatus('loading');
+        const timer = setTimeout(async () => {
+            const isValid = await verifyGeminiAPIKey(key.trim());
+            setGeminiKeyStatus(isValid ? 'valid' : 'invalid');
+        }, 800);
+        return () => clearTimeout(timer);
+    }, [aiConfig.geminiApiKey]);
+
+    // Live Validation for OpenAI Key
+    useEffect(() => {
+        const key = aiConfig.openAIApiKey;
+        if (!key || !key.trim()) {
+            setOpenAIKeyStatus('idle');
+            return;
+        }
+        setOpenAIKeyStatus('loading');
+        const timer = setTimeout(async () => {
+            const isValid = await verifyOpenAIApiKey(key.trim());
+            setOpenAIKeyStatus(isValid ? 'valid' : 'invalid');
+        }, 800);
+        return () => clearTimeout(timer);
+    }, [aiConfig.openAIApiKey]);
 
     // Save Storage Settings on change
     useEffect(() => {
@@ -188,6 +222,12 @@ const App = () => {
     // Visual
     const [isLoading, setIsLoading] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message) => {
+        setToast(message);
+        setTimeout(() => setToast(null), 3000);
+    };
 
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
     useEffect(() => { rateRef.current = rate; }, [rate]);
@@ -876,23 +916,28 @@ const App = () => {
             const imgBase64 = pageRefs.current[pageNum].getWrappedImageForTokens(ids);
 
             if (imgBase64) {
-                setOcrLoading(true); // Show Spinner
+                const isGemini = aiConfig.model.startsWith('gemini');
+                const apiKeyToUse = isGemini ? aiConfig.geminiApiKey : aiConfig.openAIApiKey;
 
-                const aiResult = await fixTranscriptWithAI(
-                    imgBase64,
-                    textToSpeak,
-                    aiConfig.apiKey,
-                    aiConfig.instructions,
-                    aiConfig.model
-                );
+                if (apiKeyToUse && apiKeyToUse.trim()) {
+                    setOcrLoading(true); // Show Spinner
 
-                setOcrLoading(false); // Hide Spinner
-                setTotalCost(getStoredCost()); // Update Cost UI
+                    const aiResult = await fixTranscriptWithAI(
+                        imgBase64,
+                        textToSpeak,
+                        apiKeyToUse,
+                        aiConfig.instructions,
+                        aiConfig.model
+                    );
 
-                if (!isPlayingRef.current) return; // Check if paused during fetch
+                    setOcrLoading(false); // Hide Spinner
+                    setTotalCost(getStoredCost()); // Update Cost UI
 
-                if (aiResult.transcript && !aiResult.error) {
-                    textToSpeak = aiResult.transcript;
+                    if (!isPlayingRef.current) return; // Check if paused during fetch
+
+                    if (aiResult.transcript && !aiResult.error) {
+                        textToSpeak = aiResult.transcript;
+                    }
                 }
             }
         }
@@ -1317,7 +1362,15 @@ const App = () => {
                     break;
                 case 'r': // Reading Mode (Mapped from "M switch reading mode" conflict)
                     e.preventDefault();
-                    setReadingMode(prev => prev === 'sentence' ? 'word' : 'sentence');
+                    if (readingMode === 'sentence') {
+                        if (aiConfig.enabled) {
+                            showToast("Word Mode is unavailable when AI Fix Mode is enabled.");
+                        } else {
+                            setReadingMode('word');
+                        }
+                    } else {
+                        setReadingMode('sentence');
+                    }
                     break;
                 case 'n':
                     e.preventDefault();
@@ -1912,27 +1965,86 @@ const App = () => {
                                             <div className="setting-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 5, paddingBottom: 10, borderBottom: '1px solid #eee' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <label style={{ fontWeight: 'bold', color: '#6200ea' }}>AI Fix Mode</label>
-                                                    <input type="checkbox" checked={aiConfig.enabled} onChange={e => setAiConfig({ ...aiConfig, enabled: e.target.checked })} />
+                                                    <input type="checkbox" checked={aiConfig.enabled} onChange={e => {
+                                                        const isChecked = e.target.checked;
+                                                        setAiConfig({ ...aiConfig, enabled: isChecked });
+                                                        if (isChecked) setReadingMode('sentence');
+                                                    }} />
                                                 </div>
                                                 {aiConfig.enabled && (
                                                     <>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="API Key (OpenAI / Gemini)"
-                                                            value={aiConfig.apiKey}
-                                                            onChange={e => setAiConfig({ ...aiConfig, apiKey: e.target.value })}
-                                                            style={{ fontSize: '12px', fontFamily: 'monospace', width: '100%', padding: 4 }}
-                                                        />
                                                         <select
                                                             value={aiConfig.model}
                                                             onChange={e => setAiConfig({ ...aiConfig, model: e.target.value })}
-                                                            style={{ width: '100%', padding: 4, fontSize: '12px' }}
+                                                            style={{ width: '100%', padding: 4, fontSize: '12px', marginBottom: '8px' }}
                                                         >
                                                             <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fastest)</option>
                                                             <option value="gemini-3-flash-preview">Gemini 3 Flash (High Quality)</option>
                                                             <option value="gpt-4o-mini">GPT-4o Mini</option>
                                                             <option value="gpt-4o">GPT-4o</option>
                                                         </select>
+
+                                                        {aiConfig.model.startsWith('gemini') ? (
+                                                            <>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Gemini API Key Required*"
+                                                                    value={aiConfig.geminiApiKey || ''}
+                                                                    onChange={e => setAiConfig({ ...aiConfig, geminiApiKey: e.target.value })}
+                                                                    style={{ 
+                                                                        fontSize: '12px', 
+                                                                        fontFamily: 'monospace', 
+                                                                        width: '100%', 
+                                                                        padding: '6px 4px',
+                                                                        border: !(aiConfig.geminiApiKey || '').trim() ? '1px solid #f44336' : '1px solid #ccc',
+                                                                        backgroundColor: !(aiConfig.geminiApiKey || '').trim() ? 'rgba(244, 67, 54, 0.1)' : undefined
+                                                                    }}
+                                                                />
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-2px', marginBottom: '4px' }}>
+                                                                    {!(aiConfig.geminiApiKey || '').trim() ? (
+                                                                        <span style={{ color: '#f44336', fontSize: '11px', fontWeight: 'bold' }}>
+                                                                            Please enter a Gemini API Key.
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: geminiKeyStatus === 'valid' ? '#4caf50' : geminiKeyStatus === 'invalid' ? '#f44336' : '#888' }}>
+                                                                            {geminiKeyStatus === 'loading' && 'Verifying...'}
+                                                                            {geminiKeyStatus === 'valid' && '✓ Key Verified'}
+                                                                            {geminiKeyStatus === 'invalid' && '✗ Invalid API Key'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="OpenAI API Key Required*"
+                                                                    value={aiConfig.openAIApiKey || ''}
+                                                                    onChange={e => setAiConfig({ ...aiConfig, openAIApiKey: e.target.value })}
+                                                                    style={{ 
+                                                                        fontSize: '12px', 
+                                                                        fontFamily: 'monospace', 
+                                                                        width: '100%', 
+                                                                        padding: '6px 4px',
+                                                                        border: !(aiConfig.openAIApiKey || '').trim() ? '1px solid #f44336' : '1px solid #ccc',
+                                                                        backgroundColor: !(aiConfig.openAIApiKey || '').trim() ? 'rgba(244, 67, 54, 0.1)' : undefined
+                                                                    }}
+                                                                />
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-2px', marginBottom: '4px' }}>
+                                                                    {!(aiConfig.openAIApiKey || '').trim() ? (
+                                                                        <span style={{ color: '#f44336', fontSize: '11px', fontWeight: 'bold' }}>
+                                                                            Please enter an OpenAI API Key.
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: openAIKeyStatus === 'valid' ? '#4caf50' : openAIKeyStatus === 'invalid' ? '#f44336' : '#888' }}>
+                                                                            {openAIKeyStatus === 'loading' && 'Verifying...'}
+                                                                            {openAIKeyStatus === 'valid' && '✓ Key Verified'}
+                                                                            {openAIKeyStatus === 'invalid' && '✗ Invalid API Key'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </>
+                                                        )}
                                                         <textarea
                                                             placeholder="Custom instructions (e.g. Skip equations...)"
                                                             value={aiConfig.instructions}
@@ -1968,7 +2080,13 @@ const App = () => {
                                                 <div className="toggle-group">
                                                     <button
                                                         className={`toggle-btn ${readingMode === 'word' ? 'active' : ''}`}
-                                                        onClick={() => setReadingMode('word')}
+                                                        onClick={() => {
+                                                            if (aiConfig.enabled && readingMode !== 'word') {
+                                                                showToast("Word Mode is unavailable when AI Fix Mode is enabled.");
+                                                            } else {
+                                                                setReadingMode('word');
+                                                            }
+                                                        }}
                                                     >
                                                         Word
                                                     </button>
@@ -2065,9 +2183,6 @@ const App = () => {
 
                                             <div className="setting-divider"></div>
 
-                                            <button onClick={handleDebugExtract} className="menu-btn" title="Generate Sentence Images">
-                                                Sentence Segmentation Preview
-                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -2076,6 +2191,14 @@ const App = () => {
                     </div>
                 )}
             </main>
+            
+            {/* TOAST SYSTEM */}
+            {toast && (
+                <div className="toast-notification">
+                    {toast}
+                </div>
+            )}
+            
             <style>{`
           .modal-overlay {
               position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -2096,6 +2219,31 @@ const App = () => {
           }
           .modal-header h3 { margin: 0; font-size: 18px; }
           .modal-body { padding: 20px; }
+          
+          .toast-notification {
+              position: fixed;
+              bottom: 20px;
+              left: 50%;
+              transform: translateX(-50%);
+              background: #f44336;
+              color: white;
+              padding: 10px 20px;
+              border-radius: 8px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+              z-index: 100000;
+              animation: fadein 0.3s, fadeout 0.3s 2.7s;
+              font-size: 14px;
+              pointer-events: none;
+          }
+          @keyframes fadein {
+              from { bottom: 0; opacity: 0; }
+              to { bottom: 20px; opacity: 1; }
+          }
+          @keyframes fadeout {
+              from { bottom: 20px; opacity: 1; }
+              to { bottom: 0; opacity: 0; }
+          }
+          
           .shortcuts-table { width: 100%; border-collapse: collapse; }
           .shortcuts-table td { padding: 8px 0; border-bottom: 1px solid #3f3f46; font-size: 14px; }
           .shortcuts-table tr:last-child td { border-bottom: none; }
