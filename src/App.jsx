@@ -1961,104 +1961,26 @@ const App = () => {
                                         <div className="settings-popup" ref={settingsRef}>
                                             <div className="settings-header">Reading Settings</div>
 
-                                            {/* AI CONFIGURATION SECTION */}
-                                            <div className="setting-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 5, paddingBottom: 10, borderBottom: '1px solid #eee' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <label style={{ fontWeight: 'bold', color: '#6200ea' }}>AI Fix Mode</label>
-                                                    <input type="checkbox" checked={aiConfig.enabled} onChange={e => {
-                                                        const isChecked = e.target.checked;
-                                                        setAiConfig({ ...aiConfig, enabled: isChecked });
-                                                        if (isChecked) setReadingMode('sentence');
-                                                    }} />
-                                                </div>
-                                                {aiConfig.enabled && (
-                                                    <>
-                                                        <select
-                                                            value={aiConfig.model}
-                                                            onChange={e => setAiConfig({ ...aiConfig, model: e.target.value })}
-                                                            style={{ width: '100%', padding: 4, fontSize: '12px', marginBottom: '8px' }}
-                                                        >
-                                                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fastest)</option>
-                                                            <option value="gemini-3-flash-preview">Gemini 3 Flash (High Quality)</option>
-                                                            <option value="gpt-4o-mini">GPT-4o Mini</option>
-                                                            <option value="gpt-4o">GPT-4o</option>
-                                                        </select>
 
-                                                        {aiConfig.model.startsWith('gemini') ? (
-                                                            <>
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Gemini API Key Required*"
-                                                                    value={aiConfig.geminiApiKey || ''}
-                                                                    onChange={e => setAiConfig({ ...aiConfig, geminiApiKey: e.target.value })}
-                                                                    style={{ 
-                                                                        fontSize: '12px', 
-                                                                        fontFamily: 'monospace', 
-                                                                        width: '100%', 
-                                                                        padding: '6px 4px',
-                                                                        border: !(aiConfig.geminiApiKey || '').trim() ? '1px solid #f44336' : '1px solid #ccc',
-                                                                        backgroundColor: !(aiConfig.geminiApiKey || '').trim() ? 'rgba(244, 67, 54, 0.1)' : undefined
-                                                                    }}
-                                                                />
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-2px', marginBottom: '4px' }}>
-                                                                    {!(aiConfig.geminiApiKey || '').trim() ? (
-                                                                        <span style={{ color: '#f44336', fontSize: '11px', fontWeight: 'bold' }}>
-                                                                            Please enter a Gemini API Key.
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: geminiKeyStatus === 'valid' ? '#4caf50' : geminiKeyStatus === 'invalid' ? '#f44336' : '#888' }}>
-                                                                            {geminiKeyStatus === 'loading' && 'Verifying...'}
-                                                                            {geminiKeyStatus === 'valid' && '✓ Key Verified'}
-                                                                            {geminiKeyStatus === 'invalid' && '✗ Invalid API Key'}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="OpenAI API Key Required*"
-                                                                    value={aiConfig.openAIApiKey || ''}
-                                                                    onChange={e => setAiConfig({ ...aiConfig, openAIApiKey: e.target.value })}
-                                                                    style={{ 
-                                                                        fontSize: '12px', 
-                                                                        fontFamily: 'monospace', 
-                                                                        width: '100%', 
-                                                                        padding: '6px 4px',
-                                                                        border: !(aiConfig.openAIApiKey || '').trim() ? '1px solid #f44336' : '1px solid #ccc',
-                                                                        backgroundColor: !(aiConfig.openAIApiKey || '').trim() ? 'rgba(244, 67, 54, 0.1)' : undefined
-                                                                    }}
-                                                                />
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-2px', marginBottom: '4px' }}>
-                                                                    {!(aiConfig.openAIApiKey || '').trim() ? (
-                                                                        <span style={{ color: '#f44336', fontSize: '11px', fontWeight: 'bold' }}>
-                                                                            Please enter an OpenAI API Key.
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: openAIKeyStatus === 'valid' ? '#4caf50' : openAIKeyStatus === 'invalid' ? '#f44336' : '#888' }}>
-                                                                            {openAIKeyStatus === 'loading' && 'Verifying...'}
-                                                                            {openAIKeyStatus === 'valid' && '✓ Key Verified'}
-                                                                            {openAIKeyStatus === 'invalid' && '✗ Invalid API Key'}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                        <textarea
-                                                            placeholder="Custom instructions (e.g. Skip equations...)"
-                                                            value={aiConfig.instructions}
-                                                            onChange={e => setAiConfig({ ...aiConfig, instructions: e.target.value })}
-                                                            rows={2}
-                                                            style={{ width: '100%', fontSize: '11px', resize: 'none' }}
-                                                        />
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#666', marginTop: 5 }}>
-                                                            <span>Cost Tracker: ${totalCost.toFixed(6)} used</span>
-                                                            <button onClick={handleResetCost} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', padding: 0 }}>Reset</button>
-                                                        </div>
-                                                    </>
-                                                )}
+                                            <div className="setting-item">
+                                                <div className="label-row">
+                                                    <label>Speed</label>
+                                                    <span className="value-badge">{rate.toFixed(1)}x</span>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    className="styled-slider"
+                                                    min="0.5" max="3.0" step="0.1"
+                                                    value={rate}
+                                                    onChange={e => setRate(Number(e.target.value))}
+                                                />
+                                                <div className="slider-labels">
+                                                    <span>0.5x</span>
+                                                    <span>3.0x</span>
+                                                </div>
                                             </div>
+
+
 
                                             <div className="setting-item">
                                                 <label><Icons.Voice /> Voice</label>
@@ -2123,25 +2045,6 @@ const App = () => {
                                                     />
                                                 </div>
                                             </div>
-
-                                            <div className="setting-item">
-                                                <div className="label-row">
-                                                    <label>Speed</label>
-                                                    <span className="value-badge">{rate.toFixed(1)}x</span>
-                                                </div>
-                                                <input
-                                                    type="range"
-                                                    className="styled-slider"
-                                                    min="0.5" max="3.0" step="0.1"
-                                                    value={rate}
-                                                    onChange={e => setRate(Number(e.target.value))}
-                                                />
-                                                <div className="slider-labels">
-                                                    <span>0.5x</span>
-                                                    <span>3.0x</span>
-                                                </div>
-                                            </div>
-
                                             <div className="setting-divider"></div>
 
                                             {/* HIGHLIGHT SETTINGS */}
@@ -2182,6 +2085,105 @@ const App = () => {
                                             </div>
 
                                             <div className="setting-divider"></div>
+                                            {/* AI CONFIGURATION SECTION */}
+                                            <div className="setting-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 5, paddingBottom: 10, borderBottom: '1px solid #eee' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <label><Icons.Sparkles /> AI Fix Mode</label>
+                                                    <input type="checkbox" checked={aiConfig.enabled} onChange={e => {
+                                                        const isChecked = e.target.checked;
+                                                        setAiConfig({ ...aiConfig, enabled: isChecked });
+                                                        if (isChecked) setReadingMode('sentence');
+                                                    }} />
+                                                </div>
+                                                {aiConfig.enabled && (
+                                                    <>
+                                                        <select
+                                                            value={aiConfig.model}
+                                                            onChange={e => setAiConfig({ ...aiConfig, model: e.target.value })}
+                                                            style={{ width: '100%', padding: 4, fontSize: '12px', marginBottom: '8px' }}
+                                                        >
+                                                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fastest)</option>
+                                                            <option value="gemini-3-flash-preview">Gemini 3 Flash (High Quality)</option>
+                                                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                                            <option value="gpt-4o">GPT-4o</option>
+                                                        </select>
+
+                                                        {aiConfig.model.startsWith('gemini') ? (
+                                                            <>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Gemini API Key Required*"
+                                                                    value={aiConfig.geminiApiKey || ''}
+                                                                    onChange={e => setAiConfig({ ...aiConfig, geminiApiKey: e.target.value })}
+                                                                    style={{
+                                                                        fontSize: '12px',
+                                                                        fontFamily: 'monospace',
+                                                                        width: '100%',
+                                                                        padding: '6px 4px',
+                                                                        border: !(aiConfig.geminiApiKey || '').trim() ? '1px solid #f44336' : '1px solid #ccc',
+                                                                        backgroundColor: !(aiConfig.geminiApiKey || '').trim() ? 'rgba(244, 67, 54, 0.1)' : undefined
+                                                                    }}
+                                                                />
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-2px', marginBottom: '4px' }}>
+                                                                    {!(aiConfig.geminiApiKey || '').trim() ? (
+                                                                        <span style={{ color: '#f44336', fontSize: '11px', fontWeight: 'bold' }}>
+                                                                            Please enter a Gemini API Key.
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: geminiKeyStatus === 'valid' ? '#4caf50' : geminiKeyStatus === 'invalid' ? '#f44336' : '#888' }}>
+                                                                            {geminiKeyStatus === 'loading' && 'Verifying...'}
+                                                                            {geminiKeyStatus === 'valid' && '✓ Key Verified'}
+                                                                            {geminiKeyStatus === 'invalid' && '✗ Invalid API Key'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="OpenAI API Key Required*"
+                                                                    value={aiConfig.openAIApiKey || ''}
+                                                                    onChange={e => setAiConfig({ ...aiConfig, openAIApiKey: e.target.value })}
+                                                                    style={{
+                                                                        fontSize: '12px',
+                                                                        fontFamily: 'monospace',
+                                                                        width: '100%',
+                                                                        padding: '6px 4px',
+                                                                        border: !(aiConfig.openAIApiKey || '').trim() ? '1px solid #f44336' : '1px solid #ccc',
+                                                                        backgroundColor: !(aiConfig.openAIApiKey || '').trim() ? 'rgba(244, 67, 54, 0.1)' : undefined
+                                                                    }}
+                                                                />
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-2px', marginBottom: '4px' }}>
+                                                                    {!(aiConfig.openAIApiKey || '').trim() ? (
+                                                                        <span style={{ color: '#f44336', fontSize: '11px', fontWeight: 'bold' }}>
+                                                                            Please enter an OpenAI API Key.
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: openAIKeyStatus === 'valid' ? '#4caf50' : openAIKeyStatus === 'invalid' ? '#f44336' : '#888' }}>
+                                                                            {openAIKeyStatus === 'loading' && 'Verifying...'}
+                                                                            {openAIKeyStatus === 'valid' && '✓ Key Verified'}
+                                                                            {openAIKeyStatus === 'invalid' && '✗ Invalid API Key'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                        <textarea
+                                                            placeholder="Custom instructions (e.g. Skip equations...)"
+                                                            value={aiConfig.instructions}
+                                                            onChange={e => setAiConfig({ ...aiConfig, instructions: e.target.value })}
+                                                            rows={2}
+                                                            style={{ width: '100%', fontSize: '11px', resize: 'none' }}
+                                                        />
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#666', marginTop: 5 }}>
+                                                            <span>Cost Tracker: ${totalCost.toFixed(6)} used</span>
+                                                            <button onClick={handleResetCost} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', padding: 0 }}>Reset</button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+
 
                                         </div>
                                     )}
@@ -2191,14 +2193,14 @@ const App = () => {
                     </div>
                 )}
             </main>
-            
+
             {/* TOAST SYSTEM */}
             {toast && (
                 <div className="toast-notification">
                     {toast}
                 </div>
             )}
-            
+
             <style>{`
           .modal-overlay {
               position: fixed; top: 0; left: 0; right: 0; bottom: 0;
