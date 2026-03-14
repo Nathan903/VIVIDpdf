@@ -75,7 +75,7 @@ class RequestQueue {
 const queue = new RequestQueue(1); // Process 4 sentences in parallel
 
 // --- HELPER: Gemini API Call ---
-const callGeminiAPI = async (imageDataUrl, promptText, apiKey, model) => {
+const callGeminiAPI = async (imageDataUrl, promptText, apiKey, model, signal) => {
   // 1. Strip Data URL Prefix for Gemini (requires raw base64)
   const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, '');
   const mimeType = imageDataUrl.match(/data:(.*?);base64/)?.[1] || 'image/jpeg';
@@ -85,6 +85,7 @@ const callGeminiAPI = async (imageDataUrl, promptText, apiKey, model) => {
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal,
     body: JSON.stringify({
       contents: [{
         parts: [
@@ -126,13 +127,14 @@ const callGeminiAPI = async (imageDataUrl, promptText, apiKey, model) => {
 };
 
 // --- HELPER: OpenAI API Call ---
-const callOpenAIAPI = async (imageDataUrl, promptText, apiKey, model) => {
+const callOpenAIAPI = async (imageDataUrl, promptText, apiKey, model, signal) => {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${apiKey}`
     },
+    signal,
     body: JSON.stringify({
       model: model, 
       messages: [
@@ -223,16 +225,20 @@ Return valid JSON only.
 
     const startTime = performance.now(); // Start Timer
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4-second timeout for fallback
+
     try {
       let result;
 
       // ROUTING LOGIC
       if (model.startsWith('gemini')) {
-         result = await callGeminiAPI(imageDataUrl, promptText, apiKey, model);
+         result = await callGeminiAPI(imageDataUrl, promptText, apiKey, model, controller.signal);
       } else {
-         result = await callOpenAIAPI(imageDataUrl, promptText, apiKey, model);
+         result = await callOpenAIAPI(imageDataUrl, promptText, apiKey, model, controller.signal);
       }
 
+      clearTimeout(timeoutId);
       const endTime = performance.now();
       
       // Calculate Cost
@@ -259,6 +265,7 @@ Return valid JSON only.
       };
 
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("AI Fix Error:", error);
       return { transcript: rawText, error: true }; // Fallback to raw
     }
