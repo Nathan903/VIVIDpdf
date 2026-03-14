@@ -241,33 +241,10 @@ const App = () => {
     const [darkMode, setDarkMode] = useState(false);
     const [toast, setToast] = useState(null);
 
-    const [isOffline, setIsOffline] = useState(!navigator.onLine);
-
     const showToast = (message) => {
         setToast(message);
         setTimeout(() => setToast(null), 3000);
     };
-
-    useEffect(() => {
-        const handleOnline = () => {
-            console.log("Network status changed: ONLINE");
-            setIsOffline(false);
-            showToast("Switched to Online Mode");
-        };
-        const handleOffline = () => {
-            console.log("Network status changed: OFFLINE");
-            setIsOffline(true);
-            showToast("Switched to Offline Fallback Mode");
-        };
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, []);
 
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
     useEffect(() => { rateRef.current = rate; }, [rate]);
@@ -276,9 +253,6 @@ const App = () => {
     useEffect(() => { speechCustomizationRef.current = speechCustomization; }, [speechCustomization]);
     useEffect(() => { activeTokenIdRef.current = activeTokenId; }, [activeTokenId]);
     useEffect(() => { activePageRef.current = activePage; }, [activePage]);
-
-    const isOfflineRef = useRef(isOffline);
-    useEffect(() => { isOfflineRef.current = isOffline; }, [isOffline]);
 
     // --- Persistence Effects ---
 
@@ -991,7 +965,7 @@ const App = () => {
         textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
 
         // --- AI VISUAL FIX STEP ---
-        if (!isOfflineRef.current && textToSpeak.trim() && pageRefs.current[pageNum]) {
+        if (textToSpeak.trim() && pageRefs.current[pageNum]) {
             const ids = sentenceTokens.map(t => t.id);
             // Get clean image of JUST this sentence
             const imgBase64 = pageRefs.current[pageNum].getWrappedImageForTokens(ids);
@@ -1003,7 +977,6 @@ const App = () => {
                 if (apiKeyToUse && apiKeyToUse.trim()) {
                     setOcrLoading(true); // Show Spinner
 
-                    console.log("Starting AI Fix Request");
                     const aiResult = await fixTranscriptWithAI(
                         imgBase64,
                         textToSpeak,
@@ -1019,20 +992,12 @@ const App = () => {
 
                     if (aiResult.transcript && !aiResult.error) {
                         textToSpeak = aiResult.transcript;
-                        console.log("AI Fix Success:", textToSpeak);
                     } else if (aiResult.error) {
-                        console.log("AI Fix Failed or Timed Out. Falling back to original text.");
                         setAiWarning("AI Failed - using original text");
                         setTimeout(() => setAiWarning(null), 3000);
-                        // If offline just happened or it timed out, check offline state again
-                        if (!navigator.onLine) {
-                             setIsOffline(true);
-                        }
                     }
                 }
             }
-        } else if (isOfflineRef.current) {
-            console.log("Offline mode: Skipping AI Visual Fix.");
         }
         // ---------------------------
 
@@ -1047,18 +1012,10 @@ const App = () => {
             return;
         }
 
-        let currentVoiceURI = selectedVoiceURI;
-        let currentRate = rateRef.current;
-        if (isOfflineRef.current) {
-            currentVoiceURI = offlineFallbackConfig.voiceURI;
-            currentRate = offlineFallbackConfig.rate;
-            console.log(`Offline fallback used. Voice: ${currentVoiceURI}, Rate: ${currentRate}`);
-        }
-
-        const vSettings = getVoiceSettings(currentVoiceURI);
+        const vSettings = getVoiceSettings(selectedVoiceURI);
         const utter = new SpeechSynthesisUtterance(textToSpeak);
-        utter.rate = calculateActualRate(currentRate, vSettings.sensitivity);
-        const targetVoice = voices.find(v => v.voiceURI === currentVoiceURI);
+        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
+        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
         if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
 
         utter.onend = () => {
@@ -1205,18 +1162,10 @@ const App = () => {
             }
         }
 
-        let currentVoiceURI = selectedVoiceURI;
-        let currentRate = rateRef.current;
-        if (isOfflineRef.current) {
-            currentVoiceURI = offlineFallbackConfig.voiceURI;
-            currentRate = offlineFallbackConfig.rate;
-            console.log(`Offline fallback used in Standard Mode. Voice: ${currentVoiceURI}, Rate: ${currentRate}`);
-        }
-
-        const vSettings = getVoiceSettings(currentVoiceURI);
+        const vSettings = getVoiceSettings(selectedVoiceURI);
         const utter = new SpeechSynthesisUtterance(script);
-        utter.rate = calculateActualRate(currentRate, vSettings.sensitivity);
-        const targetVoice = voices.find(v => v.voiceURI === currentVoiceURI);
+        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
+        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
         if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
 
         utter.audioMap = map;
