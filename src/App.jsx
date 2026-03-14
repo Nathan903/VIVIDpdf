@@ -403,7 +403,12 @@ const App = () => {
                     validatedVoiceURI = selectedVoiceURI;
                 } else {
                     // Fallback to default
-                    const defaultVoice = available.find(v => v.default) || available[0];
+                    const browserLang = (navigator.language || 'en').split('-')[0];
+                    const defaultVoice = available.find(v => v.default && v.lang.startsWith(browserLang)) || 
+                                         available.find(v => v.lang.startsWith(browserLang)) || 
+                                         available.find(v => v.lang.startsWith('en')) || 
+                                         available.find(v => v.default) || 
+                                         available[0];
                     if (defaultVoice) {
                         currentLang = defaultVoice.lang.split('-')[0];
                         validatedVoiceURI = defaultVoice.voiceURI;
