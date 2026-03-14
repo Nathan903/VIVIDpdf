@@ -2081,11 +2081,16 @@ const App = () => {
                                                     }}
                                                     className="voice-select"
                                                 >
-                                                    {Array.from(new Set(voices.map(v => v.lang.split('-')[0]))).sort().map(lang => (
+                                                    {Array.from(new Set(voices.map(v => v.lang ? v.lang.split('-')[0] : ''))).filter(Boolean).sort().map(lang => {
+                                                        let displayName = lang;
+                                                        try {
+                                                            displayName = new Intl.DisplayNames(['en'], { type: 'language' }).of(lang);
+                                                        } catch(e) {}
+                                                        return (
                                                         <option key={lang} value={lang}>
-                                                            {new Intl.DisplayNames(['en'], { type: 'language' }).of(lang)}
+                                                            {displayName}
                                                         </option>
-                                                    ))}
+                                                    )})}
                                                 </select>
                                             </div>
 
@@ -2352,11 +2357,16 @@ const App = () => {
                                                                     className="voice-select"
                                                                     style={{ width: '100%', padding: '6px' }}
                                                                 >
-                                                                    {Array.from(new Set(voices.filter(v => v.localService).map(v => v.lang.split('-')[0]))).sort().map(lang => (
+                                                                    {Array.from(new Set(voices.filter(v => v.localService).map(v => v.lang ? v.lang.split('-')[0] : ''))).filter(Boolean).sort().map(lang => {
+                                                                        let displayName = lang;
+                                                                        try {
+                                                                            displayName = new Intl.DisplayNames(['en'], { type: 'language' }).of(lang);
+                                                                        } catch(e) {}
+                                                                        return (
                                                                         <option key={lang} value={lang}>
-                                                                            {new Intl.DisplayNames(['en'], { type: 'language' }).of(lang)}
+                                                                            {displayName}
                                                                         </option>
-                                                                    ))}
+                                                                    )})}
                                                                 </select>
 
                                                                 <select
