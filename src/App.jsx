@@ -1969,7 +1969,7 @@ const App = () => {
 
                                 <div className="divider-vertical small"></div>
 
-                                <button className="text-btn" onClick={toggleFitMode} title="Toggle Fit (F)">
+                                <button className="text-btn" onClick={toggleFitMode} title="Toggle Fit (Z)">
                                     {fitMode === 'width' ? 'Fit W' : fitMode === 'height' ? 'Fit H' : 'Fit'}
                                 </button>
 
@@ -2138,7 +2138,7 @@ const App = () => {
 
                                             <div className="setting-item">
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                                                    <label>Focus Mode (Auto-Hide) (Z)</label>
+                                                    <label>Focus Mode (auto-hide menu) (F)</label>
                                                     <input
                                                         type="checkbox"
                                                         checked={autoHide}
