@@ -255,6 +255,12 @@ const App = () => {
     const [darkMode, setDarkMode] = useState(false);
     const [toast, setToast] = useState(null);
     const toastTimeoutRef = useRef(null);
+    const [pulsePlayBtn, setPulsePlayBtn] = useState(false);
+
+    // Stop pulsing when reading starts
+    useEffect(() => {
+        if (isPlaying) setPulsePlayBtn(false);
+    }, [isPlaying]);
 
     const showToast = (message, type = 'error') => {
         setToast({ message, type });
@@ -265,7 +271,7 @@ const App = () => {
     // --- User Hint Logic ---
     const checkAndTriggerSkipHint = (text) => {
         if (localStorage.getItem('pdf_reader_hint_skip_dismissed') === 'true') return;
-        
+
         let count = parseInt(localStorage.getItem('pdf_reader_hint_skip_count') || '0', 10);
         if (count >= 3) {
             localStorage.setItem('pdf_reader_hint_skip_dismissed', 'true');
@@ -280,7 +286,7 @@ const App = () => {
             console.log("[Hint Triggered] Detected skippable content. Count:", count + 1);
             showToast("💡 Reading too many links? Press 'C' or click the pencil icon to auto-skip elements.", "info");
             setPulseCustomizeBtn(true);
-            
+
             localStorage.setItem('pdf_reader_hint_skip_count', (count + 1).toString());
             localStorage.setItem('pdf_reader_hint_skip_last_date', today);
         }
@@ -289,6 +295,19 @@ const App = () => {
     useEffect(() => {
         checkAndTriggerSkipHintRef.current = checkAndTriggerSkipHint;
     });
+    
+    // --- First-time User Hint ---
+    useEffect(() => {
+        if (pdf && !localStorage.getItem('vividpdf_first_time_viewer_hint_shown')) {
+            // Delay slightly to ensure PDF is rendered or at least visible
+            const timer = setTimeout(() => {
+                showToast("💡 Click any word to start hearing.", "info");
+                setPulsePlayBtn(true);
+                localStorage.setItem('vividpdf_first_time_viewer_hint_shown', 'true');
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [pdf]);
 
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
     useEffect(() => { numPagesRef.current = numPages; }, [numPages]);
@@ -2297,10 +2316,12 @@ const App = () => {
 
                             <div style={{ textAlign: 'center', fontSize: '13px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                                 <span>All your files are processed and stored locally. No data is ever uploaded to the internet.</span>
-                                <span style={{ color: '#808080ff' }}>VIVIDpdf is a free and opensource software. <em><a href="https://www.gnu.org/philosophy/free-sw.en.html" target="_blank">Free as in freedom</a></em>.</span>
+                                <br></br>
                                 <a href="https://github.com/Nathan903/VIVIDpdf" target="_blank" rel="noopener noreferrer" style={{ color: '#a1a1aa', textDecoration: 'none', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#6366f1'} onMouseOut={e => e.currentTarget.style.color = '#a1a1aa'} title="View on GitHub">
                                     <Icons.Github style={{ width: '20px', height: '20px' }} />
                                 </a>
+                                <span style={{ color: '#808080ff' }}>VIVIDpdf is a free and opensource software. <em><a href="https://www.gnu.org/philosophy/free-sw.en.html" target="_blank">Free as in freedom</a></em>.</span>
+
                             </div>
                         </div>
                     ) : (
@@ -2361,7 +2382,7 @@ const App = () => {
                         <div className="player-bar">
                             {/* LEFT: Playback & Navigation */}
                             <div className="section-left">
-                                <button className="icon-btn" onClick={togglePlay} disabled={isMarkingMode} style={{ opacity: isMarkingMode ? 0.5 : 1 }} title="Play/Pause (Space)">
+                                <button className={`icon-btn ${pulsePlayBtn ? 'pulse-yellow' : ''}`} onClick={togglePlay} disabled={isMarkingMode} style={{ opacity: isMarkingMode ? 0.5 : 1 }} title="Play/Pause (Space)">
                                     {isPlaying ? <Icons.Pause /> : <Icons.Play />}
                                 </button>
                                 <div className="divider-vertical"></div>
@@ -2845,8 +2866,8 @@ const App = () => {
                 </div>
             )}
 
-            <BugReport 
-                darkMode={darkMode} 
+            <BugReport
+                darkMode={darkMode}
                 appContext={{
                     readingMode,
                     rate,
