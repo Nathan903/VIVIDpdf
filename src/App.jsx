@@ -46,7 +46,7 @@ const DEFAULT_AI_CONFIG = {
     geminiApiKey: "",
     openAIApiKey: "",
     model: "gemini-2.5-flash-lite", // Default to cheap model
-    instructions: "Read equations out loud naturally.",
+    instructions: "Read equations, symbols out loud, according to context, like a human reading it out loud.",
     enabled: false
 };
 
@@ -552,6 +552,7 @@ const App = () => {
     // --- References for functions ---
     const playNextSentenceAIRef = useRef(null);
     const scheduleNextBatchRef = useRef(null);
+    const queueCachedAISentenceRef = useRef(null);
 
     // --- Smart Jump Logic ---
     const performJump = async (pageNumber, doc = pdf) => {
@@ -1000,7 +1001,7 @@ const App = () => {
         }
     };
 
-    // Sequentially prefetch up to `count` sentences starting AFTER (pageNum, tokenId)
+    // Sequentially prefetch up to `count` sentences starting AT (pageNum, tokenId)
     const prefetchNextSentences = async (pageNum, tokenId, count = 3) => {
         if (!aiConfigRef.current.enabled) return;
         let curPageNum = pageNum;
@@ -1017,17 +1018,93 @@ const App = () => {
                 }
                 return;
             }
-            // Advance to the next sentence position
-            const nextPageNum = info.nextTokenId ? curPageNum : curPageNum + 1;
-            const nextTokenId = info.nextTokenId || null;
-            // Prefetch this next sentence (sequential: await each)
-            await prefetchAISentence(nextPageNum, nextTokenId);
-            curPageNum = nextPageNum;
-            curTokenId = nextTokenId;
+            // Prefetch the sentence AT (curPageNum, curTokenId) — sequential: await each
+            await prefetchAISentence(curPageNum, curTokenId);
+            // Advance to the next sentence
+            curPageNum = info.nextTokenId ? curPageNum : curPageNum + 1;
+            curTokenId = info.nextTokenId || null;
         }
     };
 
     // --- NEW: AI-Enhanced Playback Loop ---
+
+    // Queue a pre-cached AI sentence into synth immediately (no API call, synchronous).
+    // Returns true if successfully queued. After queuing, immediately tries to cascade
+    // and queue the NEXT cached sentence too — this ensures all available cached
+    // sentences are queued into synth at once, giving online voices maximum lead time.
+    const queueCachedAISentence = (pageNum, tokenId) => {
+        if (!isPlayingRef.current) return false;
+        if (!aiConfigRef.current.enabled) return false;
+
+        const info = getNextSentenceInfo(pageNum, tokenId);
+        if (!info.tokens || info.tokens.length === 0) return false;
+
+        const firstTokenId = info.tokens[0].id;
+        const cacheKey = `${pageNum}:${firstTokenId}`;
+        const cached = aiTranscriptCache.current.get(cacheKey);
+        if (!cached || !cached.transcript) return false; // Not cached yet, can't pre-queue
+
+        let textToSpeak = cached.transcript;
+        textToSpeak = applyCustomPronunciations(textToSpeak, customPronunciationsRef.current);
+
+        if (!textToSpeak.trim()) {
+            // Empty sentence — skip it, try the next one
+            const skipToPageNum = info.nextTokenId ? pageNum : pageNum + 1;
+            const skipToTokenId = info.nextTokenId || null;
+            return queueCachedAISentenceRef.current(skipToPageNum, skipToTokenId);
+        }
+
+        const vSettings = getVoiceSettings(selectedVoiceURI);
+        const utter = new SpeechSynthesisUtterance(textToSpeak);
+        utter.generation = ttsGenerationRef.current;
+        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
+        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+        if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+        utter.hasQueuedNext = false;
+
+        utter.onstart = (event) => {
+            if (event.target.generation !== ttsGenerationRef.current) return;
+            // Update highlight and scroll to this sentence
+            setActiveTokenId(firstTokenId);
+            if (pageNum !== activePageRef.current) setActivePage(pageNum);
+            handleSmartScroll(pageNum, firstTokenId);
+        };
+
+        utter.onend = (event) => {
+            if (event.target.generation !== ttsGenerationRef.current) return;
+            if (isJumpingRef.current) return;
+            if (!isPlayingRef.current) return;
+            if (!event.target.hasQueuedNext) {
+                // Nothing was pre-queued — fall back to full AI fetch path
+                const nextPageNum = info.nextTokenId ? pageNum : pageNum + 1;
+                const nextTokenId = info.nextTokenId || null;
+                playNextSentenceAIRef.current(nextPageNum, nextTokenId);
+            }
+        };
+
+        utter.onerror = (e) => {
+            if (e.target.generation !== ttsGenerationRef.current) return;
+            if (isJumpingRef.current) return;
+            if (e.error !== 'interrupted' && e.error !== 'canceled') {
+                console.error('Speech Error in pre-queued AI sentence', e);
+                setIsPlaying(false);
+            }
+        };
+
+        synth.speak(utter);
+
+        // Cascade: immediately try to queue the sentence AFTER this one too.
+        // This keeps the synth queue full, giving the browser maximum time to
+        // pre-synthesize audio for online voices. Stops at first cache miss.
+        const cascadePageNum = info.nextTokenId ? pageNum : pageNum + 1;
+        const cascadeTokenId = info.nextTokenId || null;
+        if (cascadePageNum <= numPagesRef.current) {
+            const cascaded = queueCachedAISentenceRef.current(cascadePageNum, cascadeTokenId);
+            if (cascaded) utter.hasQueuedNext = true;
+        }
+
+        return true;
+    };
     const playNextSentenceAI = async (pageNum, tokenId) => {
         console.log(`[TTS DEBUG] playNextSentenceAI called. pageNum: ${pageNum}, tokenId: ${tokenId}, isPlaying: ${isPlayingRef.current}`);
         if (!isPlayingRef.current) return;
@@ -1073,6 +1150,15 @@ const App = () => {
 
         let textToSpeak = sentenceTokens.map(t => t.spokenText).join(' ');
         textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
+
+        // Fire-and-forget: start prefetching the next 3 sentences in parallel with
+        // the live AI fetch below — so N+1 is likely cached by the time N finishes playing
+        if (info.nextTokenId || info.nextPageNum <= numPagesRef.current) {
+            prefetchNextSentences(
+                info.nextTokenId ? info.pageNum : info.nextPageNum,
+                info.nextTokenId || null
+            );
+        }
 
         // --- AI VISUAL FIX STEP (with cache + prefetch) ---
         const cacheKey = `${pageNum}:${firstTokenId}`;
@@ -1120,10 +1206,6 @@ const App = () => {
         }
         // ---------------------------
 
-        // Kick off prefetch for the next 3 sentences (fire-and-forget, no await)
-        prefetchNextSentences(info.pageNum, info.nextTokenId || null);
-        // ---
-
         textToSpeak = applyCustomPronunciations(textToSpeak, customPronunciationsRef.current);
 
         console.log(`[TTS DEBUG] playNextSentenceAI - Final textToSpeak: "${textToSpeak}"`);
@@ -1145,16 +1227,27 @@ const App = () => {
         const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
         if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
 
+        utter.hasQueuedNext = false;
+
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance start`);
+            // Pre-queue all available cached sentences right now to eliminate
+            // gaps with online voices (gives browser max time to pre-synthesize)
+            if (!event.target.hasQueuedNext) {
+                const nextPageNum = info.nextTokenId ? info.pageNum : info.nextPageNum;
+                const nextTokenId = info.nextTokenId || null;
+                const queued = queueCachedAISentenceRef.current(nextPageNum, nextTokenId);
+                if (queued) event.target.hasQueuedNext = true;
+            }
         };
 
         utter.onend = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance end. isJumping: ${isJumpingRef.current}, isPlaying: ${isPlayingRef.current}`);
             if (isJumpingRef.current) return;
-            if (isPlayingRef.current) {
+            if (isPlayingRef.current && !event.target.hasQueuedNext) {
+                // Nothing pre-queued — fall back to full AI path for next sentence
                 if (info.nextTokenId) {
                     playNextSentenceAI(info.pageNum, info.nextTokenId);
                 } else {
@@ -1516,6 +1609,7 @@ const App = () => {
     useEffect(() => {
         playNextSentenceAIRef.current = playNextSentenceAI;
         scheduleNextBatchRef.current = scheduleNextBatch;
+        queueCachedAISentenceRef.current = queueCachedAISentence;
     });
 
     const handleSmartNavigation = useCallback((direction) => {
