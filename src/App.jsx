@@ -2158,7 +2158,7 @@ const App = () => {
                     )}
                     {!pdf ? (
                         <div className="dashboard-container" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ flex: 1, minHeight: '100vh', position: 'relative' }}>
+                            <div style={{ flex: 1, minHeight: '90vh', position: 'relative' }}>
                                 {/* Settings Icon in Dashboard */}
                                 <div style={{ position: 'absolute', top: 0, right: 20, display: 'flex', gap: '10px' }}>
                                     <button
@@ -2243,8 +2243,9 @@ const App = () => {
                                 )}
                             </div>
 
-                            <div style={{ marginTop: '50px', paddingBottom: '20px', textAlign: 'center', color: '#9e9e9e', fontSize: '13px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                                <span>VIVIDpdf is a free and opensource software. <em><a href="https://www.gnu.org/philosophy/free-sw.en.html" target="_blank">Free as in freedom</a></em>.</span>
+                            <div style={{ textAlign: 'center', fontSize: '13px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                <span>All your files are processed and stored locally. No data is ever uploaded to the internet.</span>
+                                <span style={{ color: '#808080ff' }}>VIVIDpdf is a free and opensource software. <em><a href="https://www.gnu.org/philosophy/free-sw.en.html" target="_blank">Free as in freedom</a></em>.</span>
                                 <a href="https://github.com/Nathan903/VIVIDpdf" target="_blank" rel="noopener noreferrer" style={{ color: '#a1a1aa', textDecoration: 'none', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#6366f1'} onMouseOut={e => e.currentTarget.style.color = '#a1a1aa'} title="View on GitHub">
                                     <Icons.Github style={{ width: '20px', height: '20px' }} />
                                 </a>
