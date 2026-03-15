@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Icons } from '../../Icons';
 import './BugReport.css';
 
-const BugReport = ({ darkMode }) => {
+const BugReport = ({ darkMode, appContext }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [issue, setIssue] = useState('');
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
@@ -18,15 +18,27 @@ const BugReport = ({ darkMode }) => {
 
   const getSystemInfo = () => {
     const info = {
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      platform: navigator.platform || (navigator.userAgentData ? navigator.userAgentData.platform : 'unknown'),
-      memoryGB: navigator.deviceMemory || 'unknown',
-      cpuCores: navigator.hardwareConcurrency || 'unknown',
-      viewport: `${window.innerWidth}x${window.innerHeight}`,
-      screen: `${window.screen.width}x${window.screen.height}`,
-      url: window.location.href,
-      timestamp: new Date().toISOString()
+      browser: {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform || (navigator.userAgentData ? navigator.userAgentData.platform : 'unknown'),
+        devicePixelRatio: window.devicePixelRatio,
+        onLine: navigator.onLine,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        cookiesEnabled: navigator.cookieEnabled,
+        maxTouchPoints: navigator.maxTouchPoints
+      },
+      hardware: {
+        memoryGB: navigator.deviceMemory || 'unknown',
+        cpuCores: navigator.hardwareConcurrency || 'unknown',
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        screen: `${window.screen.width}x${window.screen.height}`
+      },
+      appState: appContext || 'not provided',
+      context: {
+        url: window.location.href,
+        timestamp: new Date().toISOString()
+      }
     };
     return JSON.stringify(info, null, 2);
   };
@@ -109,6 +121,10 @@ const BugReport = ({ darkMode }) => {
             <div className="info-attachment">
               <Icons.Settings />
               <span>System details (OS, Browser, Screen) will be attached automatically.</span>
+            </div>
+
+            <div className="github-link">
+              <p>You can also <a href="https://github.com/Nathan903/VIVIDpdf/issues" target="_blank" rel="noopener noreferrer">submit an issue on GitHub</a>.</p>
             </div>
 
             <div className="bug-report-footer">

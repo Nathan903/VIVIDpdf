@@ -160,6 +160,28 @@
   flex-shrink: 0;
 }
 
+.github-link {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.github-link p {
+  font-size: 13px;
+  color: #a1a1aa;
+}
+
+.github-link a {
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.github-link a:hover {
+  color: #818cf8;
+  text-decoration: underline;
+}
+
 .bug-report-footer {
   display: flex;
   justify-content: flex-end;

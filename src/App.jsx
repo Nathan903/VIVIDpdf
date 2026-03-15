@@ -2794,7 +2794,24 @@ const App = () => {
                 </div>
             )}
 
-            <BugReport darkMode={darkMode} />
+            <BugReport 
+                darkMode={darkMode} 
+                appContext={{
+                    readingMode,
+                    rate,
+                    autoHide,
+                    autoScroll,
+                    aiConfig,
+                    pdfStats: {
+                        numPages,
+                        activePage,
+                        scale,
+                        rotation,
+                        fitMode,
+                        fileId
+                    }
+                }}
+            />
 
         </div>
     );
