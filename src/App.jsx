@@ -29,12 +29,12 @@ const DEFAULT_GLOBALS = {
     autoScroll: true,
     layoutMode: 'grid',
     speechCustomization: {
-        skipUrls: false,
+        skipUrls: true,
         skipEmails: false,
         skipSquare: false,
         skipParens: false,
         skipCurly: false,
-        visualIndicator: false
+        visualIndicator: true
     },
     customPronunciations: [],
     languageVoiceCache: {}, // Store per-language preferences
