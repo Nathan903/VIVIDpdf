@@ -1045,6 +1045,9 @@ const App = () => {
     const scheduleNextBatch = (startPageNum, carryOverTokens, isFirstBatch = false, allowWait = true) => {
         if (!isPlayingRef.current) return false;
 
+        const vSettings = getVoiceSettings(selectedVoiceURI);
+        const forceSentenceMode = !vSettings.supportWordMode;
+
         let pool = [...carryOverTokens];
 
         if (pool.length === 0) {
@@ -1066,15 +1069,30 @@ const App = () => {
         const nextPageTokens = pageTokensMap.current.get(nextPageNum);
         let hasNextPage = false;
 
-        if (nextPageTokens && nextPageTokens.length > 0) {
+        const hasNextPageTokens = pool.some(t => t.pageNum === nextPageNum);
+
+        if (!hasNextPageTokens && nextPageTokens && nextPageTokens.length > 0) {
             pool = [...pool, ...nextPageTokens];
+            hasNextPage = true;
+        } else if (hasNextPageTokens) {
             hasNextPage = true;
         }
 
         let endIndex = pool.length;
         let nextLeftovers = [];
 
-        if (hasNextPage) {
+        if (forceSentenceMode) {
+            // ONLY Take ONE sentence!
+            const sentences = groupTokensIntoSentences(pool);
+            if (sentences.length > 0) {
+                const firstSentence = sentences[0];
+                endIndex = firstSentence.length;
+                if (endIndex < pool.length) {
+                    nextLeftovers = pool.slice(endIndex);
+                    pool = pool.slice(0, endIndex);
+                }
+            }
+        } else if (hasNextPage) {
             let safetyFound = false;
             for (let i = pool.length - 1; i > 0; i--) {
                 const txt = pool[i].spokenText.trim();
@@ -1154,15 +1172,18 @@ const App = () => {
         });
 
         if (!script.trim()) {
-            if (startPageNum < numPages) {
-                return scheduleNextBatch(nextPageNum, nextLeftovers, false, allowWait);
+            const nextBatchPageNum = nextLeftovers.length > 0 
+                ? nextLeftovers[0].pageNum 
+                : (hasNextPage ? nextPageNum + 1 : startPageNum + 1);
+
+            if (nextBatchPageNum <= numPages) {
+                return scheduleNextBatch(nextBatchPageNum, nextLeftovers, false, allowWait);
             } else {
                 setIsPlaying(false);
                 return false;
             }
         }
 
-        const vSettings = getVoiceSettings(selectedVoiceURI);
         const utter = new SpeechSynthesisUtterance(script);
         utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
         const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
@@ -1170,7 +1191,7 @@ const App = () => {
 
         utter.audioMap = map;
         utter.nextBatchInfo = {
-            pageNum: hasNextPage ? nextPageNum : startPageNum + 1,
+            pageNum: nextLeftovers.length > 0 ? nextLeftovers[0].pageNum : (hasNextPage ? nextPageNum + 1 : startPageNum + 1),
             leftovers: nextLeftovers
         };
         utter.hasQueuedNext = false;
@@ -1201,12 +1222,31 @@ const App = () => {
 
         utter.onstart = (event) => {
             if (!isPlayingRef.current) return;
-            const info = event.target.nextBatchInfo;
 
-            if (info && !event.target.hasQueuedNext && info.pageNum <= numPages) {
-                const queued = scheduleNextBatch(info.pageNum, info.leftovers, false, false);
-                if (queued) {
-                    event.target.hasQueuedNext = true;
+            // If word mode is not supported, we must set active token here for the whole sentence highlight
+            if (forceSentenceMode) {
+                const currentMap = event.target.audioMap;
+                if (currentMap && currentMap.length > 0) {
+                    const firstEntry = currentMap[0];
+                    const tokenId = firstEntry.token.id;
+                    const pageNum = firstEntry.token.pageNum;
+
+                    setActiveTokenId(tokenId);
+                    if (pageNum !== activePage) {
+                        setActivePage(pageNum);
+                    }
+                    handleSmartScroll(pageNum, tokenId);
+                }
+            }
+
+            if (!forceSentenceMode) {
+                const info = event.target.nextBatchInfo;
+
+                if (info && !event.target.hasQueuedNext && info.pageNum <= numPages) {
+                    const queued = scheduleNextBatch(info.pageNum, info.leftovers, false, false);
+                    if (queued) {
+                        event.target.hasQueuedNext = true;
+                    }
                 }
             }
         };
