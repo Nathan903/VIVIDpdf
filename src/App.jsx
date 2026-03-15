@@ -46,7 +46,7 @@ const DEFAULT_AI_CONFIG = {
     geminiApiKey: "",
     openAIApiKey: "",
     model: "gemini-2.5-flash-lite", // Default to cheap model
-    instructions: "Skip equations unless they are simple variables. Read naturally.",
+    instructions: "Read equations out loud naturally.",
     enabled: false
 };
 
@@ -234,6 +234,8 @@ const App = () => {
     const pageTokensMap = useRef(new Map());
     const waitingForPageRef = useRef(null);
     const activeTokenIdRef = useRef(null);
+    const aiTranscriptCache = useRef(new Map()); // key: "pageNum:firstTokenId"
+    const prefetchInProgress = useRef(new Set()); // keys currently being fetched
     const activePageRef = useRef(1);
     const numPagesRef = useRef(numPages);
 
@@ -640,6 +642,8 @@ const App = () => {
             setIsVoiceLoading(false);
             pageTokensMap.current.clear();
             waitingForPageRef.current = null;
+            aiTranscriptCache.current.clear();
+            prefetchInProgress.current.clear();
             console.log(`[TTS DEBUG] cancel called from loadFile`);
             ttsGenerationRef.current += 1;
             synth.cancel();
@@ -946,6 +950,83 @@ const App = () => {
         };
     };
 
+    // --- AI Transcript Prefetch Helpers ---
+    const prefetchAISentence = async (pageNum, tokenId) => {
+        if (!aiConfigRef.current.enabled) return;
+        if (!pageRefs.current[pageNum]) return;
+
+        const info = getNextSentenceInfo(pageNum, tokenId);
+        if (!info.tokens || info.tokens.length === 0) return;
+
+        const firstTokenId = info.tokens[0].id;
+        const cacheKey = `${pageNum}:${firstTokenId}`;
+
+        // Skip if already cached or fetch is in-flight
+        if (aiTranscriptCache.current.has(cacheKey)) return;
+        if (prefetchInProgress.current.has(cacheKey)) return;
+
+        let textToSpeak = info.tokens.map(t => t.spokenText).join(' ');
+        textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
+        if (!textToSpeak.trim()) return;
+
+        const ids = info.tokens.map(t => t.id);
+        const imgBase64 = pageRefs.current[pageNum].getWrappedImageForTokens(ids);
+        if (!imgBase64) return;
+
+        const isGemini = aiConfigRef.current.model.startsWith('gemini');
+        const apiKeyToUse = isGemini ? aiConfigRef.current.geminiApiKey : aiConfigRef.current.openAIApiKey;
+        if (!apiKeyToUse || !apiKeyToUse.trim()) return;
+
+        prefetchInProgress.current.add(cacheKey);
+        try {
+            const aiResult = await fixTranscriptWithAI(
+                imgBase64,
+                textToSpeak,
+                apiKeyToUse,
+                aiConfigRef.current.instructions,
+                aiConfigRef.current.model
+            );
+            if (aiResult.transcript && !aiResult.error) {
+                aiTranscriptCache.current.set(cacheKey, { transcript: aiResult.transcript });
+            } else {
+                // Cache the original text so we don't retry on error
+                aiTranscriptCache.current.set(cacheKey, { transcript: textToSpeak, error: true });
+            }
+            setTotalCost(getStoredCost());
+        } catch (e) {
+            // Swallow prefetch errors silently
+        } finally {
+            prefetchInProgress.current.delete(cacheKey);
+        }
+    };
+
+    // Sequentially prefetch up to `count` sentences starting AFTER (pageNum, tokenId)
+    const prefetchNextSentences = async (pageNum, tokenId, count = 3) => {
+        if (!aiConfigRef.current.enabled) return;
+        let curPageNum = pageNum;
+        let curTokenId = tokenId;
+        for (let i = 0; i < count; i++) {
+            if (!isPlayingRef.current) return; // Stop prefetching if user paused
+            const info = getNextSentenceInfo(curPageNum, curTokenId);
+            if (!info.tokens || info.tokens.length === 0) {
+                // Try next page
+                if (info.nextPage && curPageNum < numPagesRef.current) {
+                    curPageNum = curPageNum + 1;
+                    curTokenId = null;
+                    continue;
+                }
+                return;
+            }
+            // Advance to the next sentence position
+            const nextPageNum = info.nextTokenId ? curPageNum : curPageNum + 1;
+            const nextTokenId = info.nextTokenId || null;
+            // Prefetch this next sentence (sequential: await each)
+            await prefetchAISentence(nextPageNum, nextTokenId);
+            curPageNum = nextPageNum;
+            curTokenId = nextTokenId;
+        }
+    };
+
     // --- NEW: AI-Enhanced Playback Loop ---
     const playNextSentenceAI = async (pageNum, tokenId) => {
         console.log(`[TTS DEBUG] playNextSentenceAI called. pageNum: ${pageNum}, tokenId: ${tokenId}, isPlaying: ${isPlayingRef.current}`);
@@ -993,10 +1074,16 @@ const App = () => {
         let textToSpeak = sentenceTokens.map(t => t.spokenText).join(' ');
         textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
 
-        // --- AI VISUAL FIX STEP ---
-        if (textToSpeak.trim() && pageRefs.current[pageNum]) {
+        // --- AI VISUAL FIX STEP (with cache + prefetch) ---
+        const cacheKey = `${pageNum}:${firstTokenId}`;
+        const cached = aiTranscriptCache.current.get(cacheKey);
+
+        if (cached) {
+            // Cache hit: use stored transcript immediately, no API call needed
+            console.log(`[TTS DEBUG] playNextSentenceAI - Cache hit for key: ${cacheKey}`);
+            if (cached.transcript) textToSpeak = cached.transcript;
+        } else if (textToSpeak.trim() && pageRefs.current[pageNum]) {
             const ids = sentenceTokens.map(t => t.id);
-            // Get clean image of JUST this sentence
             const imgBase64 = pageRefs.current[pageNum].getWrappedImageForTokens(ids);
 
             if (imgBase64) {
@@ -1021,14 +1108,21 @@ const App = () => {
 
                     if (aiResult.transcript && !aiResult.error) {
                         textToSpeak = aiResult.transcript;
+                        aiTranscriptCache.current.set(cacheKey, { transcript: textToSpeak });
                     } else if (aiResult.error) {
                         setAiWarning("AI Failed - using original text");
                         setTimeout(() => setAiWarning(null), 3000);
+                        // Cache original so we don't retry on every replay
+                        aiTranscriptCache.current.set(cacheKey, { transcript: textToSpeak, error: true });
                     }
                 }
             }
         }
         // ---------------------------
+
+        // Kick off prefetch for the next 3 sentences (fire-and-forget, no await)
+        prefetchNextSentences(info.pageNum, info.nextTokenId || null);
+        // ---
 
         textToSpeak = applyCustomPronunciations(textToSpeak, customPronunciationsRef.current);
 
