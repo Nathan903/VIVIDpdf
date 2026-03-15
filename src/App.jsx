@@ -195,6 +195,7 @@ const App = () => {
     const [offlineFallbackConfig, setOfflineFallbackConfig] = useState(globalSettings.offlineFallbackConfig || { language: 'en', voiceURI: '', rate: 1.0 });
     const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
     const [activeTokenId, setActiveTokenId] = useState(null);
+    const [isVoiceLoading, setIsVoiceLoading] = useState(false);
 
     // Skip / Zones
     const [isMarkingMode, setIsMarkingMode] = useState(false);
@@ -217,6 +218,7 @@ const App = () => {
     const customPronunciationsRef = useRef(customPronunciations);
     const speechCustomizationRef = useRef(speechCustomization);
     const synth = window.speechSynthesis;
+    const ttsGenerationRef = useRef(0);
     const pageRefs = useRef({});
     const pageRefCallbacks = useRef({});
     const viewportRef = useRef(null);
@@ -635,9 +637,11 @@ const App = () => {
             setFitMode('custom');
             setActiveTokenId(null);
             setIsPlaying(false);
+            setIsVoiceLoading(false);
             pageTokensMap.current.clear();
             waitingForPageRef.current = null;
             console.log(`[TTS DEBUG] cancel called from loadFile`);
+            ttsGenerationRef.current += 1;
             synth.cancel();
 
             // Scroll to saved page (delayed to allow render)
@@ -686,10 +690,12 @@ const App = () => {
                     setSkipZones(meta.skipZones || []);
                     setFitMode('custom');
                     setActiveTokenId(null);
+                    setIsVoiceLoading(false);
                     setIsPlaying(false);
                     pageTokensMap.current.clear();
                     waitingForPageRef.current = null;
                     console.log(`[TTS DEBUG] cancel called from loadMetadataOnly`);
+                    ttsGenerationRef.current += 1;
                     synth.cancel();
                     setTimeout(() => performJump(meta.lastPage || 1, pdfDoc), 300);
                 } finally {
@@ -839,6 +845,7 @@ const App = () => {
         // of the canceled utterance doesn't stop playback.
         isJumpingRef.current = true;
         console.log(`[TTS DEBUG] cancel called from handleTokenClick`);
+        ttsGenerationRef.current += 1;
         synth.cancel();
         setIsPlaying(true);
         isPlayingRef.current = true;
@@ -964,6 +971,7 @@ const App = () => {
                 }
             } else {
                 console.log(`[TTS DEBUG] playNextSentenceAI - Reached end of document. Stopping playback.`);
+                setIsVoiceLoading(false);
                 setIsPlaying(false);
             }
             return;
@@ -1038,15 +1046,18 @@ const App = () => {
 
         const vSettings = getVoiceSettings(selectedVoiceURI);
         const utter = new SpeechSynthesisUtterance(textToSpeak);
+        utter.generation = ttsGenerationRef.current;
         utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
         const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
         if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
 
-        utter.onstart = () => {
+        utter.onstart = (event) => {
+            if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance start`);
         };
 
-        utter.onend = () => {
+        utter.onend = (event) => {
+            if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance end. isJumping: ${isJumpingRef.current}, isPlaying: ${isPlayingRef.current}`);
             if (isJumpingRef.current) return;
             if (isPlayingRef.current) {
@@ -1059,6 +1070,7 @@ const App = () => {
         };
 
         utter.onerror = (e) => {
+            if (e.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance error: ${e.error}. isJumping: ${isJumpingRef.current}`);
             if (isJumpingRef.current) return;
             if (e.error !== 'interrupted' && e.error !== 'canceled') {
@@ -1229,12 +1241,14 @@ const App = () => {
                 return scheduleNextBatch(nextBatchPageNum, nextLeftovers, false, allowWait);
             } else {
                 console.log(`[TTS DEBUG] scheduleNextBatch - script is empty and end of document reached, stopping playback.`);
+                setIsVoiceLoading(false);
                 setIsPlaying(false);
                 return false;
             }
         }
 
         const utter = new SpeechSynthesisUtterance(script);
+        utter.generation = ttsGenerationRef.current;
         utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
         const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
         if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
@@ -1249,8 +1263,10 @@ const App = () => {
         console.log(`[TTS DEBUG] scheduleNextBatch - Created utterance. nextBatchInfo:`, utter.nextBatchInfo);
 
         utter.onboundary = (event) => {
+            if (event.target.generation !== ttsGenerationRef.current) return;
             if (!isPlayingRef.current) { 
                 console.log(`[TTS DEBUG] utterance.onboundary - Cancelled synth because not playing.`);
+                ttsGenerationRef.current += 1;
                 synth.cancel(); 
                 return; 
             }
@@ -1277,7 +1293,9 @@ const App = () => {
         };
 
         utter.onstart = (event) => {
+            if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] utterance.onstart - Started utterance.`);
+            setIsVoiceLoading(false);
             if (!isPlayingRef.current) return;
 
             // If word mode is not supported, we must set active token here for the whole sentence highlight
@@ -1310,10 +1328,13 @@ const App = () => {
         };
 
         utter.onend = (event) => {
+            if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] utterance.onend - Ended utterance. isJumping: ${isJumpingRef.current}`);
             // If we are currently jumping (manual click), ignore the 'end' event 
             // from the canceled utterance so we don't stop playback.
             if (isJumpingRef.current) return;
+            
+            setIsVoiceLoading(false);
 
             if (!isPlayingRef.current) {
                 console.log('[TTS DEBUG] utterance.onend - isPlayingRef.current is FALSE, returning early.');
@@ -1339,10 +1360,13 @@ const App = () => {
         };
 
         utter.onerror = (event) => {
+            if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] utterance.onerror - Error: ${event.error}. isJumping: ${isJumpingRef.current}`);
             // Ignore errors caused by manual cancellation or during a jump
             if (isJumpingRef.current) return;
             if (event.error === 'interrupted' || event.error === 'canceled') return;
+
+            setIsVoiceLoading(false);
 
             if (isPlayingRef.current) {
                 console.log(`[TTS DEBUG] utterance.onerror - Stopping playback due to error.`);
@@ -1351,6 +1375,9 @@ const App = () => {
         };
 
         console.log(`[TTS DEBUG] scheduleNextBatch - calling synth.speak()`);
+        if (!synth.speaking) {
+            setIsVoiceLoading(true);
+        }
         synth.speak(utter);
         return true;
     };
@@ -1359,9 +1386,11 @@ const App = () => {
         if (isMarkingModeRef.current) return;
         if (isPlaying) {
             console.log(`[TTS DEBUG] togglePlay - Stopping playback. cancelling synth.`);
+            setIsVoiceLoading(false);
             setIsPlaying(false);
             isPlayingRef.current = false;
             waitingForPageRef.current = null;
+            ttsGenerationRef.current += 1;
             synth.cancel();
         } else {
             console.log(`[TTS DEBUG] togglePlay - Starting playback. activePage: ${activePage}, activeTokenId: ${activeTokenId}`);
@@ -2022,6 +2051,13 @@ const App = () => {
                 {aiWarning && (
                     <div style={{ position: 'absolute', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(50, 50, 50, 0.95)', color: '#e4e4e7', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)', zIndex: 2000 }}>
                         <span style={{ fontSize: '14px' }}>⚠️</span> {aiWarning}
+                    </div>
+                )}
+
+                {/* VOICE LOADING INDICATOR */}
+                {isVoiceLoading && (
+                    <div style={{ position: 'absolute', bottom: '90px', left: '50%', transform: 'translateX(-50%)', background: '#333', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', zIndex: 2000 }}>
+                        <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2, marginBottom: 0 }}></div> Loading Voice...
                     </div>
                 )}
 
