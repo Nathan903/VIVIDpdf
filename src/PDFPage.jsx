@@ -1,8 +1,7 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, memo } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Icons } from './Icons';
 import { 
-  MERGE_CONFIG, 
   isTokenInZone, 
   groupTokensIntoSentences, 
   mergeRawTokens, 
@@ -386,6 +385,7 @@ const PDFPage = forwardRef(({
   useEffect(() => {
     if (!isVisible || !pdfDoc) return;
     let isCancelled = false;
+    let renderTask = null;
 
     const render = async () => {
       setIsRendering(true); // Start Spinner
@@ -414,7 +414,8 @@ const PDFPage = forwardRef(({
             canvasRef.current.height = renderViewport.height;
             canvasRef.current.style.width = `${viewport.width}px`;
             canvasRef.current.style.height = `${viewport.height}px`;
-            await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+            renderTask = page.render({ canvasContext: ctx, viewport: renderViewport });
+            await renderTask.promise;
         }
 
         if (isCancelled) return;
@@ -427,7 +428,7 @@ const PDFPage = forwardRef(({
             const textContent = await page.getTextContent();
             
             await pdfjsLib.renderTextLayer({
-                textContent,
+                textContentSource: textContent,
                 container: textLayerRef.current,
                 viewport,
                 enhanceTextSelection: true
@@ -501,14 +502,19 @@ const PDFPage = forwardRef(({
             allTokensRef.current = allCandidates;
         }
       } catch (err) {
-        console.error(`Error rendering page ${pageNum}`, err);
+        if (!isCancelled && err.name !== 'RenderingCancelledException') {
+            console.error(`Error rendering page ${pageNum}`, err);
+        }
       } finally {
         if (!isCancelled) setIsRendering(false); // Stop Spinner
       }
     };
 
     render();
-    return () => { isCancelled = true; };
+    return () => { 
+        isCancelled = true; 
+        if (renderTask) renderTask.cancel();
+    };
   }, [isVisible, pdfDoc, pageNum, scale, rotation, registerPageTokens]); // Removed skipZones
 
   // --- Drawing Logic ---
@@ -996,4 +1002,6 @@ const PDFPage = forwardRef(({
   );
 });
 
-export default PDFPage;
+PDFPage.displayName = 'PDFPage';
+
+export default memo(PDFPage);

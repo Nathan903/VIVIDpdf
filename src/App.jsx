@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import PDFPage from './PDFPage';
 import { Icons } from './Icons';
-import { initDB, saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord, getFileRecord, getStorageInfo, deleteBlobs } from './db';
+import { saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord, getFileRecord, getStorageInfo, deleteBlobs } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage, verifyGeminiAPIKey, verifyOpenAIApiKey } from './aiService'; // IMPORT AI SERVICE
 import { applySkippingRules, applyCustomPronunciations } from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
@@ -204,9 +204,6 @@ const App = () => {
     }, [isMarkingMode]);
     const [skipZones, setSkipZones] = useState([]);
 
-    // Debug
-    const [debugImages, setDebugImages] = useState([]);
-
     // UI State
     const [showSettings, setShowSettings] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -221,6 +218,7 @@ const App = () => {
     const speechCustomizationRef = useRef(speechCustomization);
     const synth = window.speechSynthesis;
     const pageRefs = useRef({});
+    const pageRefCallbacks = useRef({});
     const viewportRef = useRef(null);
 
     const settingsRef = useRef(null);
@@ -536,16 +534,20 @@ const App = () => {
         if (waitingForPageRef.current === pageNum && isPlayingRef.current) {
             waitingForPageRef.current = null;
             // Check if AI Mode is enabled to route correctly
-            if (aiConfig.enabled) {
+            if (aiConfigRef.current.enabled) {
                 const tokens = pageTokensMap.current.get(pageNum);
                 if (tokens && tokens.length > 0) {
-                    playNextSentenceAI(pageNum, tokens[0].id);
+                    playNextSentenceAIRef.current(pageNum, tokens[0].id);
                 }
             } else {
-                scheduleNextBatch(pageNum, []);
+                scheduleNextBatchRef.current(pageNum, []);
             }
         }
-    }, [aiConfig.enabled]); // Added dependency
+    }, []); // Removed dependency since we use refs
+
+    // --- References for functions ---
+    const playNextSentenceAIRef = useRef(null);
+    const scheduleNextBatchRef = useRef(null);
 
     // --- Smart Jump Logic ---
     const performJump = async (pageNumber, doc = pdf) => {
@@ -635,7 +637,6 @@ const App = () => {
             setIsPlaying(false);
             pageTokensMap.current.clear();
             waitingForPageRef.current = null;
-            setDebugImages([]);
             console.log(`[TTS DEBUG] cancel called from loadFile`);
             synth.cancel();
 
@@ -688,7 +689,6 @@ const App = () => {
                     setIsPlaying(false);
                     pageTokensMap.current.clear();
                     waitingForPageRef.current = null;
-                    setDebugImages([]);
                     console.log(`[TTS DEBUG] cancel called from loadMetadataOnly`);
                     synth.cancel();
                     setTimeout(() => performJump(meta.lastPage || 1, pdfDoc), 300);
@@ -812,8 +812,15 @@ const App = () => {
         }
     };
 
-    // Note: Updated to store the Component Ref, not just the DIV
-    const registerPageRef = (num, ref) => { pageRefs.current[num] = ref; };
+    const registerPageRef = useCallback((num, ref) => { pageRefs.current[num] = ref; }, []);
+    
+    const getPageRefCallback = useCallback((pageNum) => {
+        if (!pageRefCallbacks.current[pageNum]) {
+            pageRefCallbacks.current[pageNum] = (r) => registerPageRef(pageNum, r);
+        }
+        return pageRefCallbacks.current[pageNum];
+    }, [registerPageRef]);
+
     const notifyPageVisible = useCallback((pageNum) => { setActivePage(pageNum); }, []);
 
     const handleJumpKey = (e) => {
@@ -839,7 +846,7 @@ const App = () => {
 
         // Determine Start logic
         if (aiConfigRef.current.enabled) {
-            playNextSentenceAI(pageNum, clickedTokenId);
+            playNextSentenceAIRef.current(pageNum, clickedTokenId);
         } else {
             let startIndex = 0;
             if (clickedTokenId) {
@@ -847,12 +854,12 @@ const App = () => {
                 if (startIndex === -1) startIndex = 0;
             }
             const tokens = pageTokens.slice(startIndex);
-            scheduleNextBatch(pageNum, tokens, true);
+            scheduleNextBatchRef.current(pageNum, tokens, true);
         }
 
         // Reset the jump flag after a short delay (enough for async cancel events to fire)
         setTimeout(() => { isJumpingRef.current = false; }, 50);
-    }, [voices, selectedVoiceURI, rate, aiConfig.enabled]);
+    }, [voices, selectedVoiceURI, rate]);
 
     // --- Smart Scrolling Logic (Safe Zone) ---
     const handleSmartScroll = (pageNum, tokenId) => {
@@ -1383,6 +1390,11 @@ const App = () => {
     };
 
     // --- Keyboard Navigation Logic (Word/Sentence aware) ---
+    useEffect(() => {
+        playNextSentenceAIRef.current = playNextSentenceAI;
+        scheduleNextBatchRef.current = scheduleNextBatch;
+    });
+
     const handleSmartNavigation = useCallback((direction) => {
         // direction: -1 (prev) or 1 (next)
         const currentPageInfo = activePageRef.current !== null ? activePageRef.current : activePage;
@@ -1594,12 +1606,13 @@ const App = () => {
                         return next;
                     });
                     break;
-                case 'i': // AI Fix Mode
+                case 'i': { // AI Fix Mode
                     e.preventDefault();
                     const nextEnabled = !aiConfigRef.current.enabled;
                     setAiConfig({ ...aiConfigRef.current, enabled: nextEnabled });
                     if (nextEnabled) setReadingMode('sentence');
                     break;
+                }
                 case 'h': // Help
                     e.preventDefault();
                     setShowHelp(prev => !prev);
@@ -1611,18 +1624,7 @@ const App = () => {
 
         window.addEventListener('keydown', handleGlobalKeyDown);
         return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-    }, [activePage, activeTokenId, readingMode, isPlaying, handleSmartNavigation, performJump, toggleFitMode]);
-
-    const handleDebugExtract = async () => {
-        const pageRef = pageRefs.current[activePage];
-        if (pageRef && pageRef.generateDebugImages) {
-            const images = await pageRef.generateDebugImages();
-            setDebugImages(images);
-            setShowSettings(false);
-        } else {
-            alert("Debug: Page not ready or loaded.");
-        }
-    };
+    }, [activePage, activeTokenId, readingMode, isPlaying, handleSmartNavigation, performJump, toggleFitMode, handleTokenClick, numPages, selectedVoiceURI, togglePlay, voices]);
 
     const handleResetCost = () => {
         if (confirm("Reset accumulated cost tracker to $0.00?")) {
@@ -1983,12 +1985,12 @@ const App = () => {
                                 {Array.from(new Array(numPages), (_, i) => i + 1).map(pageNum => (
                                     <PDFPage
                                         key={pageNum}
-                                        ref={(r) => registerPageRef(pageNum, r)}
+                                        ref={getPageRefCallback(pageNum)}
                                         pdfDoc={pdf}
                                         pageNum={pageNum}
                                         scale={scale}
                                         rotation={rotation}
-                                        activeTokenId={activeTokenId}
+                                        activeTokenId={activePage === pageNum ? activeTokenId : null}
                                         readingMode={readingMode}
                                         onTokensParsed={handleTokenClick}
                                         notifyPageVisible={notifyPageVisible}
@@ -2005,24 +2007,6 @@ const App = () => {
                                     />
                                 ))}
                             </div>
-                            {debugImages.length > 0 && (
-                                <div className="debug-panel" style={{ padding: '20px', background: '#f5f5f5', borderTop: '1px solid #ccc' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
-                                        <h3>Debug Extraction Output ({debugImages.length})</h3>
-                                        <button className="icon-btn" onClick={() => setDebugImages([])}><Icons.Close /> Clear</button>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        {debugImages.map((item, idx) => (
-                                            <div key={idx} style={{ background: 'white', padding: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
-                                                <div style={{ marginBottom: '5px', fontSize: '12px', color: '#555', fontFamily: 'monospace' }}>
-                                                    {item.text}
-                                                </div>
-                                                <img src={item.img} alt={`Sentence ${idx}`} style={{ maxWidth: '100%', border: '1px solid #ddd' }} />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </>
                     )}
                 </div>
@@ -2195,7 +2179,9 @@ const App = () => {
                                                         let displayName = lang;
                                                         try {
                                                             displayName = new Intl.DisplayNames(['en'], { type: 'language' }).of(lang);
-                                                        } catch(e) {}
+                                                        } catch (e) {
+                                                            // fallback to lang code
+                                                        }
                                                         return (
                                                         <option key={lang} value={lang}>
                                                             {displayName}
@@ -2471,7 +2457,9 @@ const App = () => {
                                                                         let displayName = lang;
                                                                         try {
                                                                             displayName = new Intl.DisplayNames(['en'], { type: 'language' }).of(lang);
-                                                                        } catch(e) {}
+                                                                        } catch (e) {
+                                                                            // fallback to lang code
+                                                                        }
                                                                         return (
                                                                         <option key={lang} value={lang}>
                                                                             {displayName}
