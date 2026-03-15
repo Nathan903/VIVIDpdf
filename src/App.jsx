@@ -1006,7 +1006,6 @@ const App = () => {
         if (prefetchInProgress.current.has(cacheKey)) return;
 
         let textToSpeak = info.tokens.map(t => t.spokenText).join(' ');
-        textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
         if (!textToSpeak.trim()) return;
 
         const ids = info.tokens.map(t => t.id);
@@ -1084,6 +1083,7 @@ const App = () => {
         if (!cached || !cached.transcript) return false; // Not cached yet, can't pre-queue
 
         let textToSpeak = cached.transcript;
+        textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
         textToSpeak = applyCustomPronunciations(textToSpeak, customPronunciationsRef.current);
 
         if (!textToSpeak.trim()) {
@@ -1188,7 +1188,6 @@ const App = () => {
         handleSmartScroll(pageNum, firstTokenId);
 
         let textToSpeak = sentenceTokens.map(t => t.spokenText).join(' ');
-        textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
 
         // Fire-and-forget: start prefetching the next 3 sentences in parallel with
         // the live AI fetch below — so N+1 is likely cached by the time N finishes playing
@@ -1246,6 +1245,7 @@ const App = () => {
         }
         // ---------------------------
 
+        textToSpeak = applySkippingRules(textToSpeak, speechCustomizationRef.current);
         textToSpeak = applyCustomPronunciations(textToSpeak, customPronunciationsRef.current);
 
         console.log(`[TTS DEBUG] playNextSentenceAI - Final textToSpeak: "${textToSpeak}"`);
