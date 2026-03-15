@@ -1,6 +1,6 @@
 // aiService.js
 
-const LS_COST_COUNT = 'pdf_reader_total_cost'; 
+const LS_COST_COUNT = 'pdf_reader_total_cost';
 
 export const getStoredCost = () => {
   return parseFloat(localStorage.getItem(LS_COST_COUNT) || '0.000000');
@@ -16,29 +16,29 @@ export const resetCostUsage = () => {
  */
 const calculateCost = (usage, model) => {
   if (!usage) return 0;
-  
+
   let inputRate = 0;
   let outputRate = 0;
 
   // Pricing per 1M tokens
   if (model === 'gpt-4o') {
-      inputRate = 2.50;
-      outputRate = 10.00;
+    inputRate = 2.50;
+    outputRate = 10.00;
   } else if (model === 'gpt-4o-mini') {
-      inputRate = 0.15;
-      outputRate = 0.60;
+    inputRate = 0.15;
+    outputRate = 0.60;
   } else if (model.includes('gemini-2.5-flash-lite')) {
-      // Very cheap tier
-      inputRate = 0.10;
-      outputRate = 0.40;
+    // Very cheap tier
+    inputRate = 0.10;
+    outputRate = 0.40;
   } else if (model.includes('gemini-3-flash-preview')) {
-      // Standard Flash tier
-      inputRate = 0.15;
-      outputRate = 0.60;
+    // Standard Flash tier
+    inputRate = 0.15;
+    outputRate = 0.60;
   } else {
-      // Fallback (assume mini/flash rates)
-      inputRate = 0.15;
-      outputRate = 0.60;
+    // Fallback (assume mini/flash rates)
+    inputRate = 0.15;
+    outputRate = 0.60;
   }
 
   const inputCost = (usage.prompt_tokens / 1_000_000) * inputRate;
@@ -89,11 +89,11 @@ const callGeminiAPI = async (imageDataUrl, promptText, apiKey, model) => {
       contents: [{
         parts: [
           { text: promptText },
-          { 
-            inline_data: { 
-              mime_type: mimeType, 
-              data: base64Data 
-            } 
+          {
+            inline_data: {
+              mime_type: mimeType,
+              data: base64Data
+            }
           }
         ]
       }],
@@ -110,7 +110,7 @@ const callGeminiAPI = async (imageDataUrl, promptText, apiKey, model) => {
   }
 
   const data = await response.json();
-  
+
   // Normalize Gemini Response to OpenAI-like structure for the main function
   const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
   const usage = data.usageMetadata || {};
@@ -134,7 +134,7 @@ const callOpenAIAPI = async (imageDataUrl, promptText, apiKey, model) => {
       "Authorization": `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: model, 
+      model: model,
       messages: [
         {
           role: "user",
@@ -201,7 +201,8 @@ GUIDELINES:
 - **Visual Verification:** Look at the image to disambiguate artifacts. If the text says "CO2" but the image shows a subscript, output "C O two".
 - **Math/Formulas:** Unless told to skip, convert visual math notation into spoken English (e.g., "x^{2}" -> "x squared", "∑" -> "the sum of").
 - **Cleanliness:** Remove non-spoken artifacts (e.g., page numbers, random geometrical shapes, invisible formatting chars).
-- **Strict Adherence:** If the USER CONSTRAINT says "skip equations", replace them with a brief pause or silence, do not read them.
+- **Strict Adherence:** If the USER CONSTRAINT says "skip equations", replace them with silence (nothing), do not read them.
+- **No need to add any extra words or phrases, just output the cleaned, spoken-word string here:** do not add any extra words or phrases, or commands like [pause] or [silence].
 
 OUTPUT FORMAT:
 Return valid JSON only.
@@ -211,7 +212,7 @@ Return valid JSON only.
 `;
 
     // --- DEBUGGING START ---
-    
+
     // // Download image for debugging
     // const link = document.createElement("a");
     // link.href = imageDataUrl;
@@ -232,9 +233,9 @@ Return valid JSON only.
         try {
           // ROUTING LOGIC
           if (model.startsWith('gemini')) {
-             result = await callGeminiAPI(imageDataUrl, promptText, apiKey, model);
+            result = await callGeminiAPI(imageDataUrl, promptText, apiKey, model);
           } else {
-             result = await callOpenAIAPI(imageDataUrl, promptText, apiKey, model);
+            result = await callOpenAIAPI(imageDataUrl, promptText, apiKey, model);
           }
           lastError = null;
           break; // Success, exit retry loop
@@ -266,7 +267,7 @@ Return valid JSON only.
       const durationMs = (endTime - startTime).toFixed(2);
 
       console.log("[Prompt]", rawText,
-        "\n[output]"+parsed.transcript,
+        "\n[output]" + parsed.transcript,
         `\n[Metrics] Model: ${model} | Time: ${durationMs}ms | Cost: $${cost.toFixed(6)}`);
 
       return {
