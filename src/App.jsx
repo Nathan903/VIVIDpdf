@@ -2565,62 +2565,7 @@ const App = () => {
                 </div>
             )}
 
-            <style>{`
-          .modal-overlay {
-              position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-              background: rgba(0,0,0,0.6); z-index: 10000;
-              display: flex; align-items: center; justify-content: center;
-              backdrop-filter: blur(2px);
-          }
-          .modal-content {
-              background: #18181b; width: 500px; max-width: 90%;
-              border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-              overflow: hidden;
-              color: #e4e4e7;
-              border: 1px solid #3f3f46;
-          }
-          .modal-header {
-              padding: 15px 20px; border-bottom: 1px solid #3f3f46;
-              display: flex; justify-content: space-between; align-items: center;
-          }
-          .modal-header h3 { margin: 0; font-size: 18px; }
-          .modal-body { padding: 20px; }
-          
-          .toast-notification {
-              position: fixed;
-              bottom: 20px;
-              left: 50%;
-              transform: translateX(-50%);
-              background: #f44336;
-              color: white;
-              padding: 10px 20px;
-              border-radius: 8px;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-              z-index: 100000;
-              animation: fadein 0.3s, fadeout 0.3s 2.7s;
-              font-size: 14px;
-              pointer-events: none;
-          }
-          @keyframes fadein {
-              from { bottom: 0; opacity: 0; }
-              to { bottom: 20px; opacity: 1; }
-          }
-          @keyframes fadeout {
-              from { bottom: 20px; opacity: 1; }
-              to { bottom: 0; opacity: 0; }
-          }
-          
-          .shortcuts-table { width: 100%; border-collapse: collapse; }
-          .shortcuts-table td { padding: 8px 0; border-bottom: 1px solid #3f3f46; font-size: 14px; }
-          .shortcuts-table tr:last-child td { border-bottom: none; }
-          kbd {
-              background-color: #27272a; border: 1px solid #3f3f46;
-              border-radius: 4px; box-shadow: 0 1px 0 rgba(0,0,0,0.2);
-              color: #e4e4e7; display: inline-block; font-size: 11px;
-              line-height: 1.4; margin: 0 2px; padding: 2px 6px;
-              white-space: nowrap; font-family: monospace;
-          }
-      `}</style>
+
         </div>
     );
 };
