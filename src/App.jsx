@@ -9,6 +9,7 @@ import { applySkippingRules, applyCustomPronunciations } from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import { getVoiceSettings, calculateActualRate } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
+import BugReport from './components/BugReport/BugReport';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -2793,6 +2794,7 @@ const App = () => {
                 </div>
             )}
 
+            <BugReport darkMode={darkMode} />
 
         </div>
     );
