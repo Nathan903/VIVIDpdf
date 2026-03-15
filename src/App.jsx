@@ -256,11 +256,17 @@ const App = () => {
     const [toast, setToast] = useState(null);
     const toastTimeoutRef = useRef(null);
     const [pulsePlayBtn, setPulsePlayBtn] = useState(false);
+    const [pulseSettingsBtn, setPulseSettingsBtn] = useState(false);
 
     // Stop pulsing when reading starts
     useEffect(() => {
         if (isPlaying) setPulsePlayBtn(false);
     }, [isPlaying]);
+
+    // Stop pulsing settings when settings are opened
+    useEffect(() => {
+        if (showSettings) setPulseSettingsBtn(false);
+    }, [showSettings]);
 
     const showToast = (message, type = 'error') => {
         setToast({ message, type });
@@ -308,6 +314,18 @@ const App = () => {
             return () => clearTimeout(timer);
         }
     }, [pdf]);
+
+    // --- First-time Settings Hint ---
+    useEffect(() => {
+        if (isPlaying && !localStorage.getItem('vividpdf_first_time_settings_hint_shown')) {
+            const timer = setTimeout(() => {
+                showToast("💡 Click the gear icon to change speed and voice.", "info");
+                setPulseSettingsBtn(true);
+                localStorage.setItem('vividpdf_first_time_settings_hint_shown', 'true');
+            }, 5000); // 5 seconds after starting play
+            return () => clearTimeout(timer);
+        }
+    }, [isPlaying]);
 
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
     useEffect(() => { numPagesRef.current = numPages; }, [numPages]);
@@ -2480,9 +2498,9 @@ const App = () => {
                                 <div style={{ position: 'relative' }}>
                                     <button
                                         ref={settingsBtnRef}
-                                        className={`icon-btn ${showSettings ? 'active' : ''}`}
+                                        className={`icon-btn ${showSettings ? 'active' : ''} ${pulseSettingsBtn ? 'pulse-yellow' : ''}`}
                                         onClick={() => setShowSettings(!showSettings)}
-                                        title="Settings"
+                                        title="Settings (S)"
                                     >
                                         <Icons.Settings />
                                     </button>
