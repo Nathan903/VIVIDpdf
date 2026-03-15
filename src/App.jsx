@@ -538,10 +538,8 @@ const App = () => {
                     currentLang = v.lang.split('-')[0]; // generic fallback, e.g. "en" from "en-US"
                     validatedVoiceURI = selectedVoiceURI;
                 } else {
-                    // Fallback to default
-                    const browserLang = (navigator.language || 'en').split('-')[0];
-                    const defaultVoice = available.find(v => v.default && v.lang.startsWith(browserLang)) ||
-                        available.find(v => v.lang.startsWith(browserLang)) ||
+                    // Fallback to default - prioritize English for all users
+                    const defaultVoice = available.find(v => v.lang.startsWith('en-US')) ||
                         available.find(v => v.lang.startsWith('en')) ||
                         available.find(v => v.default) ||
                         available[0];
