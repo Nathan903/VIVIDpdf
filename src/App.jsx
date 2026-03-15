@@ -257,6 +257,7 @@ const App = () => {
     const toastTimeoutRef = useRef(null);
     const [pulsePlayBtn, setPulsePlayBtn] = useState(false);
     const [pulseSettingsBtn, setPulseSettingsBtn] = useState(false);
+    const [pulseSkipZoneBtn, setPulseSkipZoneBtn] = useState(false);
 
     // Stop pulsing when reading starts
     useEffect(() => {
@@ -267,6 +268,22 @@ const App = () => {
     useEffect(() => {
         if (showSettings) setPulseSettingsBtn(false);
     }, [showSettings]);
+
+    // Stop pulsing skip zone when marking mode starts
+    useEffect(() => {
+        if (isMarkingMode) setPulseSkipZoneBtn(false);
+    }, [isMarkingMode]);
+
+    // Show a one-time hint when entering mark skip zone mode for the first time
+    useEffect(() => {
+        if (
+            isMarkingMode &&
+            !localStorage.getItem('vividpdf_first_time_mark_skip_hint_shown')
+        ) {
+            showToast("💡 Click and drag to draw a rectangle on a page number to skip that area.", "info");
+            localStorage.setItem('vividpdf_first_time_mark_skip_hint_shown', 'true');
+        }
+    }, [isMarkingMode]);
 
     const showToast = (message, type = 'error') => {
         setToast({ message, type });
@@ -301,7 +318,7 @@ const App = () => {
     useEffect(() => {
         checkAndTriggerSkipHintRef.current = checkAndTriggerSkipHint;
     });
-    
+
     // --- First-time User Hint ---
     useEffect(() => {
         if (pdf && !localStorage.getItem('vividpdf_first_time_viewer_hint_shown')) {
@@ -315,15 +332,27 @@ const App = () => {
         }
     }, [pdf]);
 
-    // --- First-time Settings Hint ---
+    // --- First-time Settings & Skip Zone Hints ---
     useEffect(() => {
-        if (isPlaying && !localStorage.getItem('vividpdf_first_time_settings_hint_shown')) {
-            const timer = setTimeout(() => {
-                showToast("💡 Click the gear icon to change speed and voice.", "info");
-                setPulseSettingsBtn(true);
-                localStorage.setItem('vividpdf_first_time_settings_hint_shown', 'true');
-            }, 5000); // 5 seconds after starting play
-            return () => clearTimeout(timer);
+        if (isPlaying) {
+            // Settings Hint
+            if (!localStorage.getItem('vividpdf_first_time_settings_hint_shown')) {
+                const timer = setTimeout(() => {
+                    showToast("💡 Click the gear icon to change speed and voice.", "info");
+                    setPulseSettingsBtn(true);
+                    localStorage.setItem('vividpdf_first_time_settings_hint_shown', 'true');
+                }, 8000); // 8 seconds after starting play
+                return () => clearTimeout(timer);
+            }
+            // Skip Zone Hint
+            if (!localStorage.getItem('vividpdf_first_time_skip_zone_hint_shown')) {
+                const timer = setTimeout(() => {
+                    showToast("💡 Click the mark skip area button to mark headers/footers to skip.", "info");
+                    setPulseSkipZoneBtn(true);
+                    localStorage.setItem('vividpdf_first_time_skip_zone_hint_shown', 'true');
+                }, 16000); // 16 seconds after starting play
+                return () => clearTimeout(timer);
+            }
         }
     }, [isPlaying]);
 
@@ -2462,7 +2491,7 @@ const App = () => {
                                 </div>
 
                                 <button
-                                    className={`icon-btn ${isMarkingMode ? 'active-danger' : ''}`}
+                                    className={`icon-btn ${isMarkingMode ? 'active-danger' : ''} ${pulseSkipZoneBtn ? 'pulse-yellow' : ''}`}
                                     onClick={() => { if (!isMarkingMode && isPlaying) togglePlay(); setIsMarkingMode(!isMarkingMode); }}
                                     title="Mark Skip Area (M)"
                                 >

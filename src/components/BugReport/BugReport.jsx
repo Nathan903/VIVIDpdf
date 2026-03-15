@@ -86,7 +86,7 @@ const BugReport = ({ darkMode, appContext }) => {
         onClick={() => setIsOpen(true)}
         title="Report an issue"
       >
-        Report Issue
+        🛠️Report Issue
       </button>
     );
   }
