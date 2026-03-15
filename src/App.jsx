@@ -171,7 +171,7 @@ const App = () => {
     const [showCustomSpeech, setShowCustomSpeech] = useState(false);
 
     // Navigation
-    const [numPages, setNumPages] = useState(0);
+    const [numPages, setNumPages] = useState(-999);
     const [activePage, setActivePage] = useState(1);
     const [jumpInput, setJumpInput] = useState("1");
     const [isInputFocused, setIsInputFocused] = useState(false);
@@ -235,6 +235,7 @@ const App = () => {
     const waitingForPageRef = useRef(null);
     const activeTokenIdRef = useRef(null);
     const activePageRef = useRef(1);
+    const numPagesRef = useRef(numPages);
 
     // Visual
     const [isLoading, setIsLoading] = useState(false);
@@ -247,6 +248,7 @@ const App = () => {
     };
 
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+    useEffect(() => { numPagesRef.current = numPages; }, [numPages]);
     useEffect(() => { rateRef.current = rate; }, [rate]);
     useEffect(() => { autoScrollRef.current = autoScroll; }, [autoScroll]);
     useEffect(() => { customPronunciationsRef.current = customPronunciations; }, [customPronunciations]);
@@ -547,7 +549,7 @@ const App = () => {
 
     // --- Smart Jump Logic ---
     const performJump = async (pageNumber, doc = pdf) => {
-        if (!doc || pageNumber < 1 || pageNumber > (doc.numPages || numPages)) return;
+        if (!doc || pageNumber < 1 || pageNumber > (doc.numPages || numPagesRef.current)) return;
 
         // Optional: show loading if jumping far
         const isFarJump = Math.abs(pageNumber - activePage) > 5;
@@ -613,6 +615,7 @@ const App = () => {
             loadRecentFilesList();
 
             setPdf(pdfDoc);
+            console.log("[debug] PDF loaded, number of pages:", pdfDoc.numPages);
             setNumPages(pdfDoc.numPages);
 
             // Restore Settings or Default
@@ -816,7 +819,7 @@ const App = () => {
     const handleJumpKey = (e) => {
         if (e.key === 'Enter') {
             const page = parseInt(jumpInput);
-            if (page >= 1 && page <= numPages) {
+            if (page >= 1 && page <= numPagesRef.current) {
                 // USE NEW JUMP LOGIC HERE
                 performJump(page);
                 e.target.blur();
@@ -938,8 +941,8 @@ const App = () => {
 
         // Handle Page Transitions
         if (info.nextPage && !info.tokens) {
-            console.log(`[TTS DEBUG] playNextSentenceAI - Page transition needed. targetPage: ${info.pageNum < numPages ? info.pageNum + 1 : 'End of Document'}`);
-            if (info.pageNum < numPages) {
+            console.log(`[TTS DEBUG] playNextSentenceAI - Page transition needed. targetPage: ${info.pageNum < numPagesRef.current ? info.pageNum + 1 : 'End of Document'}`);
+            if (info.pageNum < numPagesRef.current) {
                 const nextPage = info.pageNum + 1;
                 if (pageTokensMap.current.has(nextPage)) {
                     console.log(`[TTS DEBUG] playNextSentenceAI - Next page tokens found, playing next page.`);
@@ -1066,6 +1069,11 @@ const App = () => {
     const scheduleNextBatch = (startPageNum, carryOverTokens, isFirstBatch = false, allowWait = true) => {
         console.log(`[TTS DEBUG] scheduleNextBatch called. startPage: ${startPageNum}, isFirstBatch: ${isFirstBatch}, allowWait: ${allowWait}, isPlaying: ${isPlayingRef.current}`);
         console.log('[TTS DEBUG] scheduleNextBatch - carryOverTokens:', carryOverTokens);
+        if (numPagesRef.current<=0) {
+            console.log(`[ERROR] scheduleNextBatch - numPages is 0 or less. Cannot schedule batch.`, numPagesRef.current);
+            return false;
+        }
+
         if (!isPlayingRef.current) return false;
 
         const vSettings = getVoiceSettings(selectedVoiceURI);
@@ -1209,7 +1217,7 @@ const App = () => {
 
             console.log('[TTS DEBUG] scheduleNextBatch - script is empty. nextBatchPageNum:', nextBatchPageNum, 'nextLeftovers:', nextLeftovers, 'hasNextPage:', hasNextPage);
 
-            if (nextBatchPageNum <= numPages) {
+            if (nextBatchPageNum <= numPagesRef.current) {
                 console.log(`[TTS DEBUG] scheduleNextBatch - script is empty, moving to next page/leftovers: ${nextBatchPageNum}.`);
                 return scheduleNextBatch(nextBatchPageNum, nextLeftovers, false, allowWait);
             } else {
@@ -1284,7 +1292,7 @@ const App = () => {
             if (!forceSentenceMode) {
                 const info = event.target.nextBatchInfo;
 
-                if (info && !event.target.hasQueuedNext && info.pageNum <= numPages) {
+                if (info && !event.target.hasQueuedNext && info.pageNum <= numPagesRef.current) {
                     console.log(`[TTS DEBUG] utterance.onstart - queuing next batch.`);
                     const queued = scheduleNextBatch(info.pageNum, info.leftovers, false, false);
                     if (queued) {
@@ -1307,12 +1315,12 @@ const App = () => {
             if (!event.target.hasQueuedNext) {
                 const info = event.target.nextBatchInfo;
                 console.log('[TTS DEBUG] utterance.onend - nextBatchInfo:', info);
-                if (info && info.pageNum <= numPages) {
+                if (info && info.pageNum <= numPagesRef.current) {
                     console.log(`[TTS DEBUG] utterance.onend - scheduling next batch from onend. target page: ${info.pageNum}, leftovers:`, info.leftovers);
                     scheduleNextBatch(info.pageNum, info.leftovers, false, true);
                 } else {
                     if (info) {
-                        console.log(`[TTS DEBUG] utterance.onend - nextBatchInfo pageNum ${info.pageNum} exceeds numPages ${numPages}. Stopping playback.`);
+                        console.log(`[TTS DEBUG] utterance.onend - nextBatchInfo pageNum ${info.pageNum} exceeds numPages ${numPagesRef.current}. Stopping playback.`);
                     }
                     console.log(`[TTS DEBUG] utterance.onend - Reached end of document or nextBatchInfo missing/invalid. Calling setIsPlaying(false).`);
                     setIsPlaying(false);
@@ -1447,7 +1455,7 @@ const App = () => {
             }
         } else if (newIndex >= tokens.length) {
             // Go to next page
-            if (currentPageInfo < numPages) {
+            if (currentPageInfo < numPagesRef.current) {
                 const nextPage = currentPageInfo + 1;
                 activePageRef.current = nextPage;
                 const nextTokens = pageTokensMap.current.get(nextPage);
@@ -1464,7 +1472,7 @@ const App = () => {
             handleTokenClick(tokens, tokens[newIndex].id, currentPageInfo);
         }
 
-    }, [activePage, activeTokenId, readingMode, numPages, handleTokenClick, performJump]);
+    }, [activePage, activeTokenId, readingMode, handleTokenClick, performJump]);
 
     // --- Keyboard Shortcuts ---
     useEffect(() => {
@@ -1603,7 +1611,7 @@ const App = () => {
 
         window.addEventListener('keydown', handleGlobalKeyDown);
         return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-    }, [activePage, activeTokenId, readingMode, isPlaying, numPages, handleSmartNavigation, performJump, toggleFitMode]);
+    }, [activePage, activeTokenId, readingMode, isPlaying, handleSmartNavigation, performJump, toggleFitMode]);
 
     const handleDebugExtract = async () => {
         const pageRef = pageRefs.current[activePage];
