@@ -10,6 +10,7 @@ import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import { getVoiceSettings, calculateActualRate } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
 import BugReport from './components/BugReport/BugReport';
+import { initDemoFile } from './services/demoService';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -418,6 +419,14 @@ const App = () => {
 
     // 2. Load Recent Files on Mount
     useEffect(() => {
+        const checkDemoRoute = async () => {
+            if (window.location.pathname === '/demo') {
+                console.log("[Demo] Detected /demo route, initializing demo.pdf");
+                await initDemoFile();
+                loadRecentFilesList();
+            }
+        };
+        checkDemoRoute();
         loadRecentFilesList();
     }, []);
 
