@@ -1196,8 +1196,9 @@ const App = () => {
                         textToSpeak = aiResult.transcript;
                         aiTranscriptCache.current.set(cacheKey, { transcript: textToSpeak });
                     } else if (aiResult.error) {
-                        setAiWarning("AI Failed - using original text");
-                        setTimeout(() => setAiWarning(null), 3000);
+                        const reason = aiResult.reason || "Unknown error";
+                        setAiWarning(`AI Failed: ${reason}`);
+                        setTimeout(() => setAiWarning(null), 4000);
                         // Cache original so we don't retry on every replay
                         aiTranscriptCache.current.set(cacheKey, { transcript: textToSpeak, error: true });
                     }

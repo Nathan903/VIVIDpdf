@@ -225,16 +225,34 @@ Return valid JSON only.
 
     try {
       let result;
+      let lastError;
+      const MAX_RETRIES = 1;
 
-      // ROUTING LOGIC
-      if (model.startsWith('gemini')) {
-         result = await callGeminiAPI(imageDataUrl, promptText, apiKey, model);
-      } else {
-         result = await callOpenAIAPI(imageDataUrl, promptText, apiKey, model);
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          // ROUTING LOGIC
+          if (model.startsWith('gemini')) {
+             result = await callGeminiAPI(imageDataUrl, promptText, apiKey, model);
+          } else {
+             result = await callOpenAIAPI(imageDataUrl, promptText, apiKey, model);
+          }
+          lastError = null;
+          break; // Success, exit retry loop
+        } catch (retryErr) {
+          lastError = retryErr;
+          if (attempt < MAX_RETRIES) {
+            console.warn(`[AI Fix] Attempt ${attempt + 1} failed: ${retryErr.message}. Retrying in 1s...`);
+            await new Promise(r => setTimeout(r, 1000));
+          }
+        }
+      }
+
+      if (lastError) {
+        throw lastError; // All retries exhausted
       }
 
       const endTime = performance.now();
-      
+
       // Calculate Cost
       const cost = calculateCost(result.usage, model);
 
@@ -243,14 +261,14 @@ Return valid JSON only.
       localStorage.setItem(LS_COST_COUNT, (currentTotal + cost).toFixed(6));
 
       const parsed = JSON.parse(result.content);
-      
+
       // --- METRICS CALCULATION ---
       const durationMs = (endTime - startTime).toFixed(2);
-      
-      console.log("[Prompt]", rawText, 
+
+      console.log("[Prompt]", rawText,
         "\n[output]"+parsed.transcript,
         `\n[Metrics] Model: ${model} | Time: ${durationMs}ms | Cost: $${cost.toFixed(6)}`);
-      
+
       return {
         transcript: parsed.transcript || "NO CHANGE",
         usage: result.usage?.total_tokens || 0,
@@ -260,7 +278,7 @@ Return valid JSON only.
 
     } catch (error) {
       console.error("AI Fix Error:", error);
-      return { transcript: rawText, error: true }; // Fallback to raw
+      return { transcript: rawText, error: true, reason: error.message || "Unknown error" }; // Fallback to raw
     }
   });
 };
