@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../../Icons';
+import { getLogs } from '../../utils/consoleInterceptor';
 import './BugReport.css';
 
 const BugReport = ({ darkMode, appContext }) => {
@@ -38,7 +39,8 @@ const BugReport = ({ darkMode, appContext }) => {
       context: {
         url: window.location.href,
         timestamp: new Date().toISOString()
-      }
+      },
+      logs: getLogs()
     };
     return JSON.stringify(info, null, 2);
   };

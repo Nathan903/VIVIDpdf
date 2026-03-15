@@ -16,7 +16,7 @@
   justify-content: center;
   color: #a1a1aa;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
+  z-index: 10001;
   padding: 0;
 }
 
@@ -44,7 +44,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
-  z-index: 2000;
+  z-index: 10002;
   display: flex;
   align-items: center;
   justify-content: center;

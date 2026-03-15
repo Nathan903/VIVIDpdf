@@ -2801,7 +2801,13 @@ const App = () => {
                     rate,
                     autoHide,
                     autoScroll,
-                    aiConfig,
+                    aiStatus: {
+                        enabled: aiConfig.enabled,
+                        model: aiConfig.model,
+                        geminiKeyStatus: geminiKeyStatus,
+                        openAIKeyStatus: openAIKeyStatus,
+                        instructionsLength: aiConfig.instructions?.length || 0
+                    },
                     pdfStats: {
                         numPages,
                         activePage,
