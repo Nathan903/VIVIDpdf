@@ -406,11 +406,11 @@ const App = () => {
                 } else {
                     // Fallback to default
                     const browserLang = (navigator.language || 'en').split('-')[0];
-                    const defaultVoice = available.find(v => v.default && v.lang.startsWith(browserLang)) || 
-                                         available.find(v => v.lang.startsWith(browserLang)) || 
-                                         available.find(v => v.lang.startsWith('en')) || 
-                                         available.find(v => v.default) || 
-                                         available[0];
+                    const defaultVoice = available.find(v => v.default && v.lang.startsWith(browserLang)) ||
+                        available.find(v => v.lang.startsWith(browserLang)) ||
+                        available.find(v => v.lang.startsWith('en')) ||
+                        available.find(v => v.default) ||
+                        available[0];
                     if (defaultVoice) {
                         currentLang = defaultVoice.lang.split('-')[0];
                         validatedVoiceURI = defaultVoice.voiceURI;
@@ -819,7 +819,7 @@ const App = () => {
     };
 
     const registerPageRef = useCallback((num, ref) => { pageRefs.current[num] = ref; }, []);
-    
+
     const getPageRefCallback = useCallback((pageNum) => {
         if (!pageRefCallbacks.current[pageNum]) {
             pageRefCallbacks.current[pageNum] = (r) => registerPageRef(pageNum, r);
@@ -1088,7 +1088,7 @@ const App = () => {
     const scheduleNextBatch = (startPageNum, carryOverTokens, isFirstBatch = false, allowWait = true) => {
         console.log(`[TTS DEBUG] scheduleNextBatch called. startPage: ${startPageNum}, isFirstBatch: ${isFirstBatch}, allowWait: ${allowWait}, isPlaying: ${isPlayingRef.current}`);
         console.log('[TTS DEBUG] scheduleNextBatch - carryOverTokens:', carryOverTokens);
-        if (numPagesRef.current<=0) {
+        if (numPagesRef.current <= 0) {
             console.log(`[ERROR] scheduleNextBatch - numPages is 0 or less. Cannot schedule batch.`, numPagesRef.current);
             return false;
         }
@@ -1230,8 +1230,8 @@ const App = () => {
         console.log(`[TTS DEBUG] scheduleNextBatch - Final script generated. Length: ${script.length}. Empty? ${!script.trim()}`);
 
         if (!script.trim()) {
-            const nextBatchPageNum = nextLeftovers.length > 0 
-                ? nextLeftovers[0].pageNum 
+            const nextBatchPageNum = nextLeftovers.length > 0
+                ? nextLeftovers[0].pageNum
                 : (hasNextPage ? nextPageNum + 1 : startPageNum + 1);
 
             console.log('[TTS DEBUG] scheduleNextBatch - script is empty. nextBatchPageNum:', nextBatchPageNum, 'nextLeftovers:', nextLeftovers, 'hasNextPage:', hasNextPage);
@@ -1259,16 +1259,16 @@ const App = () => {
             leftovers: nextLeftovers
         };
         utter.hasQueuedNext = false;
-        
+
         console.log(`[TTS DEBUG] scheduleNextBatch - Created utterance. nextBatchInfo:`, utter.nextBatchInfo);
 
         utter.onboundary = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
-            if (!isPlayingRef.current) { 
+            if (!isPlayingRef.current) {
                 console.log(`[TTS DEBUG] utterance.onboundary - Cancelled synth because not playing.`);
                 ttsGenerationRef.current += 1;
-                synth.cancel(); 
-                return; 
+                synth.cancel();
+                return;
             }
 
             const currentMap = event.target.audioMap;
@@ -1333,7 +1333,7 @@ const App = () => {
             // If we are currently jumping (manual click), ignore the 'end' event 
             // from the canceled utterance so we don't stop playback.
             if (isJumpingRef.current) return;
-            
+
             setIsVoiceLoading(false);
 
             if (!isPlayingRef.current) {
@@ -2007,6 +2007,12 @@ const App = () => {
                                 </div>
                             )}
 
+                            <div style={{ marginTop: '50px', paddingBottom: '20px', textAlign: 'center', color: '#9e9e9e', fontSize: '13px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                <span>VIVIDpdf is a free and opensource software. <em><a href="https://www.gnu.org/philosophy/free-sw.en.html" target="_blank">Free as in freedom</a></em>.</span>
+                                <a href="https://github.com/Nathan903/VIVIDpdf" target="_blank" rel="noopener noreferrer" style={{ color: '#a1a1aa', textDecoration: 'none', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#6366f1'} onMouseOut={e => e.currentTarget.style.color = '#a1a1aa'} title="View on GitHub">
+                                    <Icons.Github style={{ width: '20px', height: '20px' }} />
+                                </a>
+                            </div>
                         </div>
                     ) : (
                         <>
@@ -2219,10 +2225,11 @@ const App = () => {
                                                             // fallback to lang code
                                                         }
                                                         return (
-                                                        <option key={lang} value={lang}>
-                                                            {displayName}
-                                                        </option>
-                                                    )})}
+                                                            <option key={lang} value={lang}>
+                                                                {displayName}
+                                                            </option>
+                                                        )
+                                                    })}
                                                 </select>
                                             </div>
 
@@ -2497,10 +2504,11 @@ const App = () => {
                                                                             // fallback to lang code
                                                                         }
                                                                         return (
-                                                                        <option key={lang} value={lang}>
-                                                                            {displayName}
-                                                                        </option>
-                                                                    )})}
+                                                                            <option key={lang} value={lang}>
+                                                                                {displayName}
+                                                                            </option>
+                                                                        )
+                                                                    })}
                                                                 </select>
 
                                                                 <select
