@@ -152,7 +152,7 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 30vh;
+    margin-top: 20vh;
     color: #555;
     gap: 20px;
 }
@@ -688,7 +688,7 @@ canvas {
     width: 100%;
     max-width: 1000px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 0px;
     /* Consistent padding */
     box-sizing: border-box;
 }
@@ -906,6 +906,7 @@ canvas {
         bottom: 0;
         opacity: 0;
     }
+
     to {
         bottom: 20px;
         opacity: 1;
@@ -917,6 +918,7 @@ canvas {
         bottom: 20px;
         opacity: 1;
     }
+
     to {
         bottom: 0;
         opacity: 0;

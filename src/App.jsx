@@ -1933,18 +1933,18 @@ const App = () => {
                         <div className="dashboard-container" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ flex: 1, minHeight: '100vh', position: 'relative' }}>
                                 {/* Settings Icon in Dashboard */}
-                                <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '10px' }}>
+                                <div style={{ position: 'absolute', top: 0, right: 20, display: 'flex', gap: '10px' }}>
                                     <button
                                         className="upload-btn"
                                         onClick={() => setShowHelp(true)}
                                         style={{ border: '1px solid #3f3f46', display: 'flex', alignItems: 'center', gap: '8px' }}
                                     >
-                                        <span style={{ fontSize: '18px'}}>?</span>
+                                        <span style={{ fontSize: '18px' }}>?</span>
                                         Keyboard Shortcuts
                                     </button>
-                                    <button 
-                                        className="upload-btn" 
-                                        onClick={() => setShowHomeSettings(true)} 
+                                    <button
+                                        className="upload-btn"
+                                        onClick={() => setShowHomeSettings(true)}
                                         title="History Storage Settings"
                                         style={{ border: '1px solid #3f3f46', display: 'flex', alignItems: 'center', gap: '8px' }}
                                     >
