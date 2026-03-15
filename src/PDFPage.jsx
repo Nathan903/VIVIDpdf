@@ -252,6 +252,8 @@ const PDFPage = forwardRef(({
         const allTexts = allTokensRef.current.map(t => t.text || '');
         const joined = allTexts.join(' ');
         const patterns = [];
+        if (speechCustomization.skipUrls) patterns.push(/https?:\/\/\S+|www\.\S+/gi);
+        if (speechCustomization.skipEmails) patterns.push(/[\w.-]+@[\w.-]+\.\w+/gi);
         if (speechCustomization.skipSquare) patterns.push(/\[[^\]]*\]/g);
         if (speechCustomization.skipParens) patterns.push(/\([^)]*\)/g);
         if (speechCustomization.skipCurly) patterns.push(/\{[^}]*\}/g);
@@ -298,11 +300,8 @@ const PDFPage = forwardRef(({
         let isSpeechAffected = false;
         if (!isSkipped && speechCustomization.visualIndicator) {
             const word = t.text || '';
-            // Check skip rules (URL per-token, brackets via pre-computed set)
-            if (speechCustomization.skipUrls && /^(https?:\/\/|www\.)/i.test(word)) {
-                isSpeechAffected = true;
-            }
-            if (!isSpeechAffected && bracketAffected.has(t.id)) {
+            
+            if (bracketAffected.has(t.id)) {
                 isSpeechAffected = true;
             }
             // Check pronunciation replacements
