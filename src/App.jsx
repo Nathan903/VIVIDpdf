@@ -249,6 +249,7 @@ const App = () => {
     const pageRefs = useRef({});
     const pageRefCallbacks = useRef({});
     const viewportRef = useRef(null);
+    const pinchRef = useRef({ initialDist: 0, initialScale: 0 });
 
     const settingsRef = useRef(null);
     const settingsBtnRef = useRef(null);
@@ -620,6 +621,38 @@ const App = () => {
             }
         } catch (err) {
             console.error("Error calculating fit:", err);
+        }
+    };
+
+    // --- Pinch-to-Zoom Logic ---
+    const handleTouchStartViewport = (e) => {
+        if (e.touches.length === 2) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            pinchRef.current = {
+                initialDist: dist,
+                initialScale: scale
+            };
+        }
+    };
+
+    const handleTouchMoveViewport = (e) => {
+        if (e.touches.length === 2 && pinchRef.current.initialDist > 0) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const zoomDelta = dist / pinchRef.current.initialDist;
+            const newScale = pinchRef.current.initialScale * zoomDelta;
+            updateScale(newScale);
+        }
+    };
+
+    const handleTouchEndViewport = (e) => {
+        if (e.touches.length < 2) {
+            pinchRef.current = { initialDist: 0, initialScale: 0 };
         }
     };
 
@@ -2305,7 +2338,13 @@ const App = () => {
             )}
 
             <main className="main-content" style={{ userSelect: textSelectionEnabled ? 'text' : 'none' }}>
-                <div className="scroll-viewport" ref={viewportRef}>
+                <div 
+                    className="scroll-viewport" 
+                    ref={viewportRef}
+                    onTouchStart={handleTouchStartViewport}
+                    onTouchMove={handleTouchMoveViewport}
+                    onTouchEnd={handleTouchEndViewport}
+                >
                     {isLoading && (
                         <div className="loading-overlay">
                             <div className="spinner"></div>

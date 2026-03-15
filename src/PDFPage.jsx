@@ -625,8 +625,9 @@ const PDFPage = forwardRef(({
   // --- Drawing Logic on Tablets ---
   const handleTouchStart = (e) => {
       if (!isMarkingMode) return;
-      // Prevent scrolling while drawing
-      if (e.cancelable) e.preventDefault();
+      // Prevent scrolling while drawing (only for single touch)
+      if (e.touches.length === 1 && e.cancelable) e.preventDefault();
+      if (e.touches.length > 1) return; // Ignore multi-touch in marking mode
 
       const touch = e.touches[0];
       const rect = containerRef.current.getBoundingClientRect();
@@ -640,7 +641,8 @@ const PDFPage = forwardRef(({
 
   const handleTouchMove = (e) => {
       if (!isDrawing || !isMarkingMode) return;
-      if (e.cancelable) e.preventDefault();
+      if (e.touches.length === 1 && e.cancelable) e.preventDefault();
+      if (e.touches.length > 1) return; // Ignore multi-touch
 
       const touch = e.touches[0];
       const rect = containerRef.current.getBoundingClientRect();
