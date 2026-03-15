@@ -218,6 +218,21 @@ const App = () => {
 
     // UI State
     const [showSettings, setShowSettings] = useState(false);
+    const [settingsInteracted, setSettingsInteracted] = useState(() => {
+        return localStorage.getItem('vividpdf_settings_interacted') === 'true';
+    });
+    const settingsOpenedRef = useRef(false);
+
+    // Track settings interaction sequence
+    useEffect(() => {
+        if (showSettings) {
+            settingsOpenedRef.current = true;
+        } else if (settingsOpenedRef.current) {
+            setSettingsInteracted(true);
+            localStorage.setItem('vividpdf_settings_interacted', 'true');
+        }
+    }, [showSettings]);
+
     const [showHelp, setShowHelp] = useState(false);
     const [recentFiles, setRecentFiles] = useState([]);
 
@@ -345,16 +360,16 @@ const App = () => {
                 return () => clearTimeout(timer);
             }
             // Skip Zone Hint
-            if (!localStorage.getItem('vividpdf_first_time_skip_zone_hint_shown')) {
+            if (settingsInteracted && !localStorage.getItem('vividpdf_first_time_skip_zone_hint_shown')) {
                 const timer = setTimeout(() => {
                     showToast("💡 Click the mark skip area button to mark headers/footers to skip.", "info");
                     setPulseSkipZoneBtn(true);
                     localStorage.setItem('vividpdf_first_time_skip_zone_hint_shown', 'true');
-                }, 16000); // 16 seconds after starting play
+                }, 8000); // 16 seconds after starting play
                 return () => clearTimeout(timer);
             }
         }
-    }, [isPlaying]);
+    }, [isPlaying, settingsInteracted]);
 
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
     useEffect(() => { numPagesRef.current = numPages; }, [numPages]);
@@ -602,6 +617,13 @@ const App = () => {
     // --- Core Logic ---
     const handleAddSkipZone = useCallback((zone) => {
         setSkipZones(prev => [...prev, zone]);
+
+        // Show a completion hint after the first time drawing a rectangle
+        if (!localStorage.getItem('vividpdf_first_time_mark_skip_complete_hint_shown')) {
+            showToast("💡 Click the mark skip area button again to complete marking.", "info");
+            setPulseSkipZoneBtn(true);
+            localStorage.setItem('vividpdf_first_time_mark_skip_complete_hint_shown', 'true');
+        }
     }, []);
 
     const handleRemoveSkipZone = useCallback((id) => {
@@ -1976,6 +1998,7 @@ const App = () => {
                     if (isPlaying) togglePlay();
                     setIsMarkingMode(prev => {
                         const next = !prev;
+                        if (!next) setPulseSkipZoneBtn(false);
                         isMarkingModeRef.current = next;
                         return next;
                     });
@@ -2492,7 +2515,11 @@ const App = () => {
 
                                 <button
                                     className={`icon-btn ${isMarkingMode ? 'active-danger' : ''} ${pulseSkipZoneBtn ? 'pulse-yellow' : ''}`}
-                                    onClick={() => { if (!isMarkingMode && isPlaying) togglePlay(); setIsMarkingMode(!isMarkingMode); }}
+                                    onClick={() => {
+                                        if (!isMarkingMode && isPlaying) togglePlay();
+                                        if (isMarkingMode) setPulseSkipZoneBtn(false);
+                                        setIsMarkingMode(!isMarkingMode);
+                                    }}
                                     title="Mark Skip Area (M)"
                                 >
                                     <Icons.Crop />
