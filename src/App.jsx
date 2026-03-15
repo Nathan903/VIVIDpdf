@@ -1930,89 +1930,91 @@ const App = () => {
                         </div>
                     )}
                     {!pdf ? (
-                        <div className="dashboard-container" style={{ position: 'relative' }}>
-                            {/* Settings Icon in Dashboard */}
-                            <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '10px' }}>
-                                <button
-                                    className="upload-btn"
-                                    onClick={() => setShowHelp(true)}
-                                    style={{ border: '1px solid #3f3f46', display: 'flex', alignItems: 'center', gap: '8px' }}
-                                >
-                                    <span style={{ fontSize: '18px'}}>?</span>
-                                    Keyboard Shortcuts
-                                </button>
-                                <button 
-                                    className="upload-btn" 
-                                    onClick={() => setShowHomeSettings(true)} 
-                                    title="History Storage Settings"
-                                    style={{ border: '1px solid #3f3f46', display: 'flex', alignItems: 'center', gap: '8px' }}
-                                >
-                                    <Icons.Settings />
-                                </button>
+                        <div className="dashboard-container" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ flex: 1, minHeight: '100vh', position: 'relative' }}>
+                                {/* Settings Icon in Dashboard */}
+                                <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '10px' }}>
+                                    <button
+                                        className="upload-btn"
+                                        onClick={() => setShowHelp(true)}
+                                        style={{ border: '1px solid #3f3f46', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                    >
+                                        <span style={{ fontSize: '18px'}}>?</span>
+                                        Keyboard Shortcuts
+                                    </button>
+                                    <button 
+                                        className="upload-btn" 
+                                        onClick={() => setShowHomeSettings(true)} 
+                                        title="History Storage Settings"
+                                        style={{ border: '1px solid #3f3f46', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                    >
+                                        <Icons.Settings />
+                                    </button>
 
-                            </div>
-
-                            <div className="empty-placeholder">
-                                <label className="upload-btn main-upload" onClick={() => fileInputRef.current.click()}>
-                                    <Icons.Upload /> Open PDF File
-                                </label>
-                                <p style={{ marginTop: '20px', color: '#9e9e9e', fontSize: '14px' }}>or drag and drop a file here</p>
-
-
-                            </div>
-
-                            {/* RECENT FILES SECTION */}
-                            {recentFiles.length > 0 && (
-                                <div className="recent-files-section">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #3f3f46', marginBottom: '20px', paddingBottom: '10px' }}>
-                                        <h3 style={{ margin: 0, border: 'none', padding: 0 }}>Recently Opened</h3>
-
-                                        {/* Toggle Button for layout view */}
-                                        <button
-                                            className="icon-btn"
-                                            onClick={() => setGlobalSettings(prev => ({
-                                                ...prev,
-                                                layoutMode: prev.layoutMode === 'grid' ? 'list' : 'grid'
-                                            }))}
-                                            title={`Switch to ${globalSettings.layoutMode === 'grid' ? 'List' : 'Grid'} Layout`}
-                                        >
-                                            {globalSettings.layoutMode === 'grid' ? <Icons.List /> : <Icons.Grid />}
-                                        </button>
-                                    </div>
-
-                                    <div className={globalSettings.layoutMode === 'grid' ? 'recent-grid' : 'recent-list'}>
-                                        {recentFiles.map(file => (
-                                            <div key={file.id} className="recent-card" onClick={() => handleRecentClick(file)}>
-                                                <div className="recent-thumb">
-                                                    {file.thumbnail ? <img src={file.thumbnail} alt="preview" /> : <div className="no-thumb">PDF</div>}
-                                                    {!file.hasBlob && (
-                                                        <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(0,0,0,0.7)', padding: '6px', borderRadius: '50%', color: '#f87171', display: 'flex' }} title="Content cleared to save space. Click to re-upload.">
-                                                            <Icons.CloudOff style={{ width: '18px', height: '18px' }} />
-                                                        </div>
-                                                    )}
-                                                    <div className="page-badge">Pg {file.lastPage}</div>
-                                                </div>
-                                                <div className="recent-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div className="recent-name" title={file.name}>{file.name}</div>
-                                                        <div className="recent-date">
-                                                            {new Date(file.lastOpened).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        className="icon-btn delete-recent-btn"
-                                                        onClick={(e) => handleDeleteRecent(e, file.id)}
-                                                        title="Remove Record"
-                                                        style={{ flexShrink: 0, padding: '4px', width: 'auto', height: 'auto', marginLeft: '8px' }}
-                                                    >
-                                                        <Icons.Trash style={{ width: '16px', height: '16px' }} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
                                 </div>
-                            )}
+
+                                <div className="empty-placeholder">
+                                    <label className="upload-btn main-upload" onClick={() => fileInputRef.current.click()}>
+                                        <Icons.Upload /> Open PDF File
+                                    </label>
+                                    <p style={{ marginTop: '20px', color: '#9e9e9e', fontSize: '14px' }}>or drag and drop a file here</p>
+
+
+                                </div>
+
+                                {/* RECENT FILES SECTION */}
+                                {recentFiles.length > 0 && (
+                                    <div className="recent-files-section">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #3f3f46', marginBottom: '20px', paddingBottom: '10px' }}>
+                                            <h3 style={{ margin: 0, border: 'none', padding: 0 }}>Recently Opened</h3>
+
+                                            {/* Toggle Button for layout view */}
+                                            <button
+                                                className="icon-btn"
+                                                onClick={() => setGlobalSettings(prev => ({
+                                                    ...prev,
+                                                    layoutMode: prev.layoutMode === 'grid' ? 'list' : 'grid'
+                                                }))}
+                                                title={`Switch to ${globalSettings.layoutMode === 'grid' ? 'List' : 'Grid'} Layout`}
+                                            >
+                                                {globalSettings.layoutMode === 'grid' ? <Icons.List /> : <Icons.Grid />}
+                                            </button>
+                                        </div>
+
+                                        <div className={globalSettings.layoutMode === 'grid' ? 'recent-grid' : 'recent-list'}>
+                                            {recentFiles.map(file => (
+                                                <div key={file.id} className="recent-card" onClick={() => handleRecentClick(file)}>
+                                                    <div className="recent-thumb">
+                                                        {file.thumbnail ? <img src={file.thumbnail} alt="preview" /> : <div className="no-thumb">PDF</div>}
+                                                        {!file.hasBlob && (
+                                                            <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(0,0,0,0.7)', padding: '6px', borderRadius: '50%', color: '#f87171', display: 'flex' }} title="Content cleared to save space. Click to re-upload.">
+                                                                <Icons.CloudOff style={{ width: '18px', height: '18px' }} />
+                                                            </div>
+                                                        )}
+                                                        <div className="page-badge">Pg {file.lastPage}</div>
+                                                    </div>
+                                                    <div className="recent-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                            <div className="recent-name" title={file.name}>{file.name}</div>
+                                                            <div className="recent-date">
+                                                                {new Date(file.lastOpened).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            className="icon-btn delete-recent-btn"
+                                                            onClick={(e) => handleDeleteRecent(e, file.id)}
+                                                            title="Remove Record"
+                                                            style={{ flexShrink: 0, padding: '4px', width: 'auto', height: 'auto', marginLeft: '8px' }}
+                                                        >
+                                                            <Icons.Trash style={{ width: '16px', height: '16px' }} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             <div style={{ marginTop: '50px', paddingBottom: '20px', textAlign: 'center', color: '#9e9e9e', fontSize: '13px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                                 <span>VIVIDpdf is a free and opensource software. <em><a href="https://www.gnu.org/philosophy/free-sw.en.html" target="_blank">Free as in freedom</a></em>.</span>
