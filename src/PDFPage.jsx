@@ -7,7 +7,7 @@ import {
   mergeRawTokens, 
   generateDebugImagesFromCanvas 
 } from './parsing';
-import { buildPronunciationRegex } from './speechUtils';
+import { buildPronunciationRegex, URL_REGEX } from './speechUtils';
 
 const PDFPage = forwardRef(({ 
   pdfDoc, 
@@ -252,7 +252,7 @@ const PDFPage = forwardRef(({
         const allTexts = allTokensRef.current.map(t => t.text || '');
         const joined = allTexts.join(' ');
         const patterns = [];
-        if (speechCustomization.skipUrls) patterns.push(/https?:\/\/\S+|www\.\S+/gi);
+        if (speechCustomization.skipUrls) patterns.push(URL_REGEX);
         if (speechCustomization.skipEmails) patterns.push(/[\w.-]+@[\w.-]+\.\w+/gi);
         if (speechCustomization.skipSquare) patterns.push(/\[[^\]]*\]/g);
         if (speechCustomization.skipParens) patterns.push(/\([^)]*\)/g);
@@ -275,7 +275,9 @@ const PDFPage = forwardRef(({
                     const mStart = m.index;
                     const mEnd = m.index + m[0].length;
                     for (let i = 0; i < tokenRanges.length; i++) {
-                        if (tokenRanges[i][0] >= mStart && tokenRanges[i][0] < mEnd) {
+                        const [tStart, tEnd] = tokenRanges[i];
+                        // Check for any overlap between token range and match range
+                        if (Math.max(tStart, mStart) < Math.min(tEnd, mEnd)) {
                             bracketAffected.add(allTokensRef.current[i].id);
                         }
                     }

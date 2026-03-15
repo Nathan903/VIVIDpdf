@@ -1,9 +1,11 @@
+export const URL_REGEX = /(?:https?:\/\/|www\.)[^\s()<>]+(?:\([^\s()<>]*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’])/gi;
+
 export const applySkippingRules = (text, speechCustomization) => {
   if (!text) return text;
   let result = text;
 
   if (speechCustomization.skipUrls) {
-    result = result.replace(/https?:\/\/\S+|www\.\S+/gi, '');
+    result = result.replace(URL_REGEX, '');
   }
   if (speechCustomization.skipEmails) {
     result = result.replace(/[\w.-]+@[\w.-]+\.\w+/gi, '');
@@ -22,8 +24,11 @@ export const applySkippingRules = (text, speechCustomization) => {
 
 export const containsSkippableItem = (text) => {
   if (!text) return false;
+  // Create a non-global version for .test() if needed, or just use the same one
+  // (Note: .test() with global regex maintains lastIndex, so it's safer to use non-global or reset)
+  const urlRe = new RegExp(URL_REGEX.source, 'i');
   return (
-    /https?:\/\/\S+|www\.\S+/i.test(text) ||
+    urlRe.test(text) ||
     /[\w.-]+@[\w.-]+\.\w+/i.test(text) ||
     /\[[^\]]*]/.test(text) ||
     /\([^)]*\)/.test(text) ||
