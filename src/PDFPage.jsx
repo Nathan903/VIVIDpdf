@@ -298,18 +298,27 @@ const PDFPage = forwardRef(({
 
         // Check if token is affected by speech rules (for visual indicator)
         let isSpeechAffected = false;
+        let isBlanked = false;
         if (!isSkipped && speechCustomization.visualIndicator) {
             const word = t.text || '';
             
             if (bracketAffected.has(t.id)) {
                 isSpeechAffected = true;
+                isBlanked = true;
             }
             // Check pronunciation replacements
             if (!isSpeechAffected && customPronunciations.length > 0) {
-                isSpeechAffected = customPronunciations.some(rule => {
+                customPronunciations.some(rule => {
                     const re = buildPronunciationRegex(rule, false);
                     if (!re) return false;
-                    return re.test(word);
+                    if (re.test(word)) {
+                        isSpeechAffected = true;
+                        if (!rule.replacement || rule.replacement.trim() === '') {
+                            isBlanked = true;
+                        }
+                        return true;
+                    }
+                    return false;
                 });
             }
         }
@@ -327,7 +336,7 @@ const PDFPage = forwardRef(({
 
         // Track affected tokens for blackout overlays
         if (isSpeechAffected) {
-            affectedTokens.push(t);
+            affectedTokens.push({ token: t, isBlanked });
         }
 
         if (!isSkipped) {
@@ -351,8 +360,8 @@ const PDFPage = forwardRef(({
 
     // Create deemphasize overlays for speech-affected tokens
     if (affectedTokens.length > 0 && containerRef.current) {
-        affectedTokens.forEach(t => {
-            t.parts.forEach(p => {
+        affectedTokens.forEach(item => {
+            item.token.parts.forEach(p => {
                 const overlay = document.createElement('div');
                 const padding = 2; // Slight padding to match highlight sizing better
                 overlay.style.position = 'absolute';
@@ -364,6 +373,18 @@ const PDFPage = forwardRef(({
                 overlay.style.pointerEvents = 'none';
                 overlay.style.zIndex = '3';
                 overlay.style.borderRadius = '2px';
+
+                if (item.isBlanked) {
+                    const line = document.createElement('div');
+                    line.style.position = 'absolute';
+                    line.style.top = '50%';
+                    line.style.left = '0';
+                    line.style.width = '100%';
+                    line.style.height = '1px';
+                    line.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+                    overlay.appendChild(line);
+                }
+
                 containerRef.current.appendChild(overlay);
                 blackoutOverlaysRef.current.push(overlay);
             });
