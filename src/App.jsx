@@ -1932,10 +1932,24 @@ const App = () => {
                     {!pdf ? (
                         <div className="dashboard-container" style={{ position: 'relative' }}>
                             {/* Settings Icon in Dashboard */}
-                            <div style={{ position: 'absolute', top: 20, right: 20 }}>
-                                <button className="icon-btn" onClick={() => setShowHomeSettings(true)} title="Storage Settings">
+                            <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '10px' }}>
+                                <button
+                                    className="upload-btn"
+                                    onClick={() => setShowHelp(true)}
+                                    style={{ border: '1px solid #3f3f46', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                >
+                                    <span style={{ fontSize: '18px'}}>?</span>
+                                    Keyboard Shortcuts
+                                </button>
+                                <button 
+                                    className="upload-btn" 
+                                    onClick={() => setShowHomeSettings(true)} 
+                                    title="History Storage Settings"
+                                    style={{ border: '1px solid #3f3f46', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                >
                                     <Icons.Settings />
                                 </button>
+
                             </div>
 
                             <div className="empty-placeholder">
@@ -1943,14 +1957,7 @@ const App = () => {
                                     <Icons.Upload /> Open PDF File
                                 </label>
                                 <p style={{ marginTop: '20px', color: '#9e9e9e', fontSize: '14px' }}>or drag and drop a file here</p>
-                                <button
-                                    className="upload-btn"
-                                    onClick={() => setShowHelp(true)}
-                                    style={{ border: '1px solid #3f3f46' }}
-                                >
-                                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>?</span>
-                                    (Press H for Help Menu)
-                                </button>
+
 
                             </div>
 
@@ -2158,14 +2165,14 @@ const App = () => {
                                     <Icons.Upload />
                                 </button>
 
-
+                                {/* 
                                 <button
                                     className={`icon-btn ${showHelp ? 'active' : ''}`}
                                     onClick={() => setShowHelp(!showHelp)}
                                     title="Shortcuts (H)"
                                 >
                                     <span style={{ fontSize: '18px', fontWeight: 'bold' }}>?</span>
-                                </button>
+                                </button> */}
 
                                 <div style={{ position: 'relative' }}>
                                     <button
