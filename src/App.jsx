@@ -627,6 +627,7 @@ const App = () => {
     // --- Pinch-to-Zoom Logic ---
     const handleTouchStartViewport = (e) => {
         if (e.touches.length === 2) {
+            if (e.cancelable) e.preventDefault();
             const dist = Math.hypot(
                 e.touches[0].clientX - e.touches[1].clientX,
                 e.touches[0].clientY - e.touches[1].clientY
@@ -640,6 +641,7 @@ const App = () => {
 
     const handleTouchMoveViewport = (e) => {
         if (e.touches.length === 2 && pinchRef.current.initialDist > 0) {
+            if (e.cancelable) e.preventDefault();
             const dist = Math.hypot(
                 e.touches[0].clientX - e.touches[1].clientX,
                 e.touches[0].clientY - e.touches[1].clientY

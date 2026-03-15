@@ -33,6 +33,7 @@ body {
     overflow: auto;
     padding: 40px 0 120px 0;
     scroll-behavior: smooth;
+    touch-action: pan-x pan-y;
 }
 
 .pdf-stream {
