@@ -6,6 +6,7 @@ import './BugReport.css';
 const BugReport = ({ darkMode, appContext }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [issue, setIssue] = useState('');
+  const [contact, setContact] = useState('');
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -38,7 +39,8 @@ const BugReport = ({ darkMode, appContext }) => {
       appState: appContext || 'not provided',
       context: {
         url: window.location.href,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        contact: contact || 'not provided'
       },
       logs: getLogs()
     };
@@ -82,9 +84,9 @@ const BugReport = ({ darkMode, appContext }) => {
       <button
         className={`bug-report-trigger ${darkMode ? 'dark' : ''}`}
         onClick={() => setIsOpen(true)}
-        title="Report a bug"
+        title="Report an issue"
       >
-        <Icons.Bug />
+        Report Issue
       </button>
     );
   }
@@ -113,11 +115,23 @@ const BugReport = ({ darkMode, appContext }) => {
               <label htmlFor="issue-desc">Describe the issue</label>
               <textarea
                 id="issue-desc"
-                placeholder="What happened? What were you doing?"
+                placeholder="What went wrong? What did you expect to happen?"
                 value={issue}
                 onChange={(e) => setIssue(e.target.value)}
                 required
               />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="contact-info">Contact Info (Optional)</label>
+              <input
+                type="text"
+                id="contact-info"
+                placeholder="Email address or Discord ID"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+              />
+              <span className="field-hint">If you don't mind us asking about the bug, please leave a way to reach you.</span>
             </div>
 
             <div className="info-attachment">
@@ -126,7 +140,7 @@ const BugReport = ({ darkMode, appContext }) => {
             </div>
 
             <div className="github-link">
-              <p>You can also <a href="https://github.com/Nathan903/VIVIDpdf/issues" target="_blank" rel="noopener noreferrer">submit an issue on GitHub</a>.</p>
+              <p>You can also <a href="https://github.com/Nathan903/VIVIDpdf/issues/new" target="_blank" rel="noopener noreferrer">submit an issue on GitHub</a>.</p>
             </div>
 
             <div className="bug-report-footer">
