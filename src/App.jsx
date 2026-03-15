@@ -246,7 +246,7 @@ const App = () => {
 
     const showToast = (message) => {
         setToast(message);
-        setTimeout(() => setToast(null), 3000);
+        setTimeout(() => setToast(null), 5000);
     };
 
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
@@ -655,6 +655,25 @@ const App = () => {
                 performJump(meta.lastPage || 1, pdfDoc);
             }, 300);
 
+            // Perform a quick check for text on the first few pages to warn about scanned PDFs
+            try {
+                let hasAnyText = false;
+                const pagesToCheck = Math.min(pdfDoc.numPages, 5);
+                for (let i = 1; i <= pagesToCheck; i++) {
+                    const page = await pdfDoc.getPage(i);
+                    const textContent = await page.getTextContent();
+                    if (textContent.items.some(item => item.str && item.str.trim().length > 0)) {
+                        hasAnyText = true;
+                        break;
+                    }
+                }
+                if (!hasAnyText) {
+                    showToast("The opened PDF does not contain text, and VIVIDpdf does not support recognizing words inside images.");
+                }
+            } catch (e) {
+                console.error("Failed to check PDF text content", e);
+            }
+
         } catch (error) {
             console.error("Error loading PDF:", error);
             alert("Failed to load PDF. Please ensure it is a valid file.");
@@ -702,6 +721,25 @@ const App = () => {
                     console.log(`[TTS DEBUG] cancel called from loadMetadataOnly`);
                     ttsGenerationRef.current += 1;
                     synth.cancel();
+                    // Perform a quick check for text on the first few pages to warn about scanned PDFs
+                    try {
+                        let hasAnyText = false;
+                        const pagesToCheck = Math.min(pdfDoc.numPages, 5);
+                        for (let i = 1; i <= pagesToCheck; i++) {
+                            const page = await pdfDoc.getPage(i);
+                            const textContent = await page.getTextContent();
+                            if (textContent.items.some(item => item.str && item.str.trim().length > 0)) {
+                                hasAnyText = true;
+                                break;
+                            }
+                        }
+                        if (!hasAnyText) {
+                            showToast("The opened PDF does not contain text, and VIVIDpdf does not support recognizing words inside images.");
+                        }
+                    } catch (e) {
+                        console.error("Failed to check PDF text content", e);
+                    }
+
                     setTimeout(() => performJump(meta.lastPage || 1, pdfDoc), 300);
                 } finally {
                     setIsLoading(false);
