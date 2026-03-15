@@ -20,7 +20,18 @@ export const applySkippingRules = (text, speechCustomization) => {
   return result;
 };
 
-export const buildPronunciationRegex = (rule, globalFlag = true) => {
+export const containsSkippableItem = (text) => {
+  if (!text) return false;
+  return (
+    /https?:\/\/\S+|www\.\S+/i.test(text) ||
+    /[\w.-]+@[\w.-]+\.\w+/i.test(text) ||
+    /\[[^\]]*]/.test(text) ||
+    /\([^)]*\)/.test(text) ||
+    /\{[^}]*}/.test(text)
+  );
+};
+
+export const buildPronunciationRegex = (rule, globalFlag = true) => { 
   const pattern = (rule.pattern || '').trim();
   if (!pattern) return null;
   const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

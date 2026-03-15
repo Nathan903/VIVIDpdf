@@ -424,6 +424,23 @@ canvas {
     border: 1px solid rgba(99, 102, 241, 0.5);
 }
 
+.pulse-yellow {
+    animation: pulseYellow 1.5s infinite;
+}
+
+@keyframes pulseYellow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 235, 59, 1);
+        background: rgba(255, 235, 59, 0.3);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(255, 235, 59, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 235, 59, 0);
+    }
+}
+
 .icon-btn.active-danger {
     background: rgba(239, 68, 68, 0.2);
     color: #f87171;
@@ -698,11 +715,10 @@ canvas {
     width: 100%;
 }
 
-.recent-files-section h3 {
+.recent-files-section p {
     margin-bottom: 20px;
     color: #a1a1aa;
     font-size: 14px;
-    text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid #3f3f46;
     padding-bottom: 10px;
@@ -870,7 +886,7 @@ canvas {
 
 .modal-header {
     padding: 15px 20px;
-    border-bottom: 1px solid #3f3f46;
+    /* border-bottom: 1px solid #3f3f46; */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -882,45 +898,56 @@ canvas {
 }
 
 .modal-body {
-    padding: 20px;
+    padding:20px;
 }
 
 .toast-notification {
     position: fixed;
-    bottom: 20px;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: #f44336;
     color: white;
     padding: 10px 20px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 100000;
-    animation: fadein 0.3s, fadeout 0.3s 2.7s;
+    animation: fadein 0.3s, fadeout 0.3s 7.7s forwards;
     font-size: 14px;
     pointer-events: none;
 }
 
+.toast-error {
+    background: #f44336;
+}
+
+.toast-info {
+    background: #2196f3;
+}
+
+.toast-warning {
+    background: #f59e0b;
+}
+
 @keyframes fadein {
     from {
-        bottom: 0;
+        top: 0;
         opacity: 0;
     }
 
     to {
-        bottom: 20px;
+        top: 20px;
         opacity: 1;
     }
 }
 
 @keyframes fadeout {
     from {
-        bottom: 20px;
+        top: 20px;
         opacity: 1;
     }
 
     to {
-        bottom: 0;
+        top: 0;
         opacity: 0;
     }
 }

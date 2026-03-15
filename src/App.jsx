@@ -5,7 +5,7 @@ import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord, getFileRecord, getStorageInfo, deleteBlobs } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage, verifyGeminiAPIKey, verifyOpenAIApiKey } from './aiService'; // IMPORT AI SERVICE
-import { applySkippingRules, applyCustomPronunciations } from './speechUtils';
+import { applySkippingRules, applyCustomPronunciations, containsSkippableItem } from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import { getVoiceSettings, calculateActualRate } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
@@ -170,6 +170,16 @@ const App = () => {
     const [speechCustomization, setSpeechCustomization] = useState(globalSettings.speechCustomization || DEFAULT_GLOBALS.speechCustomization);
     const [customPronunciations, setCustomPronunciations] = useState(globalSettings.customPronunciations || DEFAULT_GLOBALS.customPronunciations);
     const [showCustomSpeech, setShowCustomSpeech] = useState(false);
+    const [pulseCustomizeBtn, setPulseCustomizeBtn] = useState(false);
+
+    const toggleCustomSpeech = () => {
+        setShowCustomSpeech(prev => !prev);
+        // If user ever opens the customize speech menu, never display the hint again
+        if (!showCustomSpeech) {
+            localStorage.setItem('pdf_reader_hint_skip_dismissed', 'true');
+            setPulseCustomizeBtn(false);
+        }
+    };
 
     // Navigation
     const [numPages, setNumPages] = useState(-999);
@@ -244,11 +254,41 @@ const App = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const [toast, setToast] = useState(null);
+    const toastTimeoutRef = useRef(null);
 
-    const showToast = (message) => {
-        setToast(message);
-        setTimeout(() => setToast(null), 5000);
+    const showToast = (message, type = 'error') => {
+        setToast({ message, type });
+        if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = setTimeout(() => setToast(null), 8000);
     };
+
+    // --- User Hint Logic ---
+    const checkAndTriggerSkipHint = (text) => {
+        if (localStorage.getItem('pdf_reader_hint_skip_dismissed') === 'true') return;
+        
+        let count = parseInt(localStorage.getItem('pdf_reader_hint_skip_count') || '0', 10);
+        if (count >= 3) {
+            localStorage.setItem('pdf_reader_hint_skip_dismissed', 'true');
+            return;
+        }
+
+        const today = new Date().toDateString();
+        const lastDate = localStorage.getItem('pdf_reader_hint_skip_last_date');
+        if (lastDate === today) return;
+
+        if (containsSkippableItem(text)) {
+            console.log("[Hint Triggered] Detected skippable content. Count:", count + 1);
+            showToast("💡 Reading too many links? Press 'C' or click the pencil icon to auto-skip elements.", "info");
+            setPulseCustomizeBtn(true);
+            
+            localStorage.setItem('pdf_reader_hint_skip_count', (count + 1).toString());
+            localStorage.setItem('pdf_reader_hint_skip_last_date', today);
+        }
+    };
+    const checkAndTriggerSkipHintRef = useRef(checkAndTriggerSkipHint);
+    useEffect(() => {
+        checkAndTriggerSkipHintRef.current = checkAndTriggerSkipHint;
+    });
 
     useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
     useEffect(() => { numPagesRef.current = numPages; }, [numPages]);
@@ -440,7 +480,7 @@ const App = () => {
 
         if (!vSettings.supportWordMode && readingMode === 'word') {
             setReadingMode('sentence');
-            showToast(`Word Mode is not supported for ${voiceName}. Switched to Sentence Mode.`);
+            showToast(`Word Mode is not supported for ${voiceName}. Switched to Sentence Mode.`, "warning");
         }
     }, [selectedVoiceURI, readingMode, voices]);
 
@@ -1107,6 +1147,7 @@ const App = () => {
             setActiveTokenId(firstTokenId);
             if (pageNum !== activePageRef.current) setActivePage(pageNum);
             handleSmartScroll(pageNum, firstTokenId);
+            checkAndTriggerSkipHintRef.current(textToSpeak);
         };
 
         utter.onend = (event) => {
@@ -1272,6 +1313,7 @@ const App = () => {
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance start`);
+            checkAndTriggerSkipHintRef.current(textToSpeak);
             // Pre-queue all available cached sentences right now to eliminate
             // gaps with online voices (gives browser max time to pre-synthesize)
             if (!event.target.hasQueuedNext) {
@@ -1516,12 +1558,21 @@ const App = () => {
 
                 // Execute Smart Scroll Logic
                 handleSmartScroll(pageNum, tokenId);
+
+                // --- CHECK USER HINT AROUND CURRENT WORD ---
+                const chunkStart = Math.max(0, entry.start - 10);
+                const chunkEnd = Math.min(script.length, entry.end + 40);
+                const textChunk = script.substring(chunkStart, chunkEnd);
+                checkAndTriggerSkipHintRef.current(textChunk);
             }
         };
 
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] utterance.onstart - Started utterance.`);
+            if (forceSentenceMode) {
+                checkAndTriggerSkipHintRef.current(script);
+            }
             setIsVoiceLoading(false);
             if (!isPlayingRef.current) return;
 
@@ -1851,7 +1902,7 @@ const App = () => {
                     break;
                 case 'c': // Customize Speech
                     e.preventDefault();
-                    setShowCustomSpeech(prev => !prev);
+                    toggleCustomSpeech();
                     break;
                 case 'm': // Mark Skip (Mapped from "M Mark Skip")
                     e.preventDefault();
@@ -2183,9 +2234,9 @@ const App = () => {
 
                                 <div className="empty-placeholder">
                                     <label className="upload-btn main-upload" onClick={() => fileInputRef.current.click()}>
-                                        <Icons.Upload /> Open PDF File
+                                        <Icons.Upload /> Open PDF file
                                     </label>
-                                    <p style={{ marginTop: '20px', color: '#9e9e9e', fontSize: '14px' }}>or drag and drop a file here</p>
+                                    <p style={{ marginTop: '20px', color: '#9e9e9e', fontSize: '14px' }}>or drag & drop a PDF here</p>
 
 
                                 </div>
@@ -2194,7 +2245,7 @@ const App = () => {
                                 {recentFiles.length > 0 && (
                                     <div className="recent-files-section">
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #3f3f46', marginBottom: '20px', paddingBottom: '10px' }}>
-                                            <h3 style={{ margin: 0, border: 'none', padding: 0 }}>Recently Opened</h3>
+                                            <p style={{ margin: 0, border: 'none', padding: 0 }}>Recently opened</p>
 
                                             {/* Toggle Button for layout view */}
                                             <button
@@ -2363,8 +2414,8 @@ const App = () => {
                             <div className="section-right">
                                 <div style={{ position: 'relative' }}>
                                     <button
-                                        className={`icon-btn ${showCustomSpeech ? 'active' : ''}`}
-                                        onClick={() => setShowCustomSpeech(!showCustomSpeech)}
+                                        className={`icon-btn ${showCustomSpeech ? 'active' : ''} ${pulseCustomizeBtn ? 'pulse-yellow' : ''}`}
+                                        onClick={toggleCustomSpeech}
                                         title="Customize Speech (C)"
                                     >
                                         <Icons.Pencil />
@@ -2417,7 +2468,7 @@ const App = () => {
 
                                     {showSettings && (
                                         <div className="settings-popup" ref={settingsRef}>
-                                            <div className="settings-header">Reading Settings</div>
+                                            {/* <div className="settings-header">Reading Settings</div> */}
 
 
                                             <div className="setting-item">
@@ -2789,8 +2840,8 @@ const App = () => {
 
             {/* TOAST SYSTEM */}
             {toast && (
-                <div className="toast-notification">
-                    {toast}
+                <div key={toast.message} className={`toast-notification toast-${toast.type}`}>
+                    {toast.message}
                 </div>
             )}
 

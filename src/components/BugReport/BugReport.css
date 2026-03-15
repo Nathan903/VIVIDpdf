@@ -1,7 +1,7 @@
 .bug-report-trigger {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  top: 24px;
+  left: 24px;
   width: auto;
   height: 32px;
   padding: 0 16px;
