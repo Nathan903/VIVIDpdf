@@ -10,6 +10,7 @@ import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import { getVoiceSettings, calculateActualRate } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
 import BugReport from './components/BugReport/BugReport';
+import { initDemoFile } from './services/demoService';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -248,6 +249,7 @@ const App = () => {
     const pageRefs = useRef({});
     const pageRefCallbacks = useRef({});
     const viewportRef = useRef(null);
+    const pinchRef = useRef({ initialDist: 0, initialScale: 0 });
 
     const settingsRef = useRef(null);
     const settingsBtnRef = useRef(null);
@@ -267,6 +269,7 @@ const App = () => {
 
     // Visual
     const [isLoading, setIsLoading] = useState(false);
+    const [showBigFileMessage, setShowBigFileMessage] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const [toast, setToast] = useState(null);
     const toastTimeoutRef = useRef(null);
@@ -278,6 +281,18 @@ const App = () => {
     useEffect(() => {
         if (isPlaying) setPulsePlayBtn(false);
     }, [isPlaying]);
+
+    useEffect(() => {
+        let timer;
+        if (isLoading) {
+            timer = setTimeout(() => {
+                setShowBigFileMessage(true);
+            }, 3000);
+        } else {
+            setShowBigFileMessage(false);
+        }
+        return () => clearTimeout(timer);
+    }, [isLoading]);
 
     // Stop pulsing settings when settings are opened
     useEffect(() => {
@@ -418,6 +433,14 @@ const App = () => {
 
     // 2. Load Recent Files on Mount
     useEffect(() => {
+        const checkDemoRoute = async () => {
+            if (window.location.pathname === '/demo') {
+                console.log("[Demo] Detected /demo route, initializing demo.pdf");
+                await initDemoFile();
+                loadRecentFilesList();
+            }
+        };
+        checkDemoRoute();
         loadRecentFilesList();
     }, []);
 
@@ -609,6 +632,40 @@ const App = () => {
             }
         } catch (err) {
             console.error("Error calculating fit:", err);
+        }
+    };
+
+    // --- Pinch-to-Zoom Logic ---
+    const handleTouchStartViewport = (e) => {
+        if (e.touches.length === 2) {
+            if (e.cancelable) e.preventDefault();
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            pinchRef.current = {
+                initialDist: dist,
+                initialScale: scale
+            };
+        }
+    };
+
+    const handleTouchMoveViewport = (e) => {
+        if (e.touches.length === 2 && pinchRef.current.initialDist > 0) {
+            if (e.cancelable) e.preventDefault();
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const zoomDelta = dist / pinchRef.current.initialDist;
+            const newScale = pinchRef.current.initialScale * zoomDelta;
+            updateScale(newScale);
+        }
+    };
+
+    const handleTouchEndViewport = (e) => {
+        if (e.touches.length < 2) {
+            pinchRef.current = { initialDist: 0, initialScale: 0 };
         }
     };
 
@@ -2294,11 +2351,28 @@ const App = () => {
             )}
 
             <main className="main-content" style={{ userSelect: textSelectionEnabled ? 'text' : 'none' }}>
-                <div className="scroll-viewport" ref={viewportRef}>
+                <div 
+                    className="scroll-viewport" 
+                    ref={viewportRef}
+                    onTouchStart={handleTouchStartViewport}
+                    onTouchMove={handleTouchMoveViewport}
+                    onTouchEnd={handleTouchEndViewport}
+                >
                     {isLoading && (
                         <div className="loading-overlay">
-                            <div className="spinner"></div>
-                            <p>Processing Document...</p>
+                            <div className="spinner-container"
+                                style={{ 
+                                    transform: showBigFileMessage ? 'scale(2)' : 'scale(1)', 
+                                    transformOrigin: 'center',
+                                    transition: 'transform 0.3s ease-in-out',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center'
+                                }}>
+                                <div className="spinner"></div>
+                                {showBigFileMessage && <div className="flicker-image"></div>}
+                            </div>
+                            <p>{showBigFileMessage ? "Seems like we got a big file here..." : "Processing Document..."}</p>
                         </div>
                     )}
                     {!pdf ? (
