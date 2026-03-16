@@ -269,6 +269,7 @@ const App = () => {
 
     // Visual
     const [isLoading, setIsLoading] = useState(false);
+    const [showBigFileMessage, setShowBigFileMessage] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const [toast, setToast] = useState(null);
     const toastTimeoutRef = useRef(null);
@@ -280,6 +281,18 @@ const App = () => {
     useEffect(() => {
         if (isPlaying) setPulsePlayBtn(false);
     }, [isPlaying]);
+
+    useEffect(() => {
+        let timer;
+        if (isLoading) {
+            timer = setTimeout(() => {
+                setShowBigFileMessage(true);
+            }, 3000);
+        } else {
+            setShowBigFileMessage(false);
+        }
+        return () => clearTimeout(timer);
+    }, [isLoading]);
 
     // Stop pulsing settings when settings are opened
     useEffect(() => {
@@ -2347,8 +2360,19 @@ const App = () => {
                 >
                     {isLoading && (
                         <div className="loading-overlay">
-                            <div className="spinner"></div>
-                            <p>Processing Document...</p>
+                            <div className="spinner-container"
+                                style={{ 
+                                    transform: showBigFileMessage ? 'scale(2)' : 'scale(1)', 
+                                    transformOrigin: 'center',
+                                    transition: 'transform 0.3s ease-in-out',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center'
+                                }}>
+                                <div className="spinner"></div>
+                                {showBigFileMessage && <div className="flicker-image"></div>}
+                            </div>
+                            <p>{showBigFileMessage ? "Seems like we got a big file here..." : "Processing Document..."}</p>
                         </div>
                     )}
                     {!pdf ? (
