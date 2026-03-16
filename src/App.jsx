@@ -61,7 +61,54 @@ const DEFAULT_STORAGE_SETTINGS = {
     autoMetadataOnly: false
 };
 
+const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
 const App = () => {
+    if (isWeChat) {
+        return (
+            <div style={{
+                height: '100vh',
+                width: '100vw',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#ffffff',
+                color: '#333333',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+                textAlign: 'center',
+                padding: '20px',
+                boxSizing: 'border-box'
+            }}>
+                <div style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    marginBottom: '20px',
+                    color: '#07C160' // WeChat Green
+                }}>
+                    VIVIDpdf
+                </div>
+                <div style={{
+                    fontSize: '18px',
+                    lineHeight: '1.6',
+                    maxWidth: '300px'
+                }}>
+                    请用电脑/iPad浏览器打开
+                    <div style={{
+                        marginTop: '10px',
+                        color: '#576b95',
+                        wordBreak: 'break-all',
+                        fontWeight: '500',
+                        fontSize: '16px'
+                    }}>
+                        uoft.me/vividpdf
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+
     // --- Global Settings (Init from LocalStorage) ---
     const [globalSettings, setGlobalSettings] = useState(() => {
         if (IS_DEMO_MODE) return { ...DEFAULT_GLOBALS, ...DEMO_DEFAULTS };
