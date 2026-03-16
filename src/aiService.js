@@ -27,6 +27,10 @@ const calculateCost = (usage, model) => {
   } else if (model === 'gpt-4o-mini') {
     inputRate = 0.15;
     outputRate = 0.60;
+  } else if (model.includes('gemini-3.1-flash-lite')) {
+    // Newest Flash Lite tier
+    inputRate = 0.25;
+    outputRate = 1.50;
   } else if (model.includes('gemini-2.5-flash-lite')) {
     // Very cheap tier
     inputRate = 0.10;

@@ -581,7 +581,7 @@ const App = () => {
                 } else {
                     // Fallback to default - prioritize English for all users
                     let defaultVoice = null;
-                    
+
                     // 1. Try to find English voices first (checking priority within English)
                     const englishVoices = available.filter(v => v.lang.startsWith('en'));
                     if (englishVoices.length > 0) {
@@ -2436,8 +2436,8 @@ const App = () => {
             )}
 
             <main className="main-content" style={{ userSelect: textSelectionEnabled ? 'text' : 'none' }}>
-                <div 
-                    className="scroll-viewport" 
+                <div
+                    className="scroll-viewport"
                     ref={viewportRef}
                     onTouchStart={handleTouchStartViewport}
                     onTouchMove={handleTouchMoveViewport}
@@ -2875,6 +2875,7 @@ const App = () => {
                                                             onChange={e => setAiConfig({ ...aiConfig, model: e.target.value })}
                                                             style={{ width: '100%', padding: 4, fontSize: '12px', marginBottom: '8px' }}
                                                         >
+                                                            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Fast)</option>
                                                             <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Fastest)</option>
                                                             <option value="gemini-3-flash-preview">Gemini 3 Flash (High Quality)</option>
                                                             <option value="gpt-4o-mini">GPT-4o Mini</option>
