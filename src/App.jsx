@@ -12,6 +12,8 @@ import { getVoiceSettings, calculateActualRate, PRIORITY_VOICES } from './voiceS
 import BugReport from './components/BugReport/BugReport';
 import { initDemoFile, DEMO_DEFAULTS } from './services/demoService';
 import './App.css';
+import WASDOverlay from './components/WASDOverlay/WASDOverlay';
+
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -282,6 +284,10 @@ const App = () => {
     const [pulsePlayBtn, setPulsePlayBtn] = useState(false);
     const [pulseSettingsBtn, setPulseSettingsBtn] = useState(false);
     const [pulseSkipZoneBtn, setPulseSkipZoneBtn] = useState(false);
+
+    // WASD Overlay State
+    const [pressedKeys, setPressedKeys] = useState(new Set());
+
 
     // Stop pulsing when reading starts
     useEffect(() => {
@@ -2130,10 +2136,32 @@ const App = () => {
                 default:
                     break;
             }
+
+            // Update pressed keys for overlay
+            if (['w', 'a', 's', 'd'].includes(key)) {
+                setPressedKeys(prev => new Set(prev).add(key));
+            }
+        };
+
+
+        const handleGlobalKeyUp = (e) => {
+            const key = e.key.toLowerCase();
+            if (['w', 'a', 's', 'd'].includes(key)) {
+                setPressedKeys(prev => {
+                    const next = new Set(prev);
+                    next.delete(key);
+                    return next;
+                });
+            }
         };
 
         window.addEventListener('keydown', handleGlobalKeyDown);
-        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+        window.addEventListener('keyup', handleGlobalKeyUp);
+        return () => {
+            window.removeEventListener('keydown', handleGlobalKeyDown);
+            window.removeEventListener('keyup', handleGlobalKeyUp);
+        };
+
     }, [activePage, activeTokenId, readingMode, isPlaying, handleSmartNavigation, performJump, toggleFitMode, handleTokenClick, numPages, selectedVoiceURI, togglePlay, voices]);
 
     const handleResetCost = () => {
@@ -3101,7 +3129,11 @@ const App = () => {
                 }}
             />
 
+            {/* WASD OVERLAY */}
+            <WASDOverlay pressedKeys={pressedKeys} />
+
         </div>
+
     );
 };
 
