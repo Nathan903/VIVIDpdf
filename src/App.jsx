@@ -959,7 +959,7 @@ const App = () => {
 
         } catch (error) {
             console.error("Error loading PDF:", error);
-            alert("Failed to load PDF. Please ensure it is a valid file.");
+            alert("Failed to load PDF. Please ensure it is a valid file. 请使用电脑/平板打开");
         } finally {
             setIsLoading(false);
         }
