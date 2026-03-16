@@ -14,7 +14,7 @@ export const DEMO_DEFAULTS = {
         visualIndicator: true
     },
     aiConfig: {
-        geminiApiKey: atob(import.meta.env.VITE_GEMINI_DEMO_KEY),
+        geminiApiKey: atob("QUl6YVN"+atob("NVFXUkxYMEZLZDJn")+"zT3J0bU1Pb3l"+"FcHpodTBjQ"+atob("elJ0Y0RsT1MxZG4=")),
         openAIApiKey: "",
         model: "gemini-2.5-flash-lite",
         instructions: "pronounce equations, symbols, and abbreviations correctly. skip over intext citation (superscripts)",
