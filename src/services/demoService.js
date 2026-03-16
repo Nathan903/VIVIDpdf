@@ -14,7 +14,7 @@ export const DEMO_DEFAULTS = {
         visualIndicator: true
     },
     aiConfig: {
-        geminiApiKey: "AIzaSyCZsWeIxY4YPnjVeIavnkUn_YWmZRUAOSM",
+        geminiApiKey: import.meta.env.VITE_GEMINI_DEMO_KEY,
         openAIApiKey: "",
         model: "gemini-2.5-flash-lite",
         instructions: "pronounce equations, symbols, and abbreviations correctly. skip over intext citation (superscripts)",
