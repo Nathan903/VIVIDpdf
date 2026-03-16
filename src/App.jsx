@@ -8,7 +8,7 @@ import { fixTranscriptWithAI, getStoredCost, resetCostUsage, verifyGeminiAPIKey,
 import { applySkippingRules, applyCustomPronunciations, containsSkippableItem } from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
-import { getVoiceSettings, calculateActualRate } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
+import { getVoiceSettings, calculateActualRate, PRIORITY_VOICES } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
 import BugReport from './components/BugReport/BugReport';
 import { initDemoFile, DEMO_DEFAULTS } from './services/demoService';
 import './App.css';
@@ -574,10 +574,40 @@ const App = () => {
                     validatedVoiceURI = selectedVoiceURI;
                 } else {
                     // Fallback to default - prioritize English for all users
-                    const defaultVoice = available.find(v => v.lang.startsWith('en-US')) ||
-                        available.find(v => v.lang.startsWith('en')) ||
-                        available.find(v => v.default) ||
-                        available[0];
+                    let defaultVoice = null;
+                    
+                    // 1. Try to find English voices first (checking priority within English)
+                    const englishVoices = available.filter(v => v.lang.startsWith('en'));
+                    if (englishVoices.length > 0) {
+                        for (const pVoice of PRIORITY_VOICES) {
+                            const match = englishVoices.find(v => v.name.toLowerCase().includes(pVoice.toLowerCase()));
+                            if (match) {
+                                defaultVoice = match;
+                                break;
+                            }
+                        }
+                        // If no priority English voice, just pick the best English one
+                        if (!defaultVoice) {
+                            defaultVoice = englishVoices.find(v => v.lang.startsWith('en-US')) || englishVoices[0];
+                        }
+                    }
+
+                    // 2. If no English voices, then check general priority list
+                    if (!defaultVoice) {
+                        for (const pVoice of PRIORITY_VOICES) {
+                            const match = available.find(v => v.name.toLowerCase().includes(pVoice.toLowerCase()));
+                            if (match) {
+                                defaultVoice = match;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 3. Final fallback logic
+                    if (!defaultVoice) {
+                        defaultVoice = available.find(v => v.default) || available[0];
+                    }
+
                     if (defaultVoice) {
                         currentLang = defaultVoice.lang.split('-')[0];
                         validatedVoiceURI = defaultVoice.voiceURI;
