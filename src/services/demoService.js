@@ -14,7 +14,7 @@ export const DEMO_DEFAULTS = {
         visualIndicator: true
     },
     aiConfig: {
-        geminiApiKey: import.meta.env.VITE_GEMINI_DEMO_KEY,
+        geminiApiKey: atob(import.meta.env.VITE_GEMINI_DEMO_KEY),
         openAIApiKey: "",
         model: "gemini-2.5-flash-lite",
         instructions: "pronounce equations, symbols, and abbreviations correctly. skip over intext citation (superscripts)",
@@ -77,6 +77,9 @@ export const initDemoFile = async () => {
         });
 
         console.log(`[Demo] demo.pdf initialized with ID: ${fid}`);
+        //import.meta.env.VITE_GEMINI_DEMO_KEY
+        console.log(`[API Keys] Gemini: ${import.meta.env.VITE_GEMINI_DEMO_KEY ? 'Provided' : 'Not Provided'}`);
+        console.log(import.meta.env.VITE_GEMINI_DEMO_KEY);
         return fid;
     } catch (error) {
         console.error('[Demo] Error initializing demo file:', error);
