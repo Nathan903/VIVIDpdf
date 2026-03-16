@@ -63,49 +63,86 @@ const DEFAULT_STORAGE_SETTINGS = {
 
 const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
-const App = () => {
-    if (isWeChat) {
-        return (
+const WeChatBlock = () => {
+    const [imageIndex, setImageIndex] = useState(1);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setImageIndex(prev => (prev === 1 ? 2 : 1));
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div style={{
+            height: '100vh',
+            width: '100vw',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#ffffff',
+            color: '#333333',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            textAlign: 'center',
+            padding: '20px',
+            boxSizing: 'border-box',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
             <div style={{
-                height: '100vh',
-                width: '100vw',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: '#ffffff',
-                color: '#333333',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-                textAlign: 'center',
-                padding: '20px',
-                boxSizing: 'border-box'
+                fontSize: '24px',
+                fontWeight: 'bold',
+                marginBottom: '20px',
+                color: '#07C160' // WeChat Green
             }}>
+                VIVIDpdf
+            </div>
+            <div style={{
+                fontSize: '18px',
+                lineHeight: '1.6',
+                maxWidth: '300px'
+            }}>
+                请用电脑/iPad浏览器打开
                 <div style={{
-                    fontSize: '24px',
-                    fontWeight: 'bold',
-                    marginBottom: '20px',
-                    color: '#07C160' // WeChat Green
+                    marginTop: '10px',
+                    color: '#576b95',
+                    wordBreak: 'break-all',
+                    fontWeight: '500',
+                    fontSize: '16px'
                 }}>
-                    VIVIDpdf
-                </div>
-                <div style={{
-                    fontSize: '18px',
-                    lineHeight: '1.6',
-                    maxWidth: '300px'
-                }}>
-                    请用电脑/iPad浏览器打开
-                    <div style={{
-                        marginTop: '10px',
-                        color: '#576b95',
-                        wordBreak: 'break-all',
-                        fontWeight: '500',
-                        fontSize: '16px'
-                    }}>
-                        uoft.me/vividpdf
-                    </div>
+                    uoft.me/vividpdf
                 </div>
             </div>
-        );
+            
+            {/* Flickering Images at Bottom */}
+            <div style={{
+                position: 'absolute',
+                bottom: '40px',
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '120px'
+            }}>
+                <img 
+                    src={`/${imageIndex}.png`} 
+                    alt="flicker" 
+                    style={{ 
+                        maxHeight: '100%', 
+                        maxWidth: '80%',
+                        objectFit: 'contain',
+                        opacity: 0.9
+                    }} 
+                />
+            </div>
+        </div>
+    );
+};
+
+const App = () => {
+    if (isWeChat) {
+        return <WeChatBlock />;
     }
 
 
