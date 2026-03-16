@@ -1,5 +1,13 @@
 // Configuration for different voice engines
 
+export const PRIORITY_VOICES = [
+    "Aria",
+    "Zoe",
+    "Samantha",
+    "Zira",
+    "Heather",
+];
+
 export const VOICE_CONFIGS = {
     // Google voices (Online, high sensitivity, don't support word boundary)
     "Google US English": {
