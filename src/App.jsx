@@ -10,10 +10,13 @@ import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import { getVoiceSettings, calculateActualRate } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
 import BugReport from './components/BugReport/BugReport';
-import { initDemoFile } from './services/demoService';
+import { initDemoFile, DEMO_DEFAULTS } from './services/demoService';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+
+// --- Demo Mode Flag ---
+const IS_DEMO_MODE = true; 
 
 // --- Local Storage Keys ---
 const LS_GLOBALS = 'pdf_reader_globals';
@@ -61,6 +64,7 @@ const DEFAULT_STORAGE_SETTINGS = {
 const App = () => {
     // --- Global Settings (Init from LocalStorage) ---
     const [globalSettings, setGlobalSettings] = useState(() => {
+        if (IS_DEMO_MODE) return { ...DEFAULT_GLOBALS, ...DEMO_DEFAULTS };
         try {
             const saved = localStorage.getItem(LS_GLOBALS);
             return saved ? { ...DEFAULT_GLOBALS, ...JSON.parse(saved) } : DEFAULT_GLOBALS;
@@ -71,6 +75,7 @@ const App = () => {
 
     // --- AI Config State ---
     const [aiConfig, setAiConfig] = useState(() => {
+        if (IS_DEMO_MODE) return { ...DEFAULT_AI_CONFIG, ...DEMO_DEFAULTS.aiConfig };
         try {
             const saved = localStorage.getItem(LS_AI_CONFIG);
             return saved ? { ...DEFAULT_AI_CONFIG, ...JSON.parse(saved) } : DEFAULT_AI_CONFIG;
@@ -106,8 +111,9 @@ const App = () => {
 
     // Save AI Config on change
     useEffect(() => {
-        localStorage.setItem(LS_AI_CONFIG, JSON.stringify(aiConfig));
         aiConfigRef.current = aiConfig;
+        if (IS_DEMO_MODE) return;
+        localStorage.setItem(LS_AI_CONFIG, JSON.stringify(aiConfig));
     }, [aiConfig]);
 
     const aiConfigRef = useRef(aiConfig);
@@ -399,6 +405,7 @@ const App = () => {
 
     // 1. Save Global Settings to LocalStorage on change
     useEffect(() => {
+        if (IS_DEMO_MODE) return;
         const settings = {
             voiceURI: selectedVoiceURI,
             readingMode,
@@ -433,15 +440,30 @@ const App = () => {
 
     // 2. Load Recent Files on Mount
     useEffect(() => {
-        const checkDemoRoute = async () => {
-            if (window.location.pathname === '/demo') {
-                console.log("[Demo] Detected /demo route, initializing demo.pdf");
-                await initDemoFile();
-                loadRecentFilesList();
+        const initDemo = async () => {
+            const fid = await initDemoFile();
+            if (fid) {
+                const record = await getFileRecord(fid);
+                if (record && record.blob) {
+                    loadFromBlob(record.blob, record);
+                }
             }
+            loadRecentFilesList();
         };
-        checkDemoRoute();
-        loadRecentFilesList();
+
+        if (IS_DEMO_MODE) {
+            initDemo();
+        } else {
+            const checkDemoRoute = async () => {
+                if (window.location.pathname === '/demo') {
+                    console.log("[Demo] Detected /demo route, initializing demo.pdf");
+                    await initDemoFile();
+                    loadRecentFilesList();
+                }
+            };
+            checkDemoRoute();
+            loadRecentFilesList();
+        }
     }, []);
 
     useEffect(() => {
@@ -2092,6 +2114,11 @@ const App = () => {
 
     return (
         <div className="app-layout" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+            {IS_DEMO_MODE && (
+                <div className="demo-banner">
+                    This is a demo page. To use our app, go to <a href="https://vividpdf.pages.dev" target="_blank" rel="noopener noreferrer">vividpdf.pages.dev</a>
+                </div>
+            )}
             {/* Hidden File Input with Ref */}
             <input
                 type="file"

@@ -1011,3 +1011,28 @@ kbd {
     white-space: nowrap;
     font-family: monospace;
 }
+
+.demo-banner {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+    color: white;
+    text-align: center;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 10000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    white-space: nowrap;
+}
+
+.demo-banner a {
+    color: white;
+    text-decoration: underline;
+    font-weight: 600;
+    margin-left: 4px;
+}
