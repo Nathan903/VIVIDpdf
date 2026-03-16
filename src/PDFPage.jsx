@@ -376,24 +376,6 @@ const PDFPage = forwardRef(({
         }
     });
 
-    // Fix reading order: some PDFs store footer/header content in the wrong position
-    // in the PDF content stream (e.g. footer before body). Partition into header/body/footer
-    // regions by visual position and reorder to header→body→footer while preserving the
-    // original intra-region order (important for correct multi-column reading).
-    if (validTokens.length > 0 && pageDimensions) {
-      const HEADER_ZONE = pageDimensions.height * 0.10; // top 10% of page
-      const FOOTER_ZONE = pageDimensions.height * 0.90; // bottom 10% of page
-      const headerTokens = validTokens.filter(t => t.bounds.bottom <= HEADER_ZONE);
-      const footerTokens = validTokens.filter(t => t.bounds.top >= FOOTER_ZONE);
-      const bodyTokens = validTokens.filter(
-        t => t.bounds.bottom > HEADER_ZONE && t.bounds.top < FOOTER_ZONE
-      );
-      if (headerTokens.length > 0 || footerTokens.length > 0) {
-        validTokens.length = 0;
-        validTokens.push(...headerTokens, ...bodyTokens, ...footerTokens);
-      }
-    }
-
     pageTokensRef.current = validTokens;
     if (readingMode === 'sentence') {
         sentenceGroupsRef.current = groupTokensIntoSentences(validTokens);
