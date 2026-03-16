@@ -127,13 +127,13 @@ export const groupTokensIntoSentences = (tokens) => {
             activeTriggers.push('Colon + Newline');
         }
 
-        // 6. Fallback for scanned PDFs with missing terminal punctuation:
-        //    if the next line starts with a capital letter and the current token
-        //    doesn't end with a continuation character, assume a new sentence.
-        //    This avoids merging entire paragraphs when periods are absent from OCR output.
-        if (nextStartsCapital && !endsWithContinuation && !hasPunctuation && !endsWithColon) {
-            activeTriggers.push('Capital Start (OCR fallback)');
-        }
+        // // 6. Fallback for scanned PDFs with missing terminal punctuation:
+        // //    if the next line starts with a capital letter and the current token
+        // //    doesn't end with a continuation character, assume a new sentence.
+        // //    This avoids merging entire paragraphs when periods are absent from OCR output.
+        // if (nextStartsCapital && !endsWithContinuation && !hasPunctuation && !endsWithColon) {
+        //     activeTriggers.push('Capital Start (OCR fallback)');
+        // }
     }
 
     if (activeTriggers.length > 0) {
