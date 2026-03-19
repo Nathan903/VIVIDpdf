@@ -188,28 +188,7 @@ export const mergeRawTokens = (rawTokens) => {
             const isHyphenated = /[—\-\u00AD]$/.test(currentToken.text); 
             const isLineBreakSplit = isHyphenated && !isSameLine;
 
-            // Detect if transitioning in or out of a superscript
-            let isSuperscriptChange = false;
-            if (currentToken.parts && currentToken.parts.length > 0) {
-                const pTrans = currentToken.parts[currentToken.parts.length - 1].fontInfo?.transform;
-                const tTrans = nextToken.fontInfo?.transform;
-                if (pTrans && tTrans) {
-                    const pScale = pTrans[3];
-                    const tScale = tTrans[3];
-                    const pY = pTrans[5];
-                    const tY = tTrans[5];
-                    
-                    // If height drops significantly AND its shifted up
-                    const isNextSuperscript = tScale < pScale * 0.85 && tY > pY + 1;
-                    const isCurrentSuperscript = pScale < tScale * 0.85 && pY > tY + 1;
-                    
-                    if (isNextSuperscript || isCurrentSuperscript) {
-                        isSuperscriptChange = true;
-                    }
-                }
-            }
-
-            if (!isSuperscriptChange && ((isSameLine && isTouching) || isLineBreakSplit)) {
+            if ((isSameLine && isTouching) || isLineBreakSplit) {
                 if (isLineBreakSplit) {
                     currentToken.text = currentToken.text.slice(0, -1) + nextToken.text;
                 } else {

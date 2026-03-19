@@ -326,38 +326,27 @@ const PDFPage = forwardRef(({
         // Check if token is affected by speech rules (for visual indicator)
         let isSpeechAffected = false;
         let isBlanked = false;
-        if (!isSkipped) {
-            // Restore default initially
-            t.spokenText = t.text;
-
-            if (speechCustomization.skipSuperscriptCitations && t.isSuperscriptCitation) {
-                t.spokenText = ''; // Blank it out from speech
-                if (speechCustomization.visualIndicator) {
-                    isSpeechAffected = true;
-                    isBlanked = true;
-                }
-            } else if (speechCustomization.visualIndicator) {
-                const word = t.text || '';
-                
-                if (bracketAffected.has(t.id)) {
-                    isSpeechAffected = true;
-                    isBlanked = true;
-                }
-                // Check pronunciation replacements
-                if (!isSpeechAffected && customPronunciations.length > 0) {
-                    customPronunciations.some(rule => {
-                        const re = buildPronunciationRegex(rule, false);
-                        if (!re) return false;
-                        if (re.test(word)) {
-                            isSpeechAffected = true;
-                            if (!rule.replacement || rule.replacement.trim() === '') {
-                                isBlanked = true;
-                            }
-                            return true;
+        if (!isSkipped && speechCustomization.visualIndicator) {
+            const word = t.text || '';
+            
+            if (bracketAffected.has(t.id)) {
+                isSpeechAffected = true;
+                isBlanked = true;
+            }
+            // Check pronunciation replacements
+            if (!isSpeechAffected && customPronunciations.length > 0) {
+                customPronunciations.some(rule => {
+                    const re = buildPronunciationRegex(rule, false);
+                    if (!re) return false;
+                    if (re.test(word)) {
+                        isSpeechAffected = true;
+                        if (!rule.replacement || rule.replacement.trim() === '') {
+                            isBlanked = true;
                         }
-                        return false;
-                    });
-                }
+                        return true;
+                    }
+                    return false;
+                });
             }
         }
 
@@ -495,21 +484,17 @@ const PDFPage = forwardRef(({
             const spans = Array.from(textLayerRef.current.querySelectorAll('span'));
             let rawTokens = [];
             
-            // Only items with a 'str' property are rendered as spans by PDF.js
-            const textItems = textContent.items.filter(item => 'str' in item);
-
             spans.forEach((span, i) => {
                 const text = span.textContent;
                 if (!text.trim()) return; 
 
-                const item = textItems[i];
+                const item = textContent.items[i];
                 const computed = window.getComputedStyle(span);
                 
                 const fontInfo = {
                     name: item?.fontName || computed.fontFamily, 
                     family: computed.fontFamily,
-                    size: parseFloat(computed.fontSize) || 12,
-                    transform: item?.transform || null
+                    size: parseFloat(computed.fontSize) || 12
                 };
 
                 const containerRect = containerRef.current.getBoundingClientRect();
@@ -542,31 +527,6 @@ const PDFPage = forwardRef(({
             // Merging Pass (Logic moved to textUtils.js)
             const mergedTokens = mergeRawTokens(rawTokens);
 
-            for (let j = 0; j < mergedTokens.length; j++) {
-                const t = mergedTokens[j];
-                const prev = j > 0 ? mergedTokens[j - 1] : null;
-                t.isSuperscriptCitation = false;
-
-                if (prev && t.parts && prev.parts) {
-                    const tTrans = t.parts[0].fontInfo?.transform;
-                    const pTrans = prev.parts[0].fontInfo?.transform;
-                    
-                    if (tTrans && pTrans) {
-                        const tScale = tTrans[3];
-                        const pScale = pTrans[3];
-                        const tY = tTrans[5];
-                        const pY = pTrans[5];
-                        
-                        const isSmaller = tScale < pScale * 0.85;
-                        const isHigher = tY > pY + 1; 
-                        
-                        if (isSmaller && isHigher && /^[\d,\-\s*†‡a-z]+$/i.test(t.text.trim())) {
-                            t.isSuperscriptCitation = true;
-                        }
-                    }
-                }
-            }
-
             // Finalize
             let allCandidates = [];
             // We do NOT clear spanMapRef here; applySkipZones will handle it.
@@ -579,8 +539,7 @@ const PDFPage = forwardRef(({
                     spokenText: t.text,
                     bounds: t.bounds, 
                     parts: t.parts,
-                    fontInfo: t.parts[0].fontInfo,
-                    isSuperscriptCitation: t.isSuperscriptCitation
+                    fontInfo: t.parts[0].fontInfo
                 };
                 
                 // Store all tokens, regardless of skip zones
