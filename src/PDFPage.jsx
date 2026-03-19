@@ -7,7 +7,7 @@ import {
   mergeRawTokens, 
   generateDebugImagesFromCanvas 
 } from './parsing';
-import { buildPronunciationRegex, URL_REGEX } from './speechUtils';
+import { buildPronunciationRegex, URL_REGEX, IEEE_REGEX, APA_REGEX, MLA_REGEX } from './speechUtils';
 
 const PDFPage = forwardRef(({
   pdfDoc,
@@ -281,6 +281,7 @@ const PDFPage = forwardRef(({
         if (speechCustomization.skipSquare) patterns.push(/\[[^\]]*\]/g);
         if (speechCustomization.skipParens) patterns.push(/\([^)]*\)/g);
         if (speechCustomization.skipCurly) patterns.push(/\{[^}]*\}/g);
+        if (speechCustomization.skipCitations) patterns.push(IEEE_REGEX, APA_REGEX, MLA_REGEX);
 
         if (patterns.length > 0) {
             // Build token position map in joined string
