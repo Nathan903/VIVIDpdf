@@ -1,5 +1,12 @@
 export const URL_REGEX = /(?:https?:\/\/|www\.)[^\s()<>]+(?:\([^\s()<>]*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’])/gi;
 
+const excludeWords = "January|February|March|April|May|June|July|August|September|October|November|December|Spring|Summer|Fall|Autumn|Winter|Section|Figure|Table|Chapter|Page|Step|Part|User|This|That|These|Those|It|We|They|He|She|See|For|Example|Eg|Ie|In|On|At|To|From|By|With|As|And|Or|But|If|When|Where|Why|How|The|A|An|Some|Any|Many|Much|Few|All|None|Every|Each|Both|Neither|Either|Such|What|Which|Who|Whom|Whose|Why|How|Where|When";
+const negLookahead = `(?!(?:${excludeWords})\\b)`;
+
+export const IEEE_REGEX = /\[\s*\d+(?:\s*(?:,|–|-)\s*\d+)*\s*\]/gi;
+export const APA_REGEX = new RegExp(`\\(\\s*${negLookahead}(?:[A-Z][A-Za-z'-]+\\s*(?:(?:and|&)\\s*${negLookahead}[A-Z][A-Za-z'-]+\\s*)?(?:et al\\.?[,\\s]*)?)+[\\s,;]+(?:19|20)\\d{2}[a-z]?(?:[\\s,;]+(?:p|pp)\\.?\\s*\\d+(?:-\\d+)?)?\\s*\\)`, 'gi');
+export const MLA_REGEX = new RegExp(`\\(\\s*${negLookahead}(?:[A-Z][A-Za-z'-]+\\s*(?:(?:and|&)\\s*${negLookahead}[A-Z][A-Za-z'-]+\\s*)?(?:et al\\.?\\s*)?)+\\s+\\d+(?:-\\d+)?\\s*\\)`, 'gi');
+
 export const applySkippingRules = (text, speechCustomization) => {
   if (!text) return text;
   let result = text;
@@ -19,6 +26,11 @@ export const applySkippingRules = (text, speechCustomization) => {
   if (speechCustomization.skipCurly) {
     result = result.replace(/\{[^}]*}/g, '');
   }
+  if (speechCustomization.skipCitations) {
+    result = result.replace(IEEE_REGEX, '');
+    result = result.replace(APA_REGEX, '');
+    result = result.replace(MLA_REGEX, '');
+  }
   return result;
 };
 
@@ -32,7 +44,10 @@ export const containsSkippableItem = (text) => {
     /[\w.-]+@[\w.-]+\.\w+/i.test(text) ||
     /\[[^\]]*]/.test(text) ||
     /\([^)]*\)/.test(text) ||
-    /\{[^}]*}/.test(text)
+    /\{[^}]*}/.test(text) ||
+    new RegExp(IEEE_REGEX.source, 'i').test(text) ||
+    new RegExp(APA_REGEX.source, 'i').test(text) ||
+    new RegExp(MLA_REGEX.source, 'i').test(text)
   );
 };
 

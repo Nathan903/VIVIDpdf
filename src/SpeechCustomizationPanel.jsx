@@ -109,6 +109,14 @@ const SpeechCustomizationPanel = ({
                                 />
                                 Skip content inside curly braces <code style={{ background: '#27272a', padding: '2px 4px', borderRadius: '3px' }}>{'{ ... }'}</code>
                             </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={speechCustomization.skipCitations}
+                                    onChange={(e) => setSpeechCustomization({ ...speechCustomization, skipCitations: e.target.checked })}
+                                />
+                                Skip in-text citations (APA, MLA, IEEE)
+                            </label>
                         </div>
                     </div>
 
