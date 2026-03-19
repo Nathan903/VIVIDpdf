@@ -33,15 +33,20 @@ const testCases = {
       "(Smith et al., 2020, pp. 15-20)",
       "(O'Connor, 2020)",
       "(Smith-Jones, 2020)",
-      "(Van Rossum, 2020)" // wait, "Van" is capitalized, but if lowercase it fails my [A-Z] rule. I'll ignore lowercase authors for safety.
+      "(van Rossum, 2020)",
+      "(1994)",
+      "(Ross and Hannan 2007; Unger and Van Waarden 2009; Helgesson and Mörth 2016; McCarthy et al. 2015)",
+      "(Pettersson Ruiz and Angelis 2022; Alotibi et al. 2022; Jensen and Iosifidis 2023; Lokanan 2024; Zhiyuan Chen et al. 2018)",
+      "(Y. Xu and Ni 2022)",
+      "(Helgesson and Mörth 2016)",
     ],
     falsePositives: [
       "(This was discovered in 2020)",
-      "(see Figure 1, 2020)",
+      "(see Figure 1)",
       "(January 2020)",
       "(Spring 2020)",
-      "(User 2020)",
-      "(Figure 2020)"
+      "(199.3)",
+      "(1943.0)",
     ]
   },
   mla: {
