@@ -37,6 +37,7 @@ const DEFAULT_GLOBALS = {
         skipParens: false,
         skipCurly: false,
         skipCitations: true,
+        skipSuperscriptCitations: false,
         visualIndicator: true
     },
     customPronunciations: [],

@@ -117,6 +117,14 @@ const SpeechCustomizationPanel = ({
                                 />
                                 Skip in-text citations (APA, MLA, IEEE)
                             </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={speechCustomization.skipSuperscriptCitations}
+                                    onChange={(e) => setSpeechCustomization({ ...speechCustomization, skipSuperscriptCitations: e.target.checked })}
+                                />
+                                Skip superscript citations (e.g., 1, 3-4, 15)
+                            </label>
                         </div>
                     </div>
 
