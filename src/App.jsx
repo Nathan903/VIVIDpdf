@@ -262,6 +262,9 @@ const App = () => {
     const speechCustomizationRef = useRef(speechCustomization);
     const synth = window.speechSynthesis;
     const ttsGenerationRef = useRef(0);
+    const voiceFallbackActiveRef = useRef(false);
+    const fallbackTimeoutRef = useRef(null);
+    const offlineFallbackConfigRef = useRef(offlineFallbackConfig);
     const pageRefs = useRef({});
     const pageRefCallbacks = useRef({});
     const viewportRef = useRef(null);
@@ -410,6 +413,76 @@ const App = () => {
     useEffect(() => { speechCustomizationRef.current = speechCustomization; }, [speechCustomization]);
     useEffect(() => { activeTokenIdRef.current = activeTokenId; }, [activeTokenId]);
     useEffect(() => { activePageRef.current = activePage; }, [activePage]);
+    useEffect(() => { offlineFallbackConfigRef.current = offlineFallbackConfig; }, [offlineFallbackConfig]);
+
+    // --- Voice Fallback Helpers ---
+    const isCurrentVoiceOnline = () => {
+        const v = voices.find(v => v.voiceURI === selectedVoiceURI);
+        return v ? !v.localService : false;
+    };
+
+    const getEffectiveVoiceConfig = () => {
+        if (voiceFallbackActiveRef.current) {
+            const cfg = offlineFallbackConfigRef.current;
+            if (cfg && cfg.voiceURI) {
+                const fbVoice = voices.find(v => v.voiceURI === cfg.voiceURI);
+                if (fbVoice) {
+                    return { voice: fbVoice, rate: cfg.rate || 1.0, voiceURI: cfg.voiceURI };
+                }
+            }
+        }
+        return null; // Use the normal selected voice
+    };
+
+    const applyVoiceToUtterance = (utter) => {
+        const fb = getEffectiveVoiceConfig();
+        if (fb) {
+            const vSettings = getVoiceSettings(fb.voiceURI);
+            utter.voice = fb.voice;
+            utter.lang = fb.voice.lang;
+            utter.rate = calculateActualRate(fb.rate, vSettings.sensitivity);
+        } else {
+            const vSettings = getVoiceSettings(selectedVoiceURI);
+            utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
+            const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+            if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+        }
+    };
+
+    const activateVoiceFallback = () => {
+        if (voiceFallbackActiveRef.current) return; // Already active
+        const cfg = offlineFallbackConfigRef.current;
+        if (!cfg || !cfg.voiceURI) {
+            console.warn('[TTS Fallback] No offline fallback voice configured. Stopping playback.');
+            showToast('Online voice failed and no offline fallback is configured. Please set one in Settings > Offline Fallback Voice.', 'error');
+            setIsPlaying(false);
+            return false;
+        }
+        voiceFallbackActiveRef.current = true;
+        console.log('[TTS Fallback] Activated offline fallback voice:', cfg.voiceURI);
+        showToast('⚠️ Online voice unavailable. Using offline fallback voice.', 'warning');
+        return true;
+    };
+
+    const clearFallbackTimeout = () => {
+        if (fallbackTimeoutRef.current) {
+            clearTimeout(fallbackTimeoutRef.current);
+            fallbackTimeoutRef.current = null;
+        }
+    };
+
+    // --- Network Change Listener: Reset Fallback on Reconnect ---
+    useEffect(() => {
+        const handleOnline = () => {
+            if (voiceFallbackActiveRef.current) {
+                voiceFallbackActiveRef.current = false;
+                console.log('[TTS Fallback] Network restored. Will try online voice again.');
+                showToast('🌐 Network restored. Will try online voice again.', 'info');
+            }
+        };
+        window.addEventListener('online', handleOnline);
+        return () => window.removeEventListener('online', handleOnline);
+    }, []);
 
     // --- Persistence Effects ---
 
@@ -611,6 +684,29 @@ const App = () => {
 
                 if (currentLang && !selectedLanguage) {
                     setSelectedLanguage(currentLang);
+                }
+
+                // Auto-populate offline fallback voice if not yet set
+                if (!offlineFallbackConfig.voiceURI) {
+                    const fbLang = offlineFallbackConfig.language || currentLang || 'en';
+                    const localVoices = available.filter(v => v.localService && v.lang.startsWith(fbLang));
+                    if (localVoices.length > 0) {
+                        setOfflineFallbackConfig(prev => ({
+                            ...prev,
+                            language: fbLang,
+                            voiceURI: localVoices[0].voiceURI
+                        }));
+                    } else {
+                        // Try any local voice as a last resort
+                        const anyLocal = available.find(v => v.localService);
+                        if (anyLocal) {
+                            setOfflineFallbackConfig(prev => ({
+                                ...prev,
+                                language: anyLocal.lang.split('-')[0],
+                                voiceURI: anyLocal.voiceURI
+                            }));
+                        }
+                    }
                 }
             }
         };
@@ -1328,16 +1424,14 @@ const App = () => {
             return queueCachedAISentenceRef.current(skipToPageNum, skipToTokenId);
         }
 
-        const vSettings = getVoiceSettings(selectedVoiceURI);
         const utter = new SpeechSynthesisUtterance(textToSpeak);
         utter.generation = ttsGenerationRef.current;
-        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
-        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
-        if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+        applyVoiceToUtterance(utter);
         utter.hasQueuedNext = false;
 
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            clearFallbackTimeout();
             // Update highlight and scroll to this sentence
             setActiveTokenId(firstTokenId);
             if (pageNum !== activePageRef.current) setActivePage(pageNum);
@@ -1360,14 +1454,51 @@ const App = () => {
         utter.onerror = (e) => {
             if (e.target.generation !== ttsGenerationRef.current) return;
             if (isJumpingRef.current) return;
+            clearFallbackTimeout();
             if (e.error !== 'interrupted' && e.error !== 'canceled') {
                 console.error('Speech Error in pre-queued AI sentence', e);
+                // Try fallback to offline voice instead of stopping
+                if (isCurrentVoiceOnline() && !voiceFallbackActiveRef.current) {
+                    if (activateVoiceFallback()) {
+                        // Cancel any queued utterances that also used the online voice
+                        ttsGenerationRef.current += 1;
+                        synth.cancel();
+                        // Re-play from the same position with the fallback voice
+                        const nextPageNum = info.nextTokenId ? pageNum : pageNum + 1;
+                        const nextTokenId = info.nextTokenId || null;
+                        if (aiConfigRef.current.enabled) {
+                            playNextSentenceAIRef.current(pageNum, firstTokenId);
+                        } else {
+                            scheduleNextBatchRef.current(pageNum, []);
+                        }
+                        return;
+                    }
+                }
                 setIsPlaying(false);
             }
         };
 
         console.log("ACTUAL SPOKEN SENTENCE:", textToSpeak);
         synth.speak(utter);
+
+        // Timeout fallback: if onstart doesn't fire within 6 seconds, fall back
+        // Only set timeout when nothing is speaking yet — pre-queued utterances don't need it
+        if (isCurrentVoiceOnline() && !voiceFallbackActiveRef.current && !synth.speaking) {
+            fallbackTimeoutRef.current = setTimeout(() => {
+                if (!isPlayingRef.current) return;
+                if (utter.generation !== ttsGenerationRef.current) return;
+                console.log('[TTS Fallback] Online voice timed out in queueCachedAISentence. Activating fallback.');
+                if (activateVoiceFallback()) {
+                    ttsGenerationRef.current += 1;
+                    synth.cancel();
+                    if (aiConfigRef.current.enabled) {
+                        playNextSentenceAIRef.current(pageNum, firstTokenId);
+                    } else {
+                        scheduleNextBatchRef.current(pageNum, []);
+                    }
+                }
+            }, 6000);
+        }
 
         // Cascade: immediately try to queue the sentence AFTER this one too.
         // This keeps the synth queue full, giving the browser maximum time to
@@ -1497,17 +1628,15 @@ const App = () => {
             return;
         }
 
-        const vSettings = getVoiceSettings(selectedVoiceURI);
         const utter = new SpeechSynthesisUtterance(textToSpeak);
         utter.generation = ttsGenerationRef.current;
-        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
-        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
-        if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+        applyVoiceToUtterance(utter);
 
         utter.hasQueuedNext = false;
 
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            clearFallbackTimeout();
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance start`);
             checkAndTriggerSkipHintRef.current(textToSpeak);
             // Pre-queue all available cached sentences right now to eliminate
@@ -1538,8 +1667,18 @@ const App = () => {
             if (e.target.generation !== ttsGenerationRef.current) return;
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance error: ${e.error}. isJumping: ${isJumpingRef.current}`);
             if (isJumpingRef.current) return;
+            clearFallbackTimeout();
             if (e.error !== 'interrupted' && e.error !== 'canceled') {
                 console.error("Speech Error", e);
+                // Try fallback to offline voice instead of stopping
+                if (isCurrentVoiceOnline() && !voiceFallbackActiveRef.current) {
+                    if (activateVoiceFallback()) {
+                        ttsGenerationRef.current += 1;
+                        synth.cancel();
+                        playNextSentenceAIRef.current(pageNum, firstTokenId);
+                        return;
+                    }
+                }
                 setIsPlaying(false);
             }
         };
@@ -1547,6 +1686,21 @@ const App = () => {
         console.log(`[TTS DEBUG] calling synth.speak() in playNextSentenceAI`);
         console.log("ACTUAL SPOKEN SENTENCE:", textToSpeak);
         synth.speak(utter);
+
+        // Timeout fallback: if onstart doesn't fire within 6 seconds, fall back
+        // Only set timeout when nothing is speaking yet — pre-queued utterances don't need it
+        if (isCurrentVoiceOnline() && !voiceFallbackActiveRef.current && !synth.speaking) {
+            fallbackTimeoutRef.current = setTimeout(() => {
+                if (!isPlayingRef.current) return;
+                if (utter.generation !== ttsGenerationRef.current) return;
+                console.log('[TTS Fallback] Online voice timed out in playNextSentenceAI. Activating fallback.');
+                if (activateVoiceFallback()) {
+                    ttsGenerationRef.current += 1;
+                    synth.cancel();
+                    playNextSentenceAIRef.current(pageNum, firstTokenId);
+                }
+            }, 6000);
+        }
     };
 
     // --- TTS Engine (Standard Batch Mode) ---
@@ -1720,9 +1874,7 @@ const App = () => {
 
         const utter = new SpeechSynthesisUtterance(script);
         utter.generation = ttsGenerationRef.current;
-        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
-        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
-        if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+        applyVoiceToUtterance(utter);
 
         utter.audioMap = map;
         utter.nextBatchInfo = {
@@ -1771,6 +1923,7 @@ const App = () => {
 
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            clearFallbackTimeout();
             console.log(`[TTS DEBUG] utterance.onstart - Started utterance.`);
             if (forceSentenceMode) {
                 checkAndTriggerSkipHintRef.current(script);
@@ -1846,9 +1999,20 @@ const App = () => {
             if (isJumpingRef.current) return;
             if (event.error === 'interrupted' || event.error === 'canceled') return;
 
+            clearFallbackTimeout();
             setIsVoiceLoading(false);
 
             if (isPlayingRef.current) {
+                // Try fallback to offline voice instead of stopping
+                if (isCurrentVoiceOnline() && !voiceFallbackActiveRef.current) {
+                    if (activateVoiceFallback()) {
+                        ttsGenerationRef.current += 1;
+                        synth.cancel();
+                        // Re-schedule the batch from the current page
+                        scheduleNextBatchRef.current(startPageNum, carryOverTokens, isFirstBatch);
+                        return;
+                    }
+                }
                 console.log(`[TTS DEBUG] utterance.onerror - Stopping playback due to error.`);
                 setIsPlaying(false);
             }
@@ -1860,6 +2024,22 @@ const App = () => {
         }
         console.log("ACTUAL SPOKEN SENTENCE:", script);
         synth.speak(utter);
+
+        // Timeout fallback: if onstart doesn't fire within 6 seconds, fall back
+        // Only set timeout when nothing is speaking yet — pre-queued utterances don't need it
+        if (isCurrentVoiceOnline() && !voiceFallbackActiveRef.current && !synth.speaking) {
+            fallbackTimeoutRef.current = setTimeout(() => {
+                if (!isPlayingRef.current) return;
+                if (utter.generation !== ttsGenerationRef.current) return;
+                console.log('[TTS Fallback] Online voice timed out in scheduleNextBatch. Activating fallback.');
+                if (activateVoiceFallback()) {
+                    ttsGenerationRef.current += 1;
+                    synth.cancel();
+                    scheduleNextBatchRef.current(startPageNum, carryOverTokens, isFirstBatch);
+                }
+            }, 6000);
+        }
+
         return true;
     };
 
