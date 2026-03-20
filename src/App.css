@@ -98,16 +98,16 @@ canvas {
 /* --- SKIP ZONES --- */
 .skip-zone-overlay {
     position: absolute;
-    background-color: rgba(239, 68, 68, 0.15);
-    border: 2px dashed rgba(239, 68, 68, 0.8);
+    background-color: rgba(220, 38, 38, 0.15);
+    border: 2px dashed rgba(220, 38, 38, 0.9);
     z-index: 20;
     pointer-events: none;
 }
 
 .skip-zone-drawing {
     position: absolute;
-    background-color: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.8);
+    background-color: rgba(220, 38, 38, 0.2);
+    border: 1px solid rgba(220, 38, 38, 0.9);
     z-index: 20;
     pointer-events: none;
 }
@@ -119,7 +119,7 @@ canvas {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: #ef4444;
+    background: #dc2626;
     color: white;
     border: 2px solid #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -133,7 +133,7 @@ canvas {
 }
 
 .delete-zone-btn:hover {
-    background: #dc2626;
+    background: #b91c1c;
     transform: scale(1.1);
 }
 
@@ -145,7 +145,7 @@ canvas {
     align-items: center;
     justify-content: center;
     background: #27272a;
-    color: #52525b;
+    color: #a1a1aa;
     border: 1px dashed #3f3f46;
 }
 
@@ -154,14 +154,14 @@ canvas {
     flex-direction: column;
     align-items: center;
     margin-top: 20vh;
-    color: #555;
+    color: #a1a1aa;
     gap: 20px;
 }
 
 .empty-placeholder h3 {
     font-weight: 400;
     font-size: 24px;
-    color: #71717a;
+    color: #a1a1aa;
     margin: 0;
 }
 
@@ -183,11 +183,11 @@ canvas {
 
 .upload-btn:hover {
     background: #3f3f46;
-    border-color: #6366f1;
+    border-color: #818cf8;
 }
 
 .upload-btn.main-upload {
-    background: #6366f1;
+    background: #3830d4;
     color: white;
     border: none;
     padding: 12px 24px;
@@ -344,7 +344,7 @@ canvas {
 
 .zoom-unit {
     font-size: 10px;
-    color: #71717a;
+    color: #a1a1aa;
     margin-right: 6px;
     margin-left: 2px;
 }
@@ -483,7 +483,7 @@ canvas {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #71717a;
+    color: #a1a1aa;
     font-weight: 700;
 }
 
@@ -535,7 +535,7 @@ canvas {
     border-radius: 4px;
     padding: 2px 6px;
     font-size: 11px;
-    color: #6366f1;
+    color: #c1c2ff;
     font-weight: 600;
 }
 
@@ -553,7 +553,7 @@ canvas {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #6366f1;
+    background: #9397f5;
     cursor: pointer;
     border: 2px solid #18181b;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
@@ -563,7 +563,7 @@ canvas {
     display: flex;
     justify-content: space-between;
     font-size: 10px;
-    color: #52525b;
+    color: #a1a1aa;
     margin-top: -4px;
 }
 
@@ -696,7 +696,7 @@ canvas {
     background: transparent;
     cursor: pointer;
     font-size: 13px;
-    color: #555;
+    color: #a1a1aa;
     transition: all 0.2s ease;
 }
 
@@ -713,7 +713,7 @@ canvas {
 
 /* Dark Mode Overrides (if your app toggles a .dark-mode class on body/container) */
 .dark-mode .toggle-group {
-    border-color: #555;
+    border-color: #71717a;
 }
 
 .dark-mode .toggle-btn {
@@ -817,7 +817,7 @@ canvas {
 .no-thumb {
     font-size: 14px;
     font-weight: 600;
-    color: #52525b;
+    color: #a1a1aa;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -854,7 +854,7 @@ canvas {
 
 .recent-date {
     font-size: 11px;
-    color: #71717a;
+    color: #a1a1aa;
 }
 
 .recent-list {
@@ -947,15 +947,15 @@ canvas {
 }
 
 .toast-error {
-    background: #f44336;
+    background: #d32f2f;
 }
 
 .toast-info {
-    background: #2196f3;
+    background: #1976d2;
 }
 
 .toast-warning {
-    background: #f59e0b;
+    background: #b45309;
 }
 
 @keyframes fadein {
