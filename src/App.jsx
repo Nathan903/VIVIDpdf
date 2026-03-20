@@ -5,12 +5,12 @@ import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord, getFileRecord, getStorageInfo, deleteBlobs } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage, verifyGeminiAPIKey, verifyOpenAIApiKey } from './aiService'; // IMPORT AI SERVICE
-import { 
-    applySkippingRules, 
-    applyCustomPronunciations, 
-    containsSkippableItem, 
-    IEEE_REGEX, 
-    APA_REGEX, 
+import {
+    applySkippingRules,
+    applyCustomPronunciations,
+    containsSkippableItem,
+    IEEE_REGEX,
+    APA_REGEX,
     MLA_REGEX,
     HYPHEN_END_REGEX,
     BASIC_SENTENCE_TERMINATOR_REGEX,
@@ -262,6 +262,10 @@ const App = () => {
     const speechCustomizationRef = useRef(speechCustomization);
     const synth = window.speechSynthesis;
     const ttsGenerationRef = useRef(0);
+    const isOfflineFallbackRef = useRef(false);
+    const lastTTSProgressRef = useRef(Date.now());
+    const fallbackCheckIntervalRef = useRef(null);
+    const triggerFallbackRef = useRef(null);
     const pageRefs = useRef({});
     const pageRefCallbacks = useRef({});
     const viewportRef = useRef(null);
@@ -412,6 +416,96 @@ const App = () => {
     useEffect(() => { activePageRef.current = activePage; }, [activePage]);
 
     // --- Persistence Effects ---
+
+    // 0. Fallback and Hang Detection Effects
+    useEffect(() => {
+        const handleNetworkChange = () => {
+            if (navigator.onLine) {
+                console.log("[TTS] Network online, recovering from fallback state on next playback.");
+                if (isOfflineFallbackRef.current) {
+                    showToast("📶 Connection restored. Will use preferred voice on next sentence.", "info");
+                }
+                isOfflineFallbackRef.current = false;
+            } else {
+                console.log("[TTS] Network offline, enabling offline fallback state.");
+                if (!isOfflineFallbackRef.current && isPlayingRef.current) {
+                    showToast("⚠️ Device is offline. Switching to offline backup voice.", "warning");
+                }
+                isOfflineFallbackRef.current = true;
+            }
+        };
+        window.addEventListener('online', handleNetworkChange);
+        window.addEventListener('offline', handleNetworkChange);
+        if (navigator.connection) {
+            navigator.connection.addEventListener('change', handleNetworkChange);
+        }
+        return () => {
+            window.removeEventListener('online', handleNetworkChange);
+            window.removeEventListener('offline', handleNetworkChange);
+            if (navigator.connection) {
+                navigator.connection.removeEventListener('change', handleNetworkChange);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        triggerFallbackRef.current = () => {
+            if (isOfflineFallbackRef.current) return;
+            console.warn("[TTS DEBUG] Triggering offline fallback due to network/engine failure.");
+            showToast("⚠️ Voice engine connection failed. Switching to offline backup voice.", "warning");
+            isOfflineFallbackRef.current = true;
+            ttsGenerationRef.current += 1;
+            synth.cancel();
+
+            setTimeout(() => {
+                if (!isPlayingRef.current) return;
+                console.log(`[TTS DEBUG] Restarting playback from active token in fallback mode.`);
+                const tokens = pageTokensMap.current.get(activePageRef.current) || [];
+                let startTokenId = activeTokenIdRef.current;
+                if (!startTokenId && tokens.length > 0) startTokenId = tokens[0].id;
+
+                if (aiConfigRef.current.enabled && playNextSentenceAIRef.current) {
+                    playNextSentenceAIRef.current(activePageRef.current, startTokenId);
+                } else if (scheduleNextBatchRef.current) {
+                    let startTokens = [];
+                    if (startTokenId && tokens.length > 0) {
+                        const idx = tokens.findIndex(t => t.id === startTokenId);
+                        startTokens = idx >= 0 ? tokens.slice(idx) : tokens;
+                    } else {
+                        startTokens = tokens;
+                    }
+                    scheduleNextBatchRef.current(activePageRef.current, startTokens, true, true);
+                }
+            }, 250);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (isPlaying) {
+            lastTTSProgressRef.current = Date.now();
+            fallbackCheckIntervalRef.current = setInterval(() => {
+                if (isPlayingRef.current && !isOfflineFallbackRef.current) {
+                    if (Date.now() - lastTTSProgressRef.current > 5500) {
+                        console.warn("[TTS DEBUG] Engine appears stuck for 5.5 seconds. Calling fallback.");
+                        if (triggerFallbackRef.current) triggerFallbackRef.current();
+                    }
+                }
+            }, 1000);
+        } else {
+            if (fallbackCheckIntervalRef.current) {
+                clearInterval(fallbackCheckIntervalRef.current);
+                fallbackCheckIntervalRef.current = null;
+            }
+        }
+        return () => {
+            if (fallbackCheckIntervalRef.current) {
+                clearInterval(fallbackCheckIntervalRef.current);
+                fallbackCheckIntervalRef.current = null;
+            }
+        };
+    }, [isPlaying]);
+
+    const updateTTSProgress = () => { lastTTSProgressRef.current = Date.now(); };
 
     // 1. Save Global Settings to LocalStorage on change
     useEffect(() => {
@@ -1299,6 +1393,40 @@ const App = () => {
         }
     };
 
+    const configureUtteranceVoice = (utter, defaultURI, defaultRateStr) => {
+        let uri = defaultURI;
+        let rateVal = defaultRateStr;
+
+        if (!navigator.onLine && !isOfflineFallbackRef.current) {
+            isOfflineFallbackRef.current = true;
+        }
+
+        if (isOfflineFallbackRef.current) {
+            uri = offlineFallbackConfig.voiceURI || "";
+            rateVal = (offlineFallbackConfig.rate !== undefined) ? offlineFallbackConfig.rate : defaultRateStr;
+        }
+
+        const vSettings = uri ? getVoiceSettings(uri) : getVoiceSettings(defaultURI);
+        utter.rate = calculateActualRate(rateVal, vSettings.sensitivity);
+
+        const available = voices || window.speechSynthesis.getVoices() || [];
+        let tVoice = available.find(v => v.voiceURI === uri);
+
+        if (isOfflineFallbackRef.current && (!tVoice || tVoice.localService === false)) {
+            tVoice = available.find(v => v.voiceURI === uri && v.localService) ||
+                available.find(v => v.localService && !!offlineFallbackConfig.language && v.lang.startsWith(offlineFallbackConfig.language)) ||
+                available.find(v => v.localService) ||
+                available[0];
+        } else if (!tVoice) {
+            tVoice = available.find(v => v.voiceURI === defaultURI) || available[0];
+        }
+
+        if (tVoice) {
+            utter.voice = tVoice;
+            utter.lang = tVoice.lang;
+        }
+    };
+
     // --- NEW: AI-Enhanced Playback Loop ---
 
     // Queue a pre-cached AI sentence into synth immediately (no API call, synchronous).
@@ -1328,16 +1456,14 @@ const App = () => {
             return queueCachedAISentenceRef.current(skipToPageNum, skipToTokenId);
         }
 
-        const vSettings = getVoiceSettings(selectedVoiceURI);
         const utter = new SpeechSynthesisUtterance(textToSpeak);
         utter.generation = ttsGenerationRef.current;
-        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
-        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
-        if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+        configureUtteranceVoice(utter, selectedVoiceURI, rateRef.current);
         utter.hasQueuedNext = false;
 
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            updateTTSProgress();
             // Update highlight and scroll to this sentence
             setActiveTokenId(firstTokenId);
             if (pageNum !== activePageRef.current) setActivePage(pageNum);
@@ -1347,6 +1473,7 @@ const App = () => {
 
         utter.onend = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            updateTTSProgress();
             if (isJumpingRef.current) return;
             if (!isPlayingRef.current) return;
             if (!event.target.hasQueuedNext) {
@@ -1362,12 +1489,18 @@ const App = () => {
             if (isJumpingRef.current) return;
             if (e.error !== 'interrupted' && e.error !== 'canceled') {
                 console.error('Speech Error in pre-queued AI sentence', e);
-                setIsPlaying(false);
+                if (!isOfflineFallbackRef.current && triggerFallbackRef.current) {
+                    console.warn(`[TTS DEBUG] pre-queued AI onerror: ${e.error}. Triggering fallback.`);
+                    triggerFallbackRef.current();
+                } else {
+                    setIsPlaying(false);
+                }
             }
         };
 
         console.log("ACTUAL SPOKEN SENTENCE:", textToSpeak);
         synth.speak(utter);
+        updateTTSProgress();
 
         // Cascade: immediately try to queue the sentence AFTER this one too.
         // This keeps the synth queue full, giving the browser maximum time to
@@ -1497,17 +1630,15 @@ const App = () => {
             return;
         }
 
-        const vSettings = getVoiceSettings(selectedVoiceURI);
         const utter = new SpeechSynthesisUtterance(textToSpeak);
         utter.generation = ttsGenerationRef.current;
-        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
-        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
-        if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+        configureUtteranceVoice(utter, selectedVoiceURI, rateRef.current);
 
         utter.hasQueuedNext = false;
 
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            updateTTSProgress();
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance start`);
             checkAndTriggerSkipHintRef.current(textToSpeak);
             // Pre-queue all available cached sentences right now to eliminate
@@ -1522,6 +1653,7 @@ const App = () => {
 
         utter.onend = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            updateTTSProgress();
             console.log(`[TTS DEBUG] playNextSentenceAI - utterance end. isJumping: ${isJumpingRef.current}, isPlaying: ${isPlayingRef.current}`);
             if (isJumpingRef.current) return;
             if (isPlayingRef.current && !event.target.hasQueuedNext) {
@@ -1540,13 +1672,19 @@ const App = () => {
             if (isJumpingRef.current) return;
             if (e.error !== 'interrupted' && e.error !== 'canceled') {
                 console.error("Speech Error", e);
-                setIsPlaying(false);
+                if (!isOfflineFallbackRef.current && triggerFallbackRef.current) {
+                    console.warn(`[TTS DEBUG] playNextSentenceAI onerror: ${e.error}. Triggering fallback.`);
+                    triggerFallbackRef.current();
+                } else {
+                    setIsPlaying(false);
+                }
             }
         };
 
         console.log(`[TTS DEBUG] calling synth.speak() in playNextSentenceAI`);
         console.log("ACTUAL SPOKEN SENTENCE:", textToSpeak);
         synth.speak(utter);
+        updateTTSProgress();
     };
 
     // --- TTS Engine (Standard Batch Mode) ---
@@ -1561,7 +1699,14 @@ const App = () => {
 
         if (!isPlayingRef.current) return false;
 
-        const vSettings = getVoiceSettings(selectedVoiceURI);
+        let scheduleVoiceURI = selectedVoiceURI;
+        if (!navigator.onLine && !isOfflineFallbackRef.current) {
+            isOfflineFallbackRef.current = true;
+        }
+        if (isOfflineFallbackRef.current) {
+            scheduleVoiceURI = offlineFallbackConfig.voiceURI || "";
+        }
+        const vSettings = scheduleVoiceURI ? getVoiceSettings(scheduleVoiceURI) : getVoiceSettings(selectedVoiceURI);
         const forceSentenceMode = !vSettings.supportWordMode;
 
         let pool = [...carryOverTokens];
@@ -1659,8 +1804,8 @@ const App = () => {
         if (speechCustomizationRef.current.skipParens) skippingPatterns.push(new RegExp(PARENS_REGEX.source, PARENS_REGEX.flags));
         if (speechCustomizationRef.current.skipCurly) skippingPatterns.push(new RegExp(CURLY_BRACKETS_REGEX.source, CURLY_BRACKETS_REGEX.flags));
         if (speechCustomizationRef.current.skipCitations) skippingPatterns.push(
-            new RegExp(IEEE_REGEX.source, IEEE_REGEX.flags), 
-            new RegExp(APA_REGEX.source, APA_REGEX.flags), 
+            new RegExp(IEEE_REGEX.source, IEEE_REGEX.flags),
+            new RegExp(APA_REGEX.source, APA_REGEX.flags),
             new RegExp(MLA_REGEX.source, MLA_REGEX.flags)
         );
 
@@ -1720,9 +1865,7 @@ const App = () => {
 
         const utter = new SpeechSynthesisUtterance(script);
         utter.generation = ttsGenerationRef.current;
-        utter.rate = calculateActualRate(rateRef.current, vSettings.sensitivity);
-        const targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
-        if (targetVoice) { utter.voice = targetVoice; utter.lang = targetVoice.lang; }
+        configureUtteranceVoice(utter, selectedVoiceURI, rateRef.current);
 
         utter.audioMap = map;
         utter.nextBatchInfo = {
@@ -1735,6 +1878,7 @@ const App = () => {
 
         utter.onboundary = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            updateTTSProgress();
             if (!isPlayingRef.current) {
                 console.log(`[TTS DEBUG] utterance.onboundary - Cancelled synth because not playing.`);
                 ttsGenerationRef.current += 1;
@@ -1771,6 +1915,7 @@ const App = () => {
 
         utter.onstart = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            updateTTSProgress();
             console.log(`[TTS DEBUG] utterance.onstart - Started utterance.`);
             if (forceSentenceMode) {
                 checkAndTriggerSkipHintRef.current(script);
@@ -1809,6 +1954,7 @@ const App = () => {
 
         utter.onend = (event) => {
             if (event.target.generation !== ttsGenerationRef.current) return;
+            updateTTSProgress();
             console.log(`[TTS DEBUG] utterance.onend - Ended utterance. isJumping: ${isJumpingRef.current}`);
             // If we are currently jumping (manual click), ignore the 'end' event 
             // from the canceled utterance so we don't stop playback.
@@ -1849,8 +1995,13 @@ const App = () => {
             setIsVoiceLoading(false);
 
             if (isPlayingRef.current) {
-                console.log(`[TTS DEBUG] utterance.onerror - Stopping playback due to error.`);
-                setIsPlaying(false);
+                if (!isOfflineFallbackRef.current && triggerFallbackRef.current) {
+                    console.warn(`[TTS DEBUG] scheduleNextBatch onerror: ${event.error}. Triggering fallback.`);
+                    triggerFallbackRef.current();
+                } else {
+                    console.log(`[TTS DEBUG] utterance.onerror - Stopping playback due to error.`);
+                    setIsPlaying(false);
+                }
             }
         };
 
@@ -1860,6 +2011,7 @@ const App = () => {
         }
         console.log("ACTUAL SPOKEN SENTENCE:", script);
         synth.speak(utter);
+        updateTTSProgress();
         return true;
     };
 
@@ -2415,8 +2567,8 @@ const App = () => {
                     {isLoading && (
                         <div className="loading-overlay">
                             <div className="spinner-container"
-                                style={{ 
-                                    transform: showBigFileMessage ? 'scale(2)' : 'scale(1)', 
+                                style={{
+                                    transform: showBigFileMessage ? 'scale(2)' : 'scale(1)',
                                     transformOrigin: 'center',
                                     transition: 'transform 0.3s ease-in-out',
                                     display: 'flex',
