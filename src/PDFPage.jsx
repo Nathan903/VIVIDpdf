@@ -7,7 +7,7 @@ import {
   mergeRawTokens, 
   generateDebugImagesFromCanvas 
 } from './parsing';
-import { buildPronunciationRegex, URL_REGEX, IEEE_REGEX, APA_REGEX, MLA_REGEX, NON_WHITESPACE_REGEX, NUMBER_COMMA_DASH_REGEX, EMAIL_REGEX, SQUARE_BRACKETS_REGEX, PARENS_REGEX, CURLY_BRACKETS_REGEX} from './speechUtils';
+import { buildPronunciationRegex, URL_REGEX, IEEE_REGEX, APA_REGEX, MLA_REGEX, NON_WHITESPACE_REGEX, NUMBER_COMMA_DASH_REGEX, EMAIL_REGEX, SQUARE_BRACKETS_REGEX, PARENS_REGEX, CURLY_BRACKETS_REGEX, SENTENCE_TERMINATOR_REGEX} from './speechUtils';
 
 const PDFPage = forwardRef(({
   pdfDoc,
@@ -272,43 +272,41 @@ const PDFPage = forwardRef(({
     // Pre-compute which tokens are inside bracket-skipped regions
     // by scanning the full joined text for bracket matches
     const bracketAffected = new Set();
-    if (speechCustomization.visualIndicator) {
-        const allTexts = allTokensRef.current.map(t => t.text || '');
-        const joined = allTexts.join(' ');
-        const patterns = [];
-        if (speechCustomization.skipUrls) patterns.push(URL_REGEX);
-        if (speechCustomization.skipEmails) patterns.push(new RegExp(EMAIL_REGEX.source, EMAIL_REGEX.flags));
-        if (speechCustomization.skipSquare) patterns.push(new RegExp(SQUARE_BRACKETS_REGEX.source, SQUARE_BRACKETS_REGEX.flags));
-        if (speechCustomization.skipParens) patterns.push(new RegExp(PARENS_REGEX.source, PARENS_REGEX.flags));
-        if (speechCustomization.skipCurly) patterns.push(new RegExp(CURLY_BRACKETS_REGEX.source, CURLY_BRACKETS_REGEX.flags));
-        if (speechCustomization.skipCitations) patterns.push(
-            new RegExp(IEEE_REGEX.source, IEEE_REGEX.flags), 
-            new RegExp(APA_REGEX.source, APA_REGEX.flags), 
-            new RegExp(MLA_REGEX.source, MLA_REGEX.flags)
-        );
+    const allTexts = allTokensRef.current.map(t => t.text || '');
+    const joined = allTexts.join(' ');
+    const patterns = [];
+    if (speechCustomization.skipUrls) patterns.push(URL_REGEX);
+    if (speechCustomization.skipEmails) patterns.push(new RegExp(EMAIL_REGEX.source, EMAIL_REGEX.flags));
+    if (speechCustomization.skipSquare) patterns.push(new RegExp(SQUARE_BRACKETS_REGEX.source, SQUARE_BRACKETS_REGEX.flags));
+    if (speechCustomization.skipParens) patterns.push(new RegExp(PARENS_REGEX.source, PARENS_REGEX.flags));
+    if (speechCustomization.skipCurly) patterns.push(new RegExp(CURLY_BRACKETS_REGEX.source, CURLY_BRACKETS_REGEX.flags));
+    if (speechCustomization.skipCitations) patterns.push(
+        new RegExp(IEEE_REGEX.source, IEEE_REGEX.flags), 
+        new RegExp(APA_REGEX.source, APA_REGEX.flags), 
+        new RegExp(MLA_REGEX.source, MLA_REGEX.flags)
+    );
 
-        if (patterns.length > 0) {
-            // Build token position map in joined string
-            const tokenRanges = [];
-            let pos = 0;
-            for (let i = 0; i < allTexts.length; i++) {
-                const start = pos;
-                const end = pos + allTexts[i].length;
-                tokenRanges.push([start, end]);
-                pos = end + 1; // +1 for space
-            }
+    if (patterns.length > 0) {
+        // Build token position map in joined string
+        const tokenRanges = [];
+        let pos = 0;
+        for (let i = 0; i < allTexts.length; i++) {
+            const start = pos;
+            const end = pos + allTexts[i].length;
+            tokenRanges.push([start, end]);
+            pos = end + 1; // +1 for space
+        }
 
-            for (const pat of patterns) {
-                let m;
-                while ((m = pat.exec(joined)) !== null) {
-                    const mStart = m.index;
-                    const mEnd = m.index + m[0].length;
-                    for (let i = 0; i < tokenRanges.length; i++) {
-                        const [tStart, tEnd] = tokenRanges[i];
-                        // Check for any overlap between token range and match range
-                        if (Math.max(tStart, mStart) < Math.min(tEnd, mEnd)) {
-                            bracketAffected.add(allTokensRef.current[i].id);
-                        }
+        for (const pat of patterns) {
+            let m;
+            while ((m = pat.exec(joined)) !== null) {
+                const mStart = m.index;
+                const mEnd = m.index + m[0].length;
+                for (let i = 0; i < tokenRanges.length; i++) {
+                    const [tStart, tEnd] = tokenRanges[i];
+                    // Check for any overlap between token range and match range
+                    if (Math.max(tStart, mStart) < Math.min(tEnd, mEnd)) {
+                        bracketAffected.add(allTokensRef.current[i].id);
                     }
                 }
             }
@@ -327,27 +325,29 @@ const PDFPage = forwardRef(({
             return isTokenInZone(t.bounds, zonePx);
         });
 
-        // Check if token is affected by speech rules (for visual indicator)
+        // Evaluate speech rules and mutate t.spokenText
         let isSpeechAffected = false;
         let isBlanked = false;
-        if (!isSkipped && speechCustomization.visualIndicator) {
-            const word = t.text || '';
-            
+        let spokenText = t.text || '';
+        if (!isSkipped) {
             if (bracketAffected.has(t.id)) {
                 isSpeechAffected = true;
                 isBlanked = true;
+                spokenText = '';
             }
             if (speechCustomization.skipSuperscriptCitations && t.isSuperscriptCitation) {
                 isSpeechAffected = true;
                 isBlanked = true;
+                spokenText = '';
             }
             // Check pronunciation replacements
             if (!isSpeechAffected && customPronunciations.length > 0) {
                 customPronunciations.some(rule => {
                     const re = buildPronunciationRegex(rule, false);
                     if (!re) return false;
-                    if (re.test(word)) {
+                    if (re.test(spokenText)) {
                         isSpeechAffected = true;
+                        spokenText = spokenText.replace(re, rule.replacement || '');
                         if (!rule.replacement || rule.replacement.trim() === '') {
                             isBlanked = true;
                         }
@@ -357,6 +357,8 @@ const PDFPage = forwardRef(({
                 });
             }
         }
+        
+        t.spokenText = spokenText;
 
         // Apply visual styles directly
         t.parts.forEach(p => {
@@ -370,7 +372,7 @@ const PDFPage = forwardRef(({
         });
 
         // Track affected tokens for blackout overlays
-        if (isSpeechAffected) {
+        if (isSpeechAffected && speechCustomization.visualIndicator) {
             affectedTokens.push({ token: t, isBlanked });
         }
 
