@@ -5,7 +5,21 @@ import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord, getFileRecord, getStorageInfo, deleteBlobs } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage, verifyGeminiAPIKey, verifyOpenAIApiKey } from './aiService'; // IMPORT AI SERVICE
-import { applySkippingRules, applyCustomPronunciations, containsSkippableItem, IEEE_REGEX, APA_REGEX, MLA_REGEX } from './speechUtils';
+import { 
+    applySkippingRules, 
+    applyCustomPronunciations, 
+    containsSkippableItem, 
+    IEEE_REGEX, 
+    APA_REGEX, 
+    MLA_REGEX,
+    HYPHEN_END_REGEX,
+    BASIC_SENTENCE_TERMINATOR_REGEX,
+    SIMPLE_URL_REGEX,
+    EMAIL_REGEX,
+    SQUARE_BRACKETS_REGEX,
+    PARENS_REGEX,
+    CURLY_BRACKETS_REGEX
+} from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import { getVoiceSettings, calculateActualRate, PRIORITY_VOICES } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
@@ -839,9 +853,9 @@ const App = () => {
             if (first.linkedTo === last.id) return;
 
             // Check for hyphen at end of previous page
-            if (/[-\u2010\u2011\u00AD]$/.test(last.text)) {
+            if (HYPHEN_END_REGEX.test(last.text)) {
                 // Remove hyphen from spoken text and append next word
-                const cleanPrefix = last.text.replace(/[-\u2010\u2011\u00AD]$/, '');
+                const cleanPrefix = last.text.replace(HYPHEN_END_REGEX, '');
                 last.spokenText = cleanPrefix + first.text;
 
                 // Silence the second part so it doesn't trigger a separate read
@@ -1458,6 +1472,7 @@ const App = () => {
             }
         };
 
+        console.log("ACTUAL SPOKEN SENTENCE:", textToSpeak);
         synth.speak(utter);
 
         // Cascade: immediately try to queue the sentence AFTER this one too.
@@ -1636,6 +1651,7 @@ const App = () => {
         };
 
         console.log(`[TTS DEBUG] calling synth.speak() in playNextSentenceAI`);
+        console.log("ACTUAL SPOKEN SENTENCE:", textToSpeak);
         synth.speak(utter);
     };
 
@@ -1710,7 +1726,7 @@ const App = () => {
                 const txt = pool[i].spokenText.trim();
                 if (!txt) continue;
 
-                if (/[.!?]["']?$/.test(txt)) {
+                if (BASIC_SENTENCE_TERMINATOR_REGEX.test(txt)) {
                     endIndex = i + 1;
                     safetyFound = true;
                     break;
@@ -1743,12 +1759,16 @@ const App = () => {
         // then mark tokens that overlap with those regions.
         const removedRanges = [];
         const skippingPatterns = [];
-        if (speechCustomizationRef.current.skipUrls) skippingPatterns.push(/https?:\/\/\S+|www\.\S+/gi);
-        if (speechCustomizationRef.current.skipEmails) skippingPatterns.push(/[\w.-]+@[\w.-]+\.\w+/gi);
-        if (speechCustomizationRef.current.skipSquare) skippingPatterns.push(/\[[^\]]*\]/g);
-        if (speechCustomizationRef.current.skipParens) skippingPatterns.push(/\([^)]*\)/g);
-        if (speechCustomizationRef.current.skipCurly) skippingPatterns.push(/\{[^}]*\}/g);
-        if (speechCustomizationRef.current.skipCitations) skippingPatterns.push(IEEE_REGEX, APA_REGEX, MLA_REGEX);
+        if (speechCustomizationRef.current.skipUrls) skippingPatterns.push(new RegExp(SIMPLE_URL_REGEX.source, SIMPLE_URL_REGEX.flags));
+        if (speechCustomizationRef.current.skipEmails) skippingPatterns.push(new RegExp(EMAIL_REGEX.source, EMAIL_REGEX.flags));
+        if (speechCustomizationRef.current.skipSquare) skippingPatterns.push(new RegExp(SQUARE_BRACKETS_REGEX.source, SQUARE_BRACKETS_REGEX.flags));
+        if (speechCustomizationRef.current.skipParens) skippingPatterns.push(new RegExp(PARENS_REGEX.source, PARENS_REGEX.flags));
+        if (speechCustomizationRef.current.skipCurly) skippingPatterns.push(new RegExp(CURLY_BRACKETS_REGEX.source, CURLY_BRACKETS_REGEX.flags));
+        if (speechCustomizationRef.current.skipCitations) skippingPatterns.push(
+            new RegExp(IEEE_REGEX.source, IEEE_REGEX.flags), 
+            new RegExp(APA_REGEX.source, APA_REGEX.flags), 
+            new RegExp(MLA_REGEX.source, MLA_REGEX.flags)
+        );
 
         for (const pat of skippingPatterns) {
             let m;
@@ -1944,6 +1964,7 @@ const App = () => {
         if (!synth.speaking) {
             setIsVoiceLoading(true);
         }
+        console.log("ACTUAL SPOKEN SENTENCE:", script);
         synth.speak(utter);
         return true;
     };

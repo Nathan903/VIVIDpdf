@@ -7,7 +7,7 @@ import {
   mergeRawTokens, 
   generateDebugImagesFromCanvas 
 } from './parsing';
-import { buildPronunciationRegex, URL_REGEX, IEEE_REGEX, APA_REGEX, MLA_REGEX } from './speechUtils';
+import { buildPronunciationRegex, URL_REGEX, IEEE_REGEX, APA_REGEX, MLA_REGEX, NON_WHITESPACE_REGEX, NUMBER_COMMA_DASH_REGEX, EMAIL_REGEX, SQUARE_BRACKETS_REGEX, PARENS_REGEX, CURLY_BRACKETS_REGEX} from './speechUtils';
 
 const PDFPage = forwardRef(({
   pdfDoc,
@@ -277,11 +277,15 @@ const PDFPage = forwardRef(({
         const joined = allTexts.join(' ');
         const patterns = [];
         if (speechCustomization.skipUrls) patterns.push(URL_REGEX);
-        if (speechCustomization.skipEmails) patterns.push(/[\w.-]+@[\w.-]+\.\w+/gi);
-        if (speechCustomization.skipSquare) patterns.push(/\[[^\]]*\]/g);
-        if (speechCustomization.skipParens) patterns.push(/\([^)]*\)/g);
-        if (speechCustomization.skipCurly) patterns.push(/\{[^}]*\}/g);
-        if (speechCustomization.skipCitations) patterns.push(IEEE_REGEX, APA_REGEX, MLA_REGEX);
+        if (speechCustomization.skipEmails) patterns.push(new RegExp(EMAIL_REGEX.source, EMAIL_REGEX.flags));
+        if (speechCustomization.skipSquare) patterns.push(new RegExp(SQUARE_BRACKETS_REGEX.source, SQUARE_BRACKETS_REGEX.flags));
+        if (speechCustomization.skipParens) patterns.push(new RegExp(PARENS_REGEX.source, PARENS_REGEX.flags));
+        if (speechCustomization.skipCurly) patterns.push(new RegExp(CURLY_BRACKETS_REGEX.source, CURLY_BRACKETS_REGEX.flags));
+        if (speechCustomization.skipCitations) patterns.push(
+            new RegExp(IEEE_REGEX.source, IEEE_REGEX.flags), 
+            new RegExp(APA_REGEX.source, APA_REGEX.flags), 
+            new RegExp(MLA_REGEX.source, MLA_REGEX.flags)
+        );
 
         if (patterns.length > 0) {
             // Build token position map in joined string
@@ -507,7 +511,7 @@ const PDFPage = forwardRef(({
                     const curY = item.transform[5];
                     const isSmaller = curH < 0.8 * prevH;
                     const isHigher = curY > prevY;
-                    const matchesRegex = /^[\d,\-–\s]+$/.test(text);
+                    const matchesRegex = NUMBER_COMMA_DASH_REGEX.test(text);
 
                     console.log(`[Superscript Debug] Evaluating text: "${text}" (Prev: "${prevNonEmptyItem.str}")`);
                     console.log(`  -> curH=${curH}, prevH=${prevH} | isSmaller(<80%): ${isSmaller}`);
@@ -543,7 +547,7 @@ const PDFPage = forwardRef(({
                 };
 
                 const containerRect = containerRef.current.getBoundingClientRect();
-                const regex = /\S+/g;
+                const regex = new RegExp(NON_WHITESPACE_REGEX.source, NON_WHITESPACE_REGEX.flags);
                 let match;
                 while ((match = regex.exec(text)) !== null) {
                     const range = document.createRange();
@@ -796,7 +800,7 @@ const PDFPage = forwardRef(({
       const sentence = getSentenceTokens(newTokenId);
       if (sentence.length > 0) {
         const lastToken = sentence[sentence.length - 1];
-        const endsTerminal = /[.!?；。？！]["']?$/.test(lastToken.text.trim());
+        const endsTerminal = SENTENCE_TERMINATOR_REGEX.test(lastToken.text.trim());
         onHoverCrossPage(pageNum + 1, !endsTerminal);
       } else {
         onHoverCrossPage(pageNum + 1, false);

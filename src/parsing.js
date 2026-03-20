@@ -1,3 +1,11 @@
+import { 
+    SENTENCE_TERMINATOR_REGEX, 
+    COLON_END_REGEX, 
+    CONTINUATION_END_REGEX, 
+    CAPITAL_LETTER_START_REGEX, 
+    EXTENDED_HYPHEN_END_REGEX 
+} from './speechUtils';
+
 // --- Text Merging Heuristics ---
 export const MERGE_CONFIG = {
   MAX_VERTICAL_MISALIGNMENT: 0.5, 
@@ -83,12 +91,12 @@ export const groupTokensIntoSentences = (tokens) => {
     const currentText = t.spokenText.trim();
     const nextText = nextT.spokenText.trim();
 
-    const hasPunctuation = /[.!?；。？！]["']?$/.test(currentText);
-    const endsWithColon = /[:]$/.test(currentText);
-    const endsWithContinuation = /[,—-]$/.test(currentText); // Removed colon and semicolon; semicolons/Chinese stops now trigger sentence breaks
+    const hasPunctuation = SENTENCE_TERMINATOR_REGEX.test(currentText);
+    const endsWithColon = COLON_END_REGEX.test(currentText);
+    const endsWithContinuation = CONTINUATION_END_REGEX.test(currentText); // Removed colon and semicolon; semicolons/Chinese stops now trigger sentence breaks
     // Allow punctuation to break only if it's not immediately followed by math logic,
     // though usually math won't follow terminal punctuation without a newline.
-    const nextStartsCapital = /^[A-Z]/.test(nextText); // Remove numbers, so we don't snap on inline equations
+    const nextStartsCapital = CAPITAL_LETTER_START_REGEX.test(nextText); // Remove numbers, so we don't snap on inline equations
 
     const activeTriggers = [];
 
@@ -185,7 +193,7 @@ export const mergeRawTokens = (rawTokens) => {
             const isTouching = gap < (prevBounds.height * MERGE_CONFIG.MAX_INTRA_WORD_GAP) && 
                                 gap > -(prevBounds.height * MERGE_CONFIG.MAX_ALLOWED_OVERLAP);
 
-            const isHyphenated = /[—\-\u00AD]$/.test(currentToken.text); 
+            const isHyphenated = EXTENDED_HYPHEN_END_REGEX.test(currentToken.text); 
             const isLineBreakSplit = isHyphenated && !isSameLine;
             const isSameSuperscriptStatus = currentToken.isSuperscriptCitation === nextToken.isSuperscriptCitation;
 
