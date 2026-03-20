@@ -7,7 +7,7 @@ import {
   mergeRawTokens, 
   generateDebugImagesFromCanvas 
 } from './parsing';
-import { buildPronunciationRegex, URL_REGEX, IEEE_REGEX, APA_REGEX, MLA_REGEX, NON_WHITESPACE_REGEX, NUMBER_COMMA_DASH_REGEX, EMAIL_REGEX, SQUARE_BRACKETS_REGEX, PARENS_REGEX, CURLY_BRACKETS_REGEX} from './speechUtils';
+import { buildPronunciationRegex, URL_REGEX, IEEE_REGEX, APA_REGEX, MLA_REGEX, NON_WHITESPACE_REGEX, NUMBER_COMMA_DASH_REGEX, EMAIL_REGEX, SQUARE_BRACKETS_REGEX, PARENS_REGEX, CURLY_BRACKETS_REGEX, SENTENCE_TERMINATOR_REGEX} from './speechUtils';
 
 const PDFPage = forwardRef(({
   pdfDoc,
