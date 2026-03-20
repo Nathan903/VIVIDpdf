@@ -5,7 +5,7 @@ import PDFPage from './PDFPage';
 import { Icons } from './Icons';
 import { saveFileRecord, getRecentFiles, updateFileMeta, getFileId, deleteFileRecord, getFileRecord, getStorageInfo, deleteBlobs } from './db';
 import { fixTranscriptWithAI, getStoredCost, resetCostUsage, verifyGeminiAPIKey, verifyOpenAIApiKey } from './aiService'; // IMPORT AI SERVICE
-import { applySkippingRules, applyCustomPronunciations, containsSkippableItem } from './speechUtils';
+import { applySkippingRules, applyCustomPronunciations, containsSkippableItem, IEEE_REGEX, APA_REGEX, MLA_REGEX } from './speechUtils';
 import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import { getVoiceSettings, calculateActualRate, PRIORITY_VOICES } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
@@ -39,6 +39,8 @@ const DEFAULT_GLOBALS = {
         skipSquare: false,
         skipParens: false,
         skipCurly: false,
+        skipCitations: true,
+        skipSuperscriptCitations: false,
         visualIndicator: true
     },
     customPronunciations: [],
@@ -1746,6 +1748,7 @@ const App = () => {
         if (speechCustomizationRef.current.skipSquare) skippingPatterns.push(/\[[^\]]*\]/g);
         if (speechCustomizationRef.current.skipParens) skippingPatterns.push(/\([^)]*\)/g);
         if (speechCustomizationRef.current.skipCurly) skippingPatterns.push(/\{[^}]*\}/g);
+        if (speechCustomizationRef.current.skipCitations) skippingPatterns.push(IEEE_REGEX, APA_REGEX, MLA_REGEX);
 
         for (const pat of skippingPatterns) {
             let m;

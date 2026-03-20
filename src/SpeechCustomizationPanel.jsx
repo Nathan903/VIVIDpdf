@@ -109,6 +109,22 @@ const SpeechCustomizationPanel = ({
                                 />
                                 Skip content inside curly braces <code style={{ background: '#27272a', padding: '2px 4px', borderRadius: '3px' }}>{'{ ... }'}</code>
                             </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={speechCustomization.skipCitations}
+                                    onChange={(e) => setSpeechCustomization({ ...speechCustomization, skipCitations: e.target.checked })}
+                                />
+                                Skip in-text citations (APA, MLA, IEEE)
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={speechCustomization.skipSuperscriptCitations}
+                                    onChange={(e) => setSpeechCustomization({ ...speechCustomization, skipSuperscriptCitations: e.target.checked })}
+                                />
+                                Skip superscript citations (e.g., 1, 3-4, 15)
+                            </label>
                         </div>
                     </div>
 

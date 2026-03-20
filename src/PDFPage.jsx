@@ -7,7 +7,7 @@ import {
   mergeRawTokens, 
   generateDebugImagesFromCanvas 
 } from './parsing';
-import { buildPronunciationRegex, URL_REGEX } from './speechUtils';
+import { buildPronunciationRegex, URL_REGEX, IEEE_REGEX, APA_REGEX, MLA_REGEX } from './speechUtils';
 
 const PDFPage = forwardRef(({
   pdfDoc,
@@ -281,6 +281,7 @@ const PDFPage = forwardRef(({
         if (speechCustomization.skipSquare) patterns.push(/\[[^\]]*\]/g);
         if (speechCustomization.skipParens) patterns.push(/\([^)]*\)/g);
         if (speechCustomization.skipCurly) patterns.push(/\{[^}]*\}/g);
+        if (speechCustomization.skipCitations) patterns.push(IEEE_REGEX, APA_REGEX, MLA_REGEX);
 
         if (patterns.length > 0) {
             // Build token position map in joined string
@@ -329,6 +330,10 @@ const PDFPage = forwardRef(({
             const word = t.text || '';
             
             if (bracketAffected.has(t.id)) {
+                isSpeechAffected = true;
+                isBlanked = true;
+            }
+            if (speechCustomization.skipSuperscriptCitations && t.isSuperscriptCitation) {
                 isSpeechAffected = true;
                 isBlanked = true;
             }
@@ -482,12 +487,53 @@ const PDFPage = forwardRef(({
 
             const spans = Array.from(textLayerRef.current.querySelectorAll('span'));
             let rawTokens = [];
+            let prevNonEmptyItem = null;
+            
+            // CRITICAL FIX 1: Filter out both non-text structural tags AND empty strings 
+            // so indices align precisely with the rendered DOM spans which exclude them.
+            const textItems = textContent.items.filter(item => item.str !== undefined && item.str !== "");
             
             spans.forEach((span, i) => {
                 const text = span.textContent;
                 if (!text.trim()) return; 
 
-                const item = textContent.items[i];
+                const item = textItems[i];
+                let isSuperscriptCitation = false;
+                
+                if (prevNonEmptyItem && item && prevNonEmptyItem.transform && item.transform) {
+                    const prevH = prevNonEmptyItem.transform[3];
+                    const curH = item.transform[3];
+                    const prevY = prevNonEmptyItem.transform[5];
+                    const curY = item.transform[5];
+                    const isSmaller = curH < 0.8 * prevH;
+                    const isHigher = curY > prevY;
+                    const matchesRegex = /^[\d,\-–\s]+$/.test(text);
+
+                    console.log(`[Superscript Debug] Evaluating text: "${text}" (Prev: "${prevNonEmptyItem.str}")`);
+                    console.log(`  -> curH=${curH}, prevH=${prevH} | isSmaller(<80%): ${isSmaller}`);
+                    console.log(`  -> curY=${curY}, prevY=${prevY} | isHigher(>prevY): ${isHigher}`);
+                    console.log(`  -> regexMatch: ${matchesRegex}`);
+
+                    if (isSmaller && isHigher) {
+                        if (matchesRegex) {
+                            console.log(`  => [MATCH] Flagged as superscript citation!`);
+                            isSuperscriptCitation = true;
+                        } else {
+                            console.log(`  => [NO MATCH] Failed regex`);
+                        }
+                    } else {
+                        console.log(`  => [NO MATCH] Failed scale/offset checks`);
+                    }
+                } else {
+                    console.log(`[Superscript Debug] Text: "${text}" (No comparable previous item)`);
+                }
+                
+                // CRITICAL FIX 2: Only update the baseline reference item if it's NOT a superscript
+                // This way, if there are multiple superscripts in a row (e.g. "1" and "2"), 
+                // the second superscript compares against the base word ("Test"), not the first superscript ("1").
+                if (!isSuperscriptCitation) {
+                    prevNonEmptyItem = item;
+                }
                 const computed = window.getComputedStyle(span);
                 
                 const fontInfo = {
@@ -511,6 +557,7 @@ const PDFPage = forwardRef(({
                         fontInfo, 
                         startOffset: match.index,
                         endOffset: regex.lastIndex,
+                        isSuperscriptCitation,
                         bounds: {
                             left: rect.left - containerRect.left,
                             top: rect.top - containerRect.top,
@@ -538,7 +585,8 @@ const PDFPage = forwardRef(({
                     spokenText: t.text,
                     bounds: t.bounds, 
                     parts: t.parts,
-                    fontInfo: t.parts[0].fontInfo
+                    fontInfo: t.parts[0].fontInfo,
+                    isSuperscriptCitation: t.isSuperscriptCitation
                 };
                 
                 // Store all tokens, regardless of skip zones

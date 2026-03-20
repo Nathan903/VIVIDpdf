@@ -187,8 +187,9 @@ export const mergeRawTokens = (rawTokens) => {
 
             const isHyphenated = /[—\-\u00AD]$/.test(currentToken.text); 
             const isLineBreakSplit = isHyphenated && !isSameLine;
+            const isSameSuperscriptStatus = currentToken.isSuperscriptCitation === nextToken.isSuperscriptCitation;
 
-            if ((isSameLine && isTouching) || isLineBreakSplit) {
+            if (isSameSuperscriptStatus && ((isSameLine && isTouching) || isLineBreakSplit)) {
                 if (isLineBreakSplit) {
                     currentToken.text = currentToken.text.slice(0, -1) + nextToken.text;
                 } else {
