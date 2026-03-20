@@ -11,6 +11,7 @@ export const DEMO_DEFAULTS = {
         skipSquare: true,
         skipParens: true,
         skipCurly: true,
+        skipSuperscriptCitations: false, // <-- Add this line
         visualIndicator: true
     },
     aiConfig: {
