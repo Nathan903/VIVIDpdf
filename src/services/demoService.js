@@ -5,7 +5,7 @@ const DEMO_THUMBNAIL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAkACQAAD/2wBDA
 export const DEMO_DEFAULTS = {
     rate: 1.1,
     speechCustomization: {
-        skipUrls: true,
+        skipUrls: false,
         skipEmails: true,
         skipCitations: true,
         skipSquare: false,
