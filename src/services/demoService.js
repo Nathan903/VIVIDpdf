@@ -8,9 +8,9 @@ export const DEMO_DEFAULTS = {
         skipUrls: true,
         skipEmails: true,
         skipCitations: true,
-        skipSquare: true,
-        skipParens: true,
-        skipCurly: true,
+        skipSquare: false,
+        skipParens: false,
+        skipCurly: false,
         skipSuperscriptCitations: false, // <-- Add this line
         visualIndicator: true
     },
@@ -29,20 +29,6 @@ export const DEMO_DEFAULTS = {
             w: 0.866824800596698,
             h: 0.043458143416986006
         },
-        {
-            id: 1773625340067,
-            x: 0.07367606362876503,
-            y: 0.017637057995286518,
-            w: 0.9053265920330231,
-            h: 0.04038004750593824
-        },
-        {
-            id: 1773625348587,
-            x: 0.9415408656466285,
-            y: 0.0828857195349034,
-            w: 0.045266329601651153,
-            h: 0.85 // Appended manually based on context
-        }
     ]
 };
 
