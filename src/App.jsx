@@ -24,13 +24,10 @@ import { groupTokensIntoSentences } from './parsing';
 import SpeechCustomizationPanel from './SpeechCustomizationPanel';
 import { getVoiceSettings, calculateActualRate, PRIORITY_VOICES } from './voiceSpeedConfig'; // IMPORT VOICE CONFIG
 import BugReport from './components/BugReport/BugReport';
-import { initDemoFile, DEMO_DEFAULTS } from './services/demoService';
+import { initDemoFile } from './services/demoService';
 import './App.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-
-// --- Demo Mode Flag ---
-const IS_DEMO_MODE = true; 
 
 // --- Local Storage Keys ---
 const LS_GLOBALS = 'pdf_reader_globals';
@@ -45,7 +42,7 @@ const DEFAULT_GLOBALS = {
     highlightColor: '#ffeb3b',
     highlightOpacity: 0.4,
     autoHide: false,
-    autoScroll: true,
+    autoScroll: false,
     layoutMode: 'grid',
     speechCustomization: {
         skipUrls: true,
@@ -53,8 +50,8 @@ const DEFAULT_GLOBALS = {
         skipSquare: false,
         skipParens: false,
         skipCurly: false,
-        skipCitations: true,    
-        skipSuperscriptCitations: true,
+        skipCitations: true,
+        skipSuperscriptCitations: false,
         visualIndicator: true
     },
     customPronunciations: [],
@@ -77,94 +74,9 @@ const DEFAULT_STORAGE_SETTINGS = {
     autoMetadataOnly: false
 };
 
-const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-
-const WeChatBlock = () => {
-    const [imageIndex, setImageIndex] = useState(1);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setImageIndex(prev => (prev === 1 ? 2 : 1));
-        }, 500);
-        return () => clearInterval(interval);
-    }, []);
-
-    return (
-        <div style={{
-            height: '100vh',
-            width: '100vw',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#ffffff',
-            color: '#333333',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-            textAlign: 'center',
-            padding: '20px',
-            boxSizing: 'border-box',
-            position: 'relative',
-            overflow: 'hidden'
-        }}>
-            <div style={{
-                fontSize: '24px',
-                fontWeight: 'bold',
-                marginBottom: '20px',
-                color: '#07C160' // WeChat Green
-            }}>
-                VIVIDpdf
-            </div>
-            <div style={{
-                fontSize: '18px',
-                lineHeight: '1.6',
-                maxWidth: '300px'
-            }}>
-                请用电脑/iPad浏览器打开
-                <div style={{
-                    marginTop: '10px',
-                    color: '#576b95',
-                    wordBreak: 'break-all',
-                    fontWeight: '500',
-                    fontSize: '16px'
-                }}>
-                    uoft.me/vividpdf
-                </div>
-            </div>
-            
-            {/* Flickering Images at Bottom */}
-            <div style={{
-                position: 'absolute',
-                bottom: '40px',
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '120px'
-            }}>
-                <img 
-                    src={`/${imageIndex}.png`} 
-                    alt="flicker" 
-                    style={{ 
-                        maxHeight: '100%', 
-                        maxWidth: '80%',
-                        objectFit: 'contain',
-                        opacity: 0.9
-                    }} 
-                />
-            </div>
-        </div>
-    );
-};
-
 const App = () => {
-    if (isWeChat) {
-        return <WeChatBlock />;
-    }
-
-
     // --- Global Settings (Init from LocalStorage) ---
     const [globalSettings, setGlobalSettings] = useState(() => {
-        if (IS_DEMO_MODE) return { ...DEFAULT_GLOBALS, ...DEMO_DEFAULTS };
         try {
             const saved = localStorage.getItem(LS_GLOBALS);
             return saved ? { ...DEFAULT_GLOBALS, ...JSON.parse(saved) } : DEFAULT_GLOBALS;
@@ -175,7 +87,6 @@ const App = () => {
 
     // --- AI Config State ---
     const [aiConfig, setAiConfig] = useState(() => {
-        if (IS_DEMO_MODE) return { ...DEFAULT_AI_CONFIG, ...DEMO_DEFAULTS.aiConfig };
         try {
             const saved = localStorage.getItem(LS_AI_CONFIG);
             return saved ? { ...DEFAULT_AI_CONFIG, ...JSON.parse(saved) } : DEFAULT_AI_CONFIG;
@@ -211,9 +122,8 @@ const App = () => {
 
     // Save AI Config on change
     useEffect(() => {
-        aiConfigRef.current = aiConfig;
-        if (IS_DEMO_MODE) return;
         localStorage.setItem(LS_AI_CONFIG, JSON.stringify(aiConfig));
+        aiConfigRef.current = aiConfig;
     }, [aiConfig]);
 
     const aiConfigRef = useRef(aiConfig);
@@ -505,7 +415,6 @@ const App = () => {
 
     // 1. Save Global Settings to LocalStorage on change
     useEffect(() => {
-        if (IS_DEMO_MODE) return;
         const settings = {
             voiceURI: selectedVoiceURI,
             readingMode,
@@ -540,30 +449,15 @@ const App = () => {
 
     // 2. Load Recent Files on Mount
     useEffect(() => {
-        const initDemo = async () => {
-            const fid = await initDemoFile();
-            if (fid) {
-                const record = await getFileRecord(fid);
-                if (record && record.blob) {
-                    loadFromBlob(record.blob, record);
-                }
+        const checkDemoRoute = async () => {
+            if (window.location.pathname === '/demo') {
+                console.log("[Demo] Detected /demo route, initializing demo.pdf");
+                await initDemoFile();
+                loadRecentFilesList();
             }
-            loadRecentFilesList();
         };
-
-        if (IS_DEMO_MODE) {
-            initDemo();
-        } else {
-            const checkDemoRoute = async () => {
-                if (window.location.pathname === '/demo') {
-                    console.log("[Demo] Detected /demo route, initializing demo.pdf");
-                    await initDemoFile();
-                    loadRecentFilesList();
-                }
-            };
-            checkDemoRoute();
-            loadRecentFilesList();
-        }
+        checkDemoRoute();
+        loadRecentFilesList();
     }, []);
 
     useEffect(() => {
@@ -1012,7 +906,7 @@ const App = () => {
 
         } catch (error) {
             console.error("Error loading PDF:", error);
-            alert("Failed to load PDF. Please ensure it is a valid file. 请使用电脑/平板打开");
+            alert("Failed to load PDF. Please ensure it is a valid file.");
         } finally {
             setIsLoading(false);
         }
@@ -2252,11 +2146,6 @@ const App = () => {
 
     return (
         <div className="app-layout" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-            {IS_DEMO_MODE && (
-                <div className="demo-banner">
-                    This is a demo page. To use our app, go to <a href="https://vividpdf.pages.dev" target="_blank" rel="noopener noreferrer">vividpdf.pages.dev</a>
-                </div>
-            )}
             {/* Hidden File Input with Ref */}
             <input
                 type="file"
