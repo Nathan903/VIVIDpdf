@@ -12,13 +12,13 @@ export const DEMO_DEFAULTS = {
         skipParens: false,
         skipCurly: false,
         skipSuperscriptCitations: false, // <-- Add this line
-        visualIndicator: true
+        visualIndicator: false
     },
     aiConfig: {
         geminiApiKey: atob("QUl6YVN"+atob("NVFXUkxYMEZLZDJn")+"zT3J0bU1Pb3l"+"FcHpodTBjQ"+atob("elJ0Y0RsT1MxZG4=")),
         openAIApiKey: "",
         model: "gemini-2.5-flash-lite",
-        instructions: "pronounce equations, symbols, and abbreviations correctly. skip over intext citation (superscripts)",
+        instructions: "pronounce equations, symbols, and abbreviations correctly. skip over intext citation.",
         enabled: true
     },
     skipZones: [
