@@ -1,5 +1,7 @@
 # VIVIDpdf
 
+![QR Code](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://github.com/username/repo)
+
 Do you find reading dIFfiCUlT? Tired of buggy PDF readers that stutter over every page, or asks for money you don't have? 
 
 VIVIDpdf is a webapp that reads PDFs, tailored for academic text. You can configure the app exactly to your needs, for free. [*Free as in Freedom.*](https://www.gnu.org/philosophy/free-sw.en.html)
